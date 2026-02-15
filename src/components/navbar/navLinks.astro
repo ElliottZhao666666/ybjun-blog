@@ -1,9 +1,8 @@
----
+﻿---
 import { Icon } from "astro-icon/components";
-
-import { type NavbarLink } from "@/types/config";
+import type { NavbarLink, LinkPreset } from "@/types/config";
+import { LinkPresets } from "@constants/link-presets";
 import { url } from "@utils/url";
-
 
 interface Props {
     link: NavbarLink;
@@ -11,20 +10,77 @@ interface Props {
 }
 
 const { link, class: className } = Astro.props;
+
+// 🟢 核心修复：预处理 children，如果子项是数字(LinkPreset)，则转换为对象
+const children = link.children?.map((item) => {
+    if (typeof item === "number") {
+        return LinkPresets[item as LinkPreset];
+    }
+    return item;
+}) || [];
+
+const hasChildren = children.length > 0;
+
+// 通用判断外链逻辑
+const isExternal = (u: string) => link.external || u.startsWith("http") || u.startsWith("//");
 ---
 
-<div class:list={["nav-link-container", className]}>
-    <a
-        aria-label={link.name}
-        href={link.external ? link.url : url(link.url)}
-        target={link.external ? "_blank" : null}
-        class="btn-plain scale-animation rounded-lg h-11 font-bold px-3 active:scale-95 nav-link-item"
-        data-link-name={link.name}
-    >
-        <div class="flex items-center">
-            {link.icon && <Icon name={link.icon} class="text-[1.1rem] nav-link-icon" />}
-            <span class="nav-link-text ml-2 hidden lg:inline">{link.name}</span>
-            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-px ml-1 text-black/20 dark:text-white/20" />}
-        </div>
-    </a>
+<div class:list={["nav-link-container relative group", className]}>
+    {/* 情况 1: 普通链接 (无子菜单) */}
+    {
+        !hasChildren && (
+            <a
+                href={isExternal(link.url) ? link.url : url(link.url)}
+                target={isExternal(link.url) ? "_blank" : null}
+                class="btn-plain scale-animation rounded-lg h-11 font-bold px-3 active:scale-95 flex items-center"
+                aria-label={link.name}
+            >
+                <div class="flex items-center">
+                    {link.icon && <Icon name={link.icon} class="text-[1.2rem] mr-1" />}
+                    <span class="text-md">{link.name}</span>
+                </div>
+            </a>
+        )
+    }
+
+    {/* 情况 2: 下拉菜单 (有子菜单) */}
+    {
+        hasChildren && (
+            <div class="relative">
+                <button
+                    class="btn-plain scale-animation rounded-lg h-11 font-bold px-3 active:scale-95 flex items-center cursor-default"
+                    aria-label={link.name}
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                >
+                    <div class="flex items-center">
+                        {link.icon && <Icon name={link.icon} class="text-[1.2rem] mr-1" />}
+                        <span class="text-md">{link.name}</span>
+                        <Icon name="material-symbols:keyboard-arrow-down-rounded" class="text-[1.2rem] ml-1 transition-transform group-hover:rotate-180" />
+                    </div>
+                </button>
+
+                <div class="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 min-w-[160px] z-50">
+                    <div class="card-base rounded-xl p-2 border border-[var(--line-divider)] flex flex-col gap-1 shadow-lg bg-[var(--card-bg)]">
+                        {children.map((child) => (
+                            <a
+                                href={isExternal(child.url) ? child.url : url(child.url)}
+                                target={isExternal(child.url) ? "_blank" : null}
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--btn-plain-bg-hover)] transition active:scale-95"
+                            >
+                                {child.icon && (
+                                    <Icon name={child.icon} class="text-[1.25rem] text-[var(--primary)] shrink-0" />
+                                )}
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-black/75 dark:text-white/75 whitespace-nowrap">
+                                        {child.name}
+                                    </span>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )
+    }
 </div>

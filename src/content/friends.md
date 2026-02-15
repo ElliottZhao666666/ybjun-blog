@@ -1,18 +1,19 @@
 ---
 
-## How to Apply
+## 如何加入朋友列表？
 
-Please send your website information to: xxx@xxx.com
+请将你的网站信息发送到: yuebanjun666@outlook.com
 
-Email Subject:
+邮件标题:
 ```
-Request to Add Friend
+博客友链添加请求-[你的站点名称]
 ```
 
-Email Content (Template):
+邮件内容模板:
 ```
-Site Name: [Your Site Name]
-Site Desc: [Your Site Description]
-Site Link: [Your Site Link]
-Avatar Link: [Your Avatar Link]
+网站名: [你的站点名称]
+网站描述: [你的站点描述，一句话即可]
+网站链接: [你的站点链接，记得把http/https加上，最后不要以“/”结尾]
+头像链接: [你的站点头像或logo图片链接，请确保该链接允许www.ybjun.com的CORS请求]
 ```
+

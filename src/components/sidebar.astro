@@ -1,83 +1,141 @@
 ---
-import type { MarkdownHeading } from "astro";
-
-import { widgetManager } from "@utils/widget";
-import Profile from "@components/sidebar/profile.astro";
 import Announcement from "@components/sidebar/announcement.astro";
 import Categories from "@components/sidebar/categories.astro";
-import Tags from "@components/sidebar/tags.astro";
-import Statistics from "@components/sidebar/statistics.astro";
-import TOC from "@components/sidebar/toc.astro";
 
+import Profile from "@components/sidebar/profile.astro";
+import Tags from "@components/sidebar/tags.astro";
+import TOC from "@components/sidebar/toc.astro";
+import { widgetManager } from "@utils/widget";
+import type { MarkdownHeading } from "astro";
+
+// 引入你的自定义组件
+import Statistics from "./sidebar/statistics.astro";
+import VisitorInfo from "./sidebar/VisitorInfo.svelte";
 
 interface Props {
-    id?: string;
-    class?: string;
-    headings?: MarkdownHeading[];
-    side: "left" | "right" | "middle";
+	id?: string;
+	class?: string;
+	headings?: MarkdownHeading[];
+	side: "left" | "right" | "middle";
 }
 
 const { id, class: className, headings, side } = Astro.props;
 
-// 获取配置的组件列表（按侧边栏和位置划分）
-const topComponents = widgetManager.getComponentsBySideAndPosition(side, "top");
-const stickyComponents = widgetManager.getComponentsBySideAndPosition(side, "sticky");
+// 过滤掉配置里的 statistics，防止重复
+const topComponents = widgetManager
+	.getComponentsBySideAndPosition(side, "top")
+	.filter((c) => c.type !== "statistics");
+const stickyComponents = widgetManager
+	.getComponentsBySideAndPosition(side, "sticky")
+	.filter((c) => c.type !== "statistics");
 
-// 组件映射表
 const componentMap = {
-    profile: Profile,
-    announcement: Announcement,
-    categories: Categories,
-    tags: Tags,
-    statistics: Statistics,
-    toc: TOC,
+	profile: Profile,
+	announcement: Announcement,
+	categories: Categories,
+	tags: Tags,
+	toc: TOC,
 };
 
-// 渲染组件的辅助函数
 function renderComponent(component: any, index: number) {
-    const ComponentToRender =
-        componentMap[component.type as keyof typeof componentMap];
-    if (!ComponentToRender) return null;
-
-    const componentClass = widgetManager.getComponentClass(component, index, side);
-    const componentStyle = widgetManager.getComponentStyle(component, index);
-
-    return {
-        Component: ComponentToRender,
-        props: {
-            class: componentClass,
-            style: componentStyle,
-            headings: component.type === "toc" ? headings : undefined,
-            ...component.customProps,
-        },
-    };
+	const ComponentToRender =
+		componentMap[component.type as keyof typeof componentMap];
+	if (!ComponentToRender) return null;
+	const componentClass = widgetManager.getComponentClass(
+		component,
+		index,
+		side,
+	);
+	const componentStyle = widgetManager.getComponentStyle(component, index);
+	return {
+		Component: ComponentToRender,
+		props: {
+			class: componentClass,
+			style: componentStyle,
+			headings: component.type === "toc" ? headings : undefined,
+			...component.customProps,
+		},
+	};
 }
 ---
 
 <div id={id || "sidebar"} data-side={side} class:list={[className, "w-full h-full"]}>
-    <!-- 顶部固定组件区域 -->
-    {topComponents.length > 0 && (
-        <div class:list={["flex flex-col w-full gap-4", { "mb-4": stickyComponents.length > 0 }]}>
-            {topComponents.map((component, index) => {
+    
+    {side === "left" && (
+        <>
+            {/* 1. 顶部固定组件 (如 Profile) */}
+            {topComponents.length > 0 && (
+                <div class:list={["flex flex-col w-full gap-4", { "mb-4": stickyComponents.length > 0 }]}>
+                    {topComponents.map((component, index) => {
+                        const renderData = renderComponent(component, index);
+                        if (!renderData) return null;
+                        const { Component, props } = renderData;
+                        return <Component {...props} side={side} />;
+                    })}
+                </div>
+            )}
+            {/* 2. 粘性组件 (如 Tags) */}
+            {stickyComponents.length > 0 && (
+                <div id="sidebar-sticky" class="flex flex-col w-full gap-4 sticky top-4">
+                    {stickyComponents.map((component, index) => {
+                        const renderData = renderComponent(component, index);
+                        if (!renderData) return null;
+                        const { Component, props } = renderData;
+                        return <Component {...props} side={side} />;
+                    })}
+                </div>
+            )}
+        </>
+    )}
+
+{side === "right" && (
+        <>
+            {/* 📦 粘性容器开始：包含 目录、统计、访客 */}
+            <div id="sidebar-sticky" class="flex flex-col w-full gap-4 sticky top-4 mb-4">
+                
+                {/* 1. 目录 TOC (如果有) */}
+                {stickyComponents.length > 0 && (
+                    stickyComponents.map((component, index) => {
+                        const renderData = renderComponent(component, index);
+                        if (!renderData) return null;
+                        const { Component, props } = renderData;
+                        return <Component {...props} side={side} />;
+                    })
+                )}
+
+                {/* 2. 自定义统计模块 */}
+                <Statistics class="onload-animation" style="animation-delay: 0ms" />
+                
+                {/* 3. 访客信息模块 */}
+                <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
+            
+            </div>
+            {/* 📦 粘性容器结束 */}
+
+            {/* 4. 其他普通组件 (如果有，会显示在粘性模块下方，随页面滚动消失) */}
+            {topComponents.length > 0 && (
+                <div class="flex flex-col w-full gap-4">
+                    {topComponents.map((component, index) => {
+                        const renderData = renderComponent(component, index);
+                        if (!renderData) return null;
+                        const { Component, props } = renderData;
+                        return <Component {...props} side={side} />;
+                    })}
+                </div>
+            )}
+        </>
+    )}
+
+    {side === "middle" && (
+         <div class="flex flex-col w-full gap-4">
+             {/* 中间栏逻辑通常比较简单，直接渲染即可 */}
+             {topComponents.map((component, index) => {
                 const renderData = renderComponent(component, index);
                 if (!renderData) return null;
-
                 const { Component, props } = renderData;
                 return <Component {...props} side={side} />;
             })}
-        </div>
+         </div>
     )}
 
-    <!-- 粘性组件区域 -->
-    {stickyComponents.length > 0 && (
-        <div id="sidebar-sticky" class="flex flex-col w-full gap-4 sticky top-4">
-            {stickyComponents.map((component, index) => {
-                const renderData = renderComponent(component, index);
-                if (!renderData) return null;
-
-                const { Component, props } = renderData;
-                return <Component {...props} side={side} />;
-            })}
-        </div>
-    )}
 </div>

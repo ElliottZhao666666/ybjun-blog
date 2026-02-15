@@ -1,14 +1,13 @@
----
+﻿---
 import { Icon } from "astro-icon/components";
 import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
-import { getFileDirFromPath, getPostUrl } from "@utils/url";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
+import { getFileDirFromPath, getPostUrl, removeFileExtension } from "@utils/url";
 import ImageWrapper from "@components/common/imageWrapper.astro";
 import PostMetadata from "./postMeta.astro";
-
 
 interface Props {
     class?: string;
@@ -16,94 +15,131 @@ interface Props {
     style?: string;
 }
 
+const { entry, style } = Astro.props;
 const className = Astro.props.class;
 
-const { entry, style } = Astro.props;
+const { title, published, updated, tags, category, cover, description, pinned, draft } = entry.data;
 
 const url = getPostUrl(entry);
-
-const {
-    title,
-    published,
-    updated,
-    description,
-    cover,
-    tags,
-    category,
-    pinned,
-} = entry.data;
-
+// 🟢 核心修复：确保 slug 存在，用于传给后端查询
+//const slug = entry.slug || removeFileExtension(entry.id);
+const slug = (entry as any).slug || entry.id;
 const hasCover = cover !== undefined && cover !== null && cover !== "";
-
 const coverWidth = "28%";
 
 const { remarkPluginFrontmatter } = await render(entry);
-
-// derive image base path from the real file path to preserve directory casing
 const imageBaseDir = getFileDirFromPath(entry.filePath || "");
 ---
 
-<div class:list={["card-base flex flex-col-reverse md:flex-col w-full rounded-(--radius-large) overflow-hidden relative", className]} style={style}>
-    <div class:list={["pl-6 md:pl-9 pr-6 md:pr-2 pt-6 md:pt-7 pb-6 relative", {"w-full md:w-[calc(100%-52px-12px)]": !hasCover, "w-full md:w-[calc(100%-var(--coverWidth)-12px)]": hasCover}]}>
+<div class:list={["card-base flex flex-col-reverse md:flex-col w-full rounded-[var(--radius-large)] overflow-hidden relative", className]} style={style}>
+    <div class:list={["pl-6 md:pl-9 pr-6 md:pr-2 pt-6 md:pt-7 pb-6 relative", {"w-full md:w-[calc(100%_-_52px_-_12px)]": !hasCover, "w-full md:w-[calc(100%_-_var(--coverWidth)_-_12px)]": hasCover}]}>
         <a href={url}
            class="transition group w-full block font-bold mb-3 text-3xl text-90
-            hover:text-(--primary) dark:hover:text-(--primary)
-            active:text-(--title-active) dark:active:text-(--title-active)
-            before:w-1 before:h-5 before:rounded-md before:bg-(--primary)
-            before:absolute before:top-[35px] before:left-[18px] before:hidden md:before:block
+        hover:text-[var(--primary)] dark:hover:text-[var(--primary)]
+        active:text-[var(--title-active)] dark:active:text-[var(--title-active)]
+        before:w-1 before:h-5 before:rounded-md before:bg-[var(--primary)]
+        before:absolute before:top-[35px] before:left-[18px] before:hidden md:before:block
         ">
-            {pinned && <Icon name="mdi:pin" class="inline text-(--primary) text-2xl mr-2 -translate-y-0.5"></Icon>}
+            {pinned && <Icon name="material-symbols:push-pin" class="inline text-[var(--primary)] text-2xl mr-2 -translate-y-0.5"></Icon>}
             {title}
-            <Icon class="inline text-[2rem] text-(--primary) md:hidden translate-y-0.5 absolute" name="material-symbols:chevron-right-rounded" ></Icon>
-            <Icon class="text-(--primary) text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" name="material-symbols:chevron-right-rounded"></Icon>
+            <Icon class="inline text-[2rem] text-[var(--primary)] md:hidden translate-y-0.5 absolute" name="material-symbols:chevron-right-rounded" ></Icon>
+            <Icon class="text-[var(--primary)] text-[2rem] transition hidden md:inline absolute translate-y-0.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0" name="material-symbols:chevron-right-rounded"></Icon>
         </a>
-        <!-- metadata -->
-        <PostMetadata published={published} updated={updated} tags={tags} category={category || undefined} hideTagsForMobile={true} hideUpdateDate={true} postUrl={url} className="mb-4"></PostMetadata>
-        <!-- description -->
+        
+        <PostMetadata published={published} updated={updated} tags={tags} category={category || undefined} hideTagsForMobile={true} hideUpdateDate={true} className="mb-4"></PostMetadata>
+        
         <div class:list={["transition text-75 mb-3.5 pr-4", {"line-clamp-2 md:line-clamp-1": !description}]}>
             { description || remarkPluginFrontmatter.excerpt }
         </div>
-        <!-- word count and read time  -->
-        <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition">
+        
+        <div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition items-center">
             <div>
-                {remarkPluginFrontmatter.words} {" " + i18n(remarkPluginFrontmatter.words === 1 ? I18nKey.wordCount : I18nKey.wordsCount)}
+                {remarkPluginFrontmatter.words} 字
             </div>
             <div>|</div>
             <div>
-                {remarkPluginFrontmatter.minutes} {" " + i18n(remarkPluginFrontmatter.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
+                约 {remarkPluginFrontmatter.minutes} 分钟
+            </div>
+            <div>|</div>
+            <div class="flex items-center">
+                <span class="view-count-item" data-slug={slug}>0</span>
+                <span class="ml-1">阅读</span>
             </div>
         </div>
     </div>
 
-    {hasCover &&
-        <a href={url} aria-label={title} class:list={["group",
-                "max-h-[20vh] md:max-h-none mx-4 mt-4 -mb-2 md:mb-0 md:mx-0 md:mt-0",
-                "md:w-(--coverWidth) relative md:absolute md:top-3 md:bottom-3 md:right-3 rounded-xl overflow-hidden active:scale-95"
-            ]}
-        >
-            <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
-            <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center ">
-                <Icon name="material-symbols:chevron-right-rounded"
-                    class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl">
-                </Icon>
-            </div>
-            <ImageWrapper src={cover} basePath={imageBaseDir} alt="Cover Image of the Post"
-                    class="w-full h-full">
-            </ImageWrapper>
-        </a>
-    }
+    {hasCover && <a href={url} aria-label={title}
+                    class:list={["group",
+                        "max-h-[20vh] md:max-h-none mx-4 mt-4 -mb-2 md:mb-0 md:mx-0 md:mt-0",
+                        "md:w-[var(--coverWidth)] relative md:absolute md:top-3 md:bottom-3 md:right-3 rounded-xl overflow-hidden active:scale-95"
+                    ]} >
+        <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
+        <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center ">
+            <Icon name="material-symbols:chevron-right-rounded"
+                  class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl">
+            </Icon>
+        </div>
+        <ImageWrapper src={cover} basePath={imageBaseDir} alt="Cover Image of the Post"
+                  class="w-full h-full">
+        </ImageWrapper>
+    </a>}
 
     {!hasCover &&
-        <a href={url} aria-label={title} class="hidden! md:flex! btn-regular w-13
-            absolute right-3 top-3 bottom-3 rounded-xl bg-(--enter-btn-bg)
-            hover:bg-(--enter-btn-bg-hover) active:bg-(--enter-btn-bg-active) active:scale-95
+        <a href={url} aria-label={title} class="!hidden md:!flex btn-regular w-[3.25rem]
+         absolute right-3 top-3 bottom-3 rounded-xl bg-[var(--enter-btn-bg)]
+         hover:bg-[var(--enter-btn-bg-hover)] active:bg-[var(--enter-btn-bg-active)] active:scale-95
         ">
             <Icon name="material-symbols:chevron-right-rounded"
-                class="transition text-(--primary) text-4xl mx-auto">
+                  class="transition text-[var(--primary)] text-4xl mx-auto">
             </Icon>
         </a>
     }
 </div>
+
+<script is:inline>
+    // 定义全局函数，防止重复定义
+    if (!window.loadPostCardViews) {
+        window.loadPostCardViews = async () => {
+            // 只选择还未加载过的元素
+            const elements = document.querySelectorAll('.view-count-item:not([data-loaded])');
+            if (elements.length === 0) return;
+
+            // 标记为已加载
+            elements.forEach(el => el.setAttribute('data-loaded', 'true'));
+
+            // 批量获取数据
+            elements.forEach(async (el) => {
+                const slug = el.getAttribute('data-slug');
+                if (!slug) return;
+
+                try {
+                    const res = await fetch(`https://comment.blog.ybjun.com/stats?slug=${encodeURIComponent(slug)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        el.innerText = data.time || '0';
+                    }
+                } catch (e) {
+                    console.error(`阅读量获取失败: ${slug}`, e);
+                }
+            });
+        };
+
+        // 绑定事件：页面初次加载
+        document.addEventListener('DOMContentLoaded', window.loadPostCardViews);
+        
+        // 绑定事件：Swup 页面切换 (适配 Twilight 主题)
+        if (window.swup) {
+            window.swup.hooks.on('content:replace', window.loadPostCardViews);
+        } else {
+            document.addEventListener('swup:content:replace', window.loadPostCardViews);
+        }
+    }
+
+    // 立即执行一次 (确保当前渲染的组件能立即获取数据)
+    if (window.loadPostCardViews) {
+        window.loadPostCardViews();
+    }
+</script>
 
 <style define:vars={{coverWidth}}>
 </style>

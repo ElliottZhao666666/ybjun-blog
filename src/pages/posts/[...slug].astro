@@ -1,91 +1,126 @@
 ---
-import { Icon } from "astro-icon/components";
-import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-
-import { siteConfig, profileConfig, postConfig } from "@/config";
+import { render } from "astro:content";
+import ImageWrapper from "@components/common/imageWrapper.astro";
+import Markdown from "@components/common/markdown.astro";
+import PasswordProtection from "@components/common/passwordProtection.astro";
+import Comment from "@components/post/comment.astro";
+import License from "@components/post/license.astro";
+import PostMetadata from "@components/post/postMeta.astro";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import GridLayout from "@layouts/grid.astro";
 import { getSortedPosts } from "@utils/content";
 import { formatDateToYYYYMMDD } from "@utils/date";
-import { getFileDirFromPath, getPostUrl, getPostUrlBySlug, removeFileExtension} from "@utils/url";
-import { i18n } from "@i18n/translation";
-import I18nKey from "@i18n/i18nKey";
-import License from "@components/post/license.astro";
-import Markdown from "@components/common/markdown.astro";
-import ImageWrapper from "@components/common/imageWrapper.astro";
-import Comment from "@components/post/comment.astro";
-import PasswordProtection from "@components/common/passwordProtection.astro";
-import PostMetadata from "@components/post/postMeta.astro";
-import GridLayout from "@layouts/grid.astro";
-
-
+import {
+	getFileDirFromPath,
+	getPostUrlBySlug,
+	removeFileExtension,
+} from "@utils/url";
+import { Icon } from "astro-icon/components";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { postConfig, profileConfig, siteConfig } from "@/config";
 
 export async function getStaticPaths() {
-    const blogEntries = await getSortedPosts();
-    const paths: {
-        params: { slug: string };
-        props: { entry: CollectionEntry<"posts"> };
-    }[] = [];
+	const blogEntries = await getSortedPosts();
+	const paths: {
+		params: { slug: string };
+		props: { entry: CollectionEntry<"posts"> };
+	}[] = [];
 
-    for (const entry of blogEntries) {
-        // 将 id 转换为 slug（移除扩展名）以匹配路由参数
-        const slug = removeFileExtension(entry.id);
-        // 为每篇文章创建默认的 slug 路径
-        paths.push({
-            params: { slug },
-            props: { entry },
-        });
-        // 如果文章有自定义固定链接，也创建对应的路径
-        if (entry.data.routeName) {
-            // 移除开头的斜杠和结尾的斜杠
-            // 同时移除可能的 "posts/" 前缀，避免重复
-            let routeName = entry.data.routeName
-                .replace(/^\/+/, "")
-                .replace(/\/+$/, "");
-            if (routeName.startsWith("posts/")) {
-                routeName = routeName.replace(/^posts\//, "");
-            }
-            paths.push({
-                params: { slug: routeName },
-                props: { entry },
-            });
-        }
-    }
+	for (const entry of blogEntries) {
+		// 将 id 转换为 slug（移除扩展名）以匹配路由参数
+		const slug = removeFileExtension(entry.id);
+		// 为每篇文章创建默认的 slug 路径
+		paths.push({
+			params: { slug },
+			props: { entry },
+		});
+		// 如果文章有自定义固定链接，也创建对应的路径
+		if (entry.data.routeName) {
+			// 移除开头的斜杠和结尾的斜杠
+			// 同时移除可能的 "posts/" 前缀，避免重复
+			let routeName = entry.data.routeName
+				.replace(/^\/+/, "")
+				.replace(/\/+$/, "");
+			if (routeName.startsWith("posts/")) {
+				routeName = routeName.replace(/^posts\//, "");
+			}
+			paths.push({
+				params: { slug: routeName },
+				props: { entry },
+			});
+		}
+	}
 
-    return paths;
+	return paths;
 }
 
-
 const { entry } = Astro.props;
+const { slug } = Astro.params;
 const { Content, headings } = await render(entry);
 
 const { remarkPluginFrontmatter } = await render(entry);
+const {
+	title,
+	published,
+	updated,
+	description,
+	cover,
+	category,
+	tags,
+	nextSlug,
+	nextTitle,
+	prevSlug,
+	prevTitle,
+} = entry.data;
+
+// 🟢 [新增] 相对时间计算函数
+function getRelativeTime(date: Date) {
+	const now = new Date();
+	const diff = now.getTime() - date.getTime();
+	const minute = 60 * 1000;
+	const hour = 60 * minute;
+	const day = 24 * hour;
+	const month = 30 * day;
+	const year = 12 * month;
+
+	if (diff < minute) return "刚刚";
+	if (diff < hour) return Math.floor(diff / minute) + " 分钟前";
+	if (diff < day) return Math.floor(diff / hour) + " 小时前";
+	if (diff < month) return Math.floor(diff / day) + " 天前";
+	if (diff < year) return Math.floor(diff / month) + " 个月前";
+	return Math.floor(diff / year) + " 年前";
+}
+
+// 🟢 [新增] 计算显示的字符串 (优先用更新时间，没有则用发布时间)
+const lastModifiedStr = getRelativeTime(updated || published);
 
 // 处理加密逻辑
 let isEncrypted = !!(entry.data.encrypted && entry.data.password);
 
 dayjs.extend(utc);
 const lastModified = dayjs(entry.data.updated || entry.data.published)
-    .utc()
-    .format("YYYY-MM-DDTHH:mm:ss");
+	.utc()
+	.format("YYYY-MM-DDTHH:mm:ss");
 
 const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: entry.data.title,
-    description: entry.data.description || entry.data.title,
-    keywords: entry.data.tags,
-    author: {
-        "@type": "Person",
-        name: profileConfig.name,
-        url: Astro.site,
-    },
-    datePublished: formatDateToYYYYMMDD(entry.data.published),
-    inLanguage: entry.data.lang
-        ? entry.data.lang.replace("_", "-")
-        : siteConfig.lang.replace("_", "-"),
-    // TODO include cover image here
+	"@context": "https://schema.org",
+	"@type": "BlogPosting",
+	headline: entry.data.title,
+	description: entry.data.description || entry.data.title,
+	keywords: entry.data.tags,
+	author: {
+		"@type": "Person",
+		name: profileConfig.name,
+		url: Astro.site,
+	},
+	datePublished: formatDateToYYYYMMDD(entry.data.published),
+	inLanguage: entry.data.lang
+		? entry.data.lang.replace("_", "-")
+		: siteConfig.lang.replace("_", "-"),
+	// TODO include cover image here
 };
 ---
 
@@ -105,7 +140,7 @@ const jsonLd = {
         set:html={JSON.stringify(jsonLd)}
     />
     <div
-        class="flex w-full rounded-(--radius-large) overflow-hidden relative mb-4"
+        class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4"
     >
         <div
             id="post-container"
@@ -115,41 +150,69 @@ const jsonLd = {
             ]}
         >
             <!-- word count and reading time -->
-            <div
-                class="flex flex-row text-black/30 dark:text-white/30 gap-5 mb-3 transition onload-animation-up"
-            >
+<div class="flex flex-row text-black/30 dark:text-white/30 gap-5 mb-3 transition onload-animation-up">
+                
                 <div class="flex flex-row items-center">
-                    <div
-                        class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2"
-                    >
+                    <div class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2">
                         <Icon name="material-symbols:notes-rounded" />
                     </div>
                     <div class="text-sm">
-                        {remarkPluginFrontmatter.words}
-                        {" " + i18n(I18nKey.wordsCount)}
+                        {remarkPluginFrontmatter.words} 字
                     </div>
                 </div>
+
                 <div class="flex flex-row items-center">
-                    <div
-                        class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2"
-                    >
-                        <Icon
-                            name="material-symbols:schedule-outline-rounded"
-                        />
+                    <div class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2">
+                        <Icon name="material-symbols:schedule-outline-rounded" />
                     </div>
                     <div class="text-sm">
-                        {remarkPluginFrontmatter.minutes}
-                        {
-                            " " +
-                                i18n(
-                                    remarkPluginFrontmatter.minutes === 1
-                                        ? I18nKey.minuteCount
-                                        : I18nKey.minutesCount,
-                                )
-                        }
+                        预计 {remarkPluginFrontmatter.minutes} 分钟
+                    </div>
+                </div>
+
+                <div class="flex flex-row items-center">
+                    <div class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2">
+                        <Icon name="material-symbols:visibility-outline-rounded" />
+                    </div>
+                    <div class="text-sm">
+                        <span id="view-count">...</span> 次阅读
                     </div>
                 </div>
             </div>
+
+<script is:inline define:vars={{ slug: slug }}>
+                (async () => {
+                    const el = document.getElementById('view-count');
+                    if (!el) return;
+
+                    try {
+                        // 1. 发送 POST 请求 (计数 +1)
+                        const pageTitle = document.title.split(' - ')[0] || document.title;
+                        const res = await fetch(`https://comment.blog.ybjun.com/stats`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ 
+                                slug: slug, 
+                                title: pageTitle      
+                            })
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            el.innerText = data.time || '0';
+                        } else {
+                            // 2. 降级处理 (仅读取)
+                            console.warn('阅读量上报失败，尝试仅读取...');
+                            const fallbackRes = await fetch(`https://comment.blog.ybjun.com/stats?slug=${encodeURIComponent(slug)}`);
+                            const fallbackData = await fallbackRes.json();
+                            el.innerText = fallbackData.time || '0';
+                        }
+                    } catch (e) {
+                        console.error('阅读量服务连接异常', e);
+                        el.innerText = '-';
+                    }
+                })();
+            </script>
             <!-- title -->
             <div class="relative onload-animation-up">
                 <div
@@ -159,8 +222,8 @@ const jsonLd = {
                     class="transition w-full block font-bold mb-3
                     text-3xl md:text-[2.25rem]/[2.75rem]
                     text-black/90 dark:text-white/90
-                    md:before:w-1 before:h-5 before:rounded-md before:bg-(--primary)
-                    before:absolute before:top-3 before:-left-4.5"
+                    md:before:w-1 before:h-5 before:rounded-md before:bg-[var(--primary)]
+                    before:absolute before:top-[0.75rem] before:left-[-1.125rem]"
                 >
                     {entry.data.title}
                 </div>
@@ -173,11 +236,11 @@ const jsonLd = {
                     updated={entry.data.updated}
                     tags={entry.data.tags}
                     category={entry.data.category}
-                    postUrl={getPostUrl(entry)}
+                    slug={entry.id}
                 />
                 {
                     (!entry.data.cover || (entry.data.cover && !postConfig.showCoverInContent)) && (
-                        <div class="mt-4 border-(--line-divider) border-dashed border-b mb-5" />
+                        <div class="mt-4 border-[var(--line-divider)] border-dashed border-b-[1px] mb-5" />
                     )
                 }
             </div>
@@ -213,7 +276,6 @@ const jsonLd = {
                             sourceLink={entry.data.sourceLink}
                             licenseName={entry.data.licenseName}
                             licenseUrl={entry.data.licenseUrl}
-                            postUrl={getPostUrl(entry)}
                             class="mb-6 rounded-xl license-container onload-animation-up"
                         />
                     )
@@ -238,72 +300,21 @@ const jsonLd = {
                 style="display: none;"
             ></div>
 
-            <div class="card-base p-6 mb-4">
-                <script is:inline>
-                    function runtime() {
-                        const lastModifiedElement = document.getElementById('last-modified');
-                        if (!lastModifiedElement) return;
-                        const startDate = new Date(lastModifiedElement.dataset.lastModified);
-                        const currentDate = new Date();
-                        const diff = currentDate - startDate;
-                        const seconds = Math.floor(diff / 1000);
-                        const days = Math.floor(seconds / 86400);
-                        const hours = Math.floor((seconds % 86400) / 3600);
-                        const minutes = Math.floor((seconds % 3600) / 60);
-                        const secs = seconds % 60;
-                        const years = Math.floor(days / 365);
-                        const months = Math.floor((days % 365) / 30);
-                        const remainingDays = days % 30;
-                        const prefix = lastModifiedElement.dataset.prefix;
-                        const yearKey = lastModifiedElement.dataset.year;
-                        const monthKey = lastModifiedElement.dataset.month;
-                        const dayKey = lastModifiedElement.dataset.day;
-                        const hourKey = lastModifiedElement.dataset.hour;
-                        const minuteKey = lastModifiedElement.dataset.minute;
-                        const secondKey = lastModifiedElement.dataset.second;
-                        let runtimeString = prefix + ' ';
-                        if (years > 0) {
-                            runtimeString += `${years} ${yearKey} `;
-                        }
-                        if (months > 0) {
-                            runtimeString += `${months} ${monthKey} `;
-                        }
-                        if (remainingDays > 0) {
-                            runtimeString += `${remainingDays} ${dayKey} `;
-                        }
-                        runtimeString += `${hours} ${hourKey} `;
-                        if (minutes < 10) {
-                            runtimeString += `0${minutes} ${minuteKey} `;
-                        } else {
-                            runtimeString += `${minutes} ${minuteKey} `;
-                        }
-                        if (secs < 10) {
-                            runtimeString += `0${secs} ${secondKey}`;
-                        } else {
-                            runtimeString += `${secs} ${secondKey}`;
-                        }
-                        document.getElementById("modifiedtime").innerHTML = runtimeString;
-                    }
-                    setInterval(runtime, 1000);
-                </script>
-                <div class="card-base p-1 mb-0.1">
-                    <div class="flex items-center gap-2">
-                        <div class="transition h-9 w-9 rounded-lg overflow-hidden relative flex items-center justify-center mr-0">
-                            <Icon
-                                name="material-symbols:history-rounded"
-                                class="text-4xl text-(--primary) transition-transform group-hover:translate-x-0.5 bg-(--enter-btn-bg) p-2 rounded-md"
-                            />
-                        </div>
-                        <div class="flex flex-col gap-0.1">
-                            <div id="modifiedtime" class="text-[1.0rem] leading-tight text-black/75 dark:text-white/75"></div>
-                            <p class="text-[0.8rem] leading-tight text-black/75 dark:text-white/75">
-                                {i18n(I18nKey.lastModifiedOutdated)}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </>
+<div class="card-base p-6 mb-4 flex items-center gap-4 transition hover:brightness-95 dark:hover:brightness-110">
+    <div class="h-11 w-11 rounded-lg flex items-center justify-center bg-[var(--enter-btn-bg)] text-[var(--primary)] shrink-0">
+         <Icon name="material-symbols:history-rounded" class="text-3xl" />
+    </div>
+    
+    <div class="flex flex-col">
+        <div class="text-base font-bold text-black/90 dark:text-white/90">
+            文章最后更新于： {lastModifiedStr}
+        </div>
+        <div class="text-sm text-black/50 dark:text-white/50 mt-0.5">
+            部分信息可能已过时，请留意时效性
+        </div>
+    </div>
+</div>        
+</>
     )}
     <div
         class="flex flex-col md:flex-row justify-between mb-4 gap-4 overflow-hidden w-full"
@@ -319,12 +330,12 @@ const jsonLd = {
         >
             {
                 entry.data.nextSlug && (
-                    <div class="btn-card rounded-2xl w-full h-15 max-w-full px-4 flex items-center justify-start! gap-4">
+                    <div class="btn-card rounded-2xl w-full h-[3.75rem] max-w-full px-4 flex items-center !justify-start gap-4">
                         <Icon
                             name="material-symbols:chevron-left-rounded"
-                            class="text-[2rem] text-(--primary)"
+                            class="text-[2rem] text-[var(--primary)]"
                         />
-                        <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
+                        <div class="overflow-hidden transition overflow-ellipsis whitespace-nowrap max-w-[calc(100%_-_3rem)] text-black/75 dark:text-white/75">
                             {entry.data.nextTitle}
                         </div>
                     </div>
@@ -342,13 +353,13 @@ const jsonLd = {
         >
             {
                 entry.data.prevSlug && (
-                    <div class="btn-card rounded-2xl w-full h-15 max-w-full px-4 flex items-center justify-end! gap-4">
-                        <div class="overflow-hidden transition text-ellipsis whitespace-nowrap max-w-[calc(100%-3rem)] text-black/75 dark:text-white/75">
+                    <div class="btn-card rounded-2xl w-full h-[3.75rem] max-w-full px-4 flex items-center !justify-end gap-4">
+                        <div class="overflow-hidden transition overflow-ellipsis whitespace-nowrap max-w-[calc(100%_-_3rem)] text-black/75 dark:text-white/75">
                             {entry.data.prevTitle}
                         </div>
                         <Icon
                             name="material-symbols:chevron-right-rounded"
-                            class="text-[2rem] text-(--primary)"
+                            class="text-[2rem] text-[var(--primary)]"
                         />
                     </div>
                 )

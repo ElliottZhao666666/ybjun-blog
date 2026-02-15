@@ -1,19 +1,48 @@
 ---
-import { getCategoryList, getSortedPostsList, getTagList } from "@utils/content";
-import StatsCharts from "./statistics.svelte";
+import { getSortedPosts } from "@utils/content";
+import StatsPanel from "./statistics.svelte";
 
+// 获取所有文章列表
+const posts = await getSortedPosts();
 
-const posts = await getSortedPostsList();
-const categories = await getCategoryList();
-const tags = await getTagList();
+// 1. 文章数目
+const postCount = posts.length;
+
+// 2. 本站总字数 (遍历所有文章内容计算)
+let totalWords = 0;
+// 3. 最后更新时间 (找最近的一个时间戳)
+let lastUpdatedTime = 0;
+
+posts.forEach((post) => {
+	// 累加字数 (去除空格换行)
+	if (post.body) {
+		const cleanBody = post.body.replace(/\s/g, "");
+		totalWords += cleanBody.length;
+	}
+
+	// 比较时间，取最大值
+	const date = post.data.updated || post.data.published;
+	if (date && date.getTime() > lastUpdatedTime) {
+		lastUpdatedTime = date.getTime();
+	}
+});
+
+// 格式化字数 (例如 12.5 k)
+const wordCountStr = (totalWords / 1000).toFixed(1) + " k";
 
 interface Props {
-    class?: string;
-    style?: string;
-    side?: string;
+	class?: string;
+	style?: string;
 }
 
-const { class: className, style, side } = Astro.props;
+const { class: className, style } = Astro.props;
 ---
 
-<StatsCharts client:load {posts} {categories} {tags} class={className} style={style} {side} />
+<StatsPanel 
+    client:load 
+    {postCount} 
+    {wordCountStr} 
+    {lastUpdatedTime}
+    class={className} 
+    style={style} 
+/>

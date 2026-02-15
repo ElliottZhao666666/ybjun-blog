@@ -1,28 +1,255 @@
----
+﻿---
 import type { CollectionEntry } from "astro:content";
-
-import { getPostUrl } from "@utils/url";
+import { Icon } from "astro-icon/components";
 import { postConfig } from "@/config";
-import Twikoo from "./twikoo.astro";
-
 
 interface Props {
     post: CollectionEntry<"posts">;
 }
 
 const { post } = Astro.props;
-
-const path = getPostUrl(post);
-
-let commentService = "";
-if (postConfig.comment?.enable && postConfig.comment?.twikoo) {
-    commentService = "twikoo";
-}
+// 容错处理：优先用 slug，如果没有则尝试 id
+// const slug = post.slug || post.id;
+const slug = (post as any).slug || post.id;
 ---
 
 {postConfig.comment?.enable && (
     <div class="card-base p-6 mb-4">
-        {commentService === 'twikoo' && <Twikoo path={path} />}
-        {commentService === '' && null}
+        <div class="font-bold text-xl mb-4 text-black/90 dark:text-white/90 flex items-center gap-2">
+            <Icon name="material-symbols:comment-outline" />
+            评论
+        </div>
+
+        <div id="comment-form-wrapper" class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <input type="text" id="c-nick" placeholder="昵称 (选填)" class="px-4 py-2 rounded-lg bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] transition outline-none text-sm" />
+                <input type="email" id="c-mail" placeholder="邮箱 (必填)" class="px-4 py-2 rounded-lg bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] transition outline-none text-sm" />
+                <input type="url" id="c-link" placeholder="个人网址 (选填)" class="px-4 py-2 rounded-lg bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] transition outline-none text-sm" />
+            </div>
+            <div class="relative">
+                <textarea id="c-content" rows="4" placeholder="写下你的评论... (支持 Emoji)" class="w-full px-4 py-3 rounded-lg bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] transition outline-none text-sm resize-y min-h-[100px]"></textarea>
+                <button id="cancel-reply-btn" class="hidden absolute right-2 top-2 text-xs bg-red-100 text-red-500 px-2 py-1 rounded hover:bg-red-200 transition">
+                    取消回复
+                </button>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button id="submit-btn" class="btn-regular rounded-lg px-6 py-2 bg-[var(--primary)] text-white hover:brightness-110 transition flex items-center gap-2">
+                    <Icon name="material-symbols:send" />
+                    发送评论
+                </button>
+            </div>
+            <div id="msg-box" class="text-sm mt-2 text-center hidden"></div>
+        </div>
+
+        <div class="w-full h-[1px] bg-black/5 dark:bg-white/5 my-6"></div>
+
+        <div id="comment-list" class="flex flex-col gap-6">
+            <div class="text-center text-black/30 dark:text-white/30 text-sm py-4">
+                <Icon name="svg-spinners:90-ring-with-bg" class="inline text-xl mr-2" />
+                正在加载评论...
+            </div>
+        </div>
     </div>
 )}
+
+<script is:inline define:vars={{ slug: slug || "" }}>
+    let replyToId = null; 
+    let commentsData = [];
+
+    const dom = {
+        nick: document.getElementById('c-nick'),
+        mail: document.getElementById('c-mail'),
+        link: document.getElementById('c-link'),
+        content: document.getElementById('c-content'),
+        submitBtn: document.getElementById('submit-btn'),
+        list: document.getElementById('comment-list'),
+        msg: document.getElementById('msg-box'),
+        cancelBtn: document.getElementById('cancel-reply-btn')
+    };
+
+    function getAvatar(nick) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(nick)}&background=random&color=fff&size=64`;
+    }
+
+    function formatTime(ts) {
+        return new Date(ts).toLocaleString();
+    }
+
+    // 1. 加载评论
+    async function loadComments() {
+        if (!dom.list) return;
+        try {
+            const res = await fetch(`https://comment.blog.ybjun.com/comment?slug=${encodeURIComponent(slug)}`);
+            const data = await res.json();
+            commentsData = data;
+            renderComments();
+        } catch (e) {
+            dom.list.innerHTML = `<div class="text-center text-red-500">评论加载失败，请检查网络</div>`;
+        }
+    }
+
+    // 2. 渲染评论 (修复无限递归逻辑)
+    function renderComments() {
+        dom.list.innerHTML = '';
+        if (!commentsData || commentsData.length === 0) {
+            dom.list.innerHTML = `<div class="text-center text-black/20 dark:text-white/20">暂无评论，快来抢沙发吧~</div>`;
+            return;
+        }
+
+        // 只从“根评论”开始渲染
+        const roots = commentsData.filter(c => !c.pid);
+        
+        roots.forEach(root => {
+            // buildCommentHTML 内部会自动寻找子节点
+            const html = buildCommentHTML(root);
+            dom.list.insertAdjacentHTML('beforeend', html);
+        });
+
+        // 绑定事件
+        bindReplyEvents();
+    }
+
+    // 🟢 核心修改：递归构建 HTML
+    function buildCommentHTML(item) {
+        // 1. 在这里动态查找当前评论的子评论 (实现无限嵌套)
+        const children = commentsData.filter(c => c.pid === item.id);
+
+        // 2. 构建子评论 HTML
+        let childrenHtml = '';
+        if (children.length > 0) {
+            childrenHtml = `
+                <div class="mt-3 pl-4 border-l-2 border-[var(--primary)]/20 flex flex-col gap-3">
+                    ${children.map(child => buildCommentHTML(child)).join('')}
+                </div>
+            `;
+        }
+
+        const isAdmin = item.is_admin === 1;
+        const tag = isAdmin ? `<span class="text-xs bg-[var(--primary)] text-white px-1.5 py-0.5 rounded ml-2">博主</span>` : '';
+        
+        // 🟢 核心修改：用户名链接逻辑
+        let userLink = item.nick;
+        const linkClass = "hover:text-[var(--primary)] transition";        
+        if (item.link) {
+            // 有网址 -> 跳转网址
+            userLink = `<a href="${item.link}" target="_blank" rel="nofollow" class="${linkClass}">${item.nick}</a>`;
+        } else if (item.mail) {
+            // 无网址有邮箱 -> Mailto
+            userLink = `<a href="mailto:${item.mail}" class="${linkClass}">${item.nick}</a>`;
+        }
+
+        return `
+            <div class="flex gap-3 w-full animate-fade-in-up" id="comment-${item.id}">
+                <img src="${getAvatar(item.nick)}" class="w-10 h-10 rounded-full shrink-0 bg-gray-200" loading="lazy" />
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center">
+                            <span class="font-bold text-sm text-black/80 dark:text-white/80">${userLink}</span>
+                            ${tag}
+                            <span class="text-xs text-black/30 dark:text-white/30 ml-2">${formatTime(item.insertedAt)}</span>
+                        </div>
+                        <button class="reply-btn text-xs text-[var(--primary)] hover:underline opacity-60 hover:opacity-100 transition" 
+                            data-id="${item.id}" data-nick="${item.nick}">
+                            回复
+                        </button>
+                    </div>
+                    <div class="text-sm text-black/70 dark:text-white/70 break-words leading-relaxed whitespace-pre-wrap">${item.comment}</div>
+                    ${childrenHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function bindReplyEvents() {
+        document.querySelectorAll('.reply-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.id;
+                const nick = e.currentTarget.dataset.nick;
+                startReply(id, nick);
+            });
+        });
+    }
+
+    // 3. 回复逻辑
+    function startReply(id, nick) {
+        replyToId = id;
+        dom.content.placeholder = `回复 @${nick} ...`;
+        dom.content.focus();
+        dom.cancelBtn.classList.remove('hidden');
+        document.getElementById('comment-form-wrapper').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    if (dom.cancelBtn) {
+        dom.cancelBtn.addEventListener('click', () => {
+            replyToId = null;
+            dom.content.placeholder = "写下你的评论... (支持 Emoji)";
+            dom.cancelBtn.classList.add('hidden');
+        });
+    }
+
+    // 4. 提交逻辑
+    if (dom.submitBtn) {
+        dom.submitBtn.addEventListener('click', async () => {
+            const nick = dom.nick.value.trim() || '匿名';
+            const mail = dom.mail.value.trim();
+            const link = dom.link.value.trim();
+            const content = dom.content.value.trim();
+
+            if (!mail || !content) {
+                showMessage('请填写邮箱和评论内容', 'error');
+                return;
+            }
+
+            dom.submitBtn.disabled = true;
+            dom.submitBtn.innerText = "发送中...";
+
+            try {
+                const res = await fetch('https://comment.blog.ybjun.com/comment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        slug: slug,
+                        nick, mail, link, comment: content,
+                        pid: replyToId,
+                        ua: navigator.userAgent
+                    })
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    showMessage('评论成功！', 'success');
+                    dom.content.value = '';
+                    if (dom.cancelBtn) dom.cancelBtn.click();
+                    loadComments(); 
+                } else {
+                    showMessage(result.error || '发送失败', 'error');
+                }
+            } catch (e) {
+                showMessage('网络错误，请稍后再试', 'error');
+            } finally {
+                dom.submitBtn.disabled = false;
+                dom.submitBtn.innerHTML = `发送评论`; 
+            }
+        });
+    }
+
+    function showMessage(text, type) {
+        dom.msg.innerText = text;
+        dom.msg.className = `text-sm mt-2 text-center ${type === 'error' ? 'text-red-500' : 'text-green-500'}`;
+        dom.msg.classList.remove('hidden');
+        setTimeout(() => dom.msg.classList.add('hidden'), 3000);
+    }
+
+    loadComments();
+</script>
+
+<style>
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

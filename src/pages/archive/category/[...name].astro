@@ -1,0 +1,51 @@
+---
+import ArchivePanel from "@components/archivePanel.svelte";
+import BackwardButton from "@components/backwardButton.astro";
+import { LinkPresets } from "@constants/link-presets";
+import GridLayout from "@layouts/grid.astro";
+import { getCategoryList, getSortedPostsList } from "@utils/content";
+import { LinkPreset } from "@/types/config";
+
+// 1. 生成路径：告诉 Astro 有哪些分类页面需要生成
+export async function getStaticPaths() {
+    const categories = await getCategoryList();
+    return categories.map((category) => {
+        return {
+            params: { name: category.name },
+            props: { categoryName: category.name }
+        };
+    });
+}
+
+const { categoryName } = Astro.props;
+
+// 2. 数据获取：只拿当前分类的文章
+const allPosts = await getSortedPostsList();
+const sortedPostsList = allPosts.filter((post) => 
+    post.data.category === categoryName
+);
+
+const pageTitle = LinkPresets[LinkPreset.Archive].name;
+const pageDescription = LinkPresets[LinkPreset.Archive].description;
+---
+
+<GridLayout title={`${pageTitle} - ${categoryName}`} description={pageDescription}>
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+        <div class="card-base z-10 px-9 py-6 relative w-full ">
+            <BackwardButton currentPath="/archive" />
+            
+            <header class="mb-8">
+                <div class="flex items-center gap-2 mb-3">
+                    <h1 class="text-3xl font-bold text-[var(--primary)]">
+                        {categoryName}
+                    </h1>
+                    <span class="text-xl text-neutral-400 dark:text-neutral-500 font-bold">
+                        / 分类
+                    </span>
+                </div>
+            </header>
+
+            <ArchivePanel sortedPosts={sortedPostsList} client:load></ArchivePanel>
+        </div>
+    </div>
+</GridLayout>

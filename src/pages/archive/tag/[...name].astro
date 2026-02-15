@@ -1,0 +1,49 @@
+---
+import ArchivePanel from "@components/archivePanel.svelte";
+import BackwardButton from "@components/backwardButton.astro";
+import { LinkPresets } from "@constants/link-presets";
+import GridLayout from "@layouts/grid.astro";
+import { getTagList, getSortedPostsList } from "@utils/content";
+import { LinkPreset } from "@/types/config";
+
+export async function getStaticPaths() {
+    const tags = await getTagList();
+    return tags.map((tag) => {
+        return {
+            params: { name: tag.name },
+            props: { tagName: tag.name }
+        };
+    });
+}
+
+const { tagName } = Astro.props;
+
+const allPosts = await getSortedPostsList();
+const sortedPostsList = allPosts.filter((post) => 
+    post.data.tags && post.data.tags.includes(tagName)
+);
+
+const pageTitle = LinkPresets[LinkPreset.Archive].name;
+const pageDescription = LinkPresets[LinkPreset.Archive].description;
+---
+
+<GridLayout title={`${pageTitle} - ${tagName}`} description={pageDescription}>
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+        <div class="card-base z-10 px-9 py-6 relative w-full ">
+            <BackwardButton currentPath="/archive" />
+            
+            <header class="mb-8">
+                <div class="flex items-center gap-2 mb-3">
+                    <h1 class="text-3xl font-bold text-[var(--primary)]">
+                        {tagName}
+                    </h1>
+                    <span class="text-xl text-neutral-400 dark:text-neutral-500 font-bold">
+                        / 标签
+                    </span>
+                </div>
+            </header>
+
+            <ArchivePanel sortedPosts={sortedPostsList} client:load></ArchivePanel>
+        </div>
+    </div>
+</GridLayout>

@@ -1,37 +1,37 @@
 ---
-import type { SiteConfig } from "@/types/config";
-import { BANNER_HEIGHT_EXTEND } from "@constants/constants";
-import TypewriterText from "@components/common/typewriterText.astro";
 import ImageWrapper from "@components/common/imageWrapper.astro";
-
+import TypewriterText from "@components/common/typewriterText.astro";
+import { BANNER_HEIGHT_EXTEND } from "@constants/constants";
+import type { SiteConfig } from "@/types/config";
 
 interface Props {
-    config: SiteConfig["wallpaper"];
-    isHomePage: boolean;
-    class?: string;
+	config: SiteConfig["wallpaper"];
+	isHomePage: boolean;
+	class?: string;
 }
 
 const { config, isHomePage, class: className } = Astro.props;
 
 // 获取当前设备类型的图片源
 const getImageSources = () => {
-    const toArray = (src: any) => [src || []].flat();
-    const { src } = config;
-    const isObj = src && typeof src === "object" && !Array.isArray(src);
-    const desktop = toArray(isObj ? (src as any).desktop : src);
-    const mobile = toArray(isObj ? (src as any).mobile : src);
-    return {
-        desktop: desktop.length > 0 ? desktop : mobile,
-        mobile: mobile.length > 0 ? mobile : desktop,
-    };
-}
+	const toArray = (src: any) => [src || []].flat();
+	const { src } = config;
+	const isObj = src && typeof src === "object" && !Array.isArray(src);
+	const desktop = toArray(isObj ? (src as any).desktop : src);
+	const mobile = toArray(isObj ? (src as any).mobile : src);
+	return {
+		desktop: desktop.length > 0 ? desktop : mobile,
+		mobile: mobile.length > 0 ? mobile : desktop,
+	};
+};
 
 const imageSources = getImageSources();
 
 // 轮播配置
 const carouselConfig = config.carousel;
-const isCarouselEnabled = imageSources.desktop.length > 1 || imageSources.mobile.length > 1;
-const carouselInterval = carouselConfig?.interval || 6
+const isCarouselEnabled =
+	imageSources.desktop.length > 1 || imageSources.mobile.length > 1;
+const carouselInterval = carouselConfig?.interval || 6;
 
 // 样式配置
 const showHomeText = config.banner?.homeText?.enable && isHomePage;
@@ -113,22 +113,10 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                             {config.banner.homeText.title}
                         </h1>
                     )}
-                    {config.banner?.homeText?.subtitle && (
-                        <h2 class="banner-subtitle text-xl lg:text-3xl text-white/90">
-                            {config.banner.homeText.typewriter?.enable ? (
-                                <TypewriterText
-                                    text={config.banner.homeText.subtitle}
-                                    speed={config.banner.homeText.typewriter.speed}
-                                    deleteSpeed={config.banner.homeText.typewriter.deleteSpeed}
-                                    pauseTime={config.banner.homeText.typewriter.pauseTime}
-                                />
-                            ) : (
-                                Array.isArray(config.banner.homeText.subtitle)
-                                    ? config.banner.homeText.subtitle[0]
-                                    : config.banner.homeText.subtitle
-                            )}
+                        <h2 class="banner-subtitle text-xl lg:text-3xl text-white/90 mt-4 min-h-[1.5em] flex justify-center items-center">
+                            <span id="hitokoto-text">Welcome to ybjun's blog!</span>
+                            <span id="cursor" class="animate-pulse ml-1 font-light">|</span>
                         </h2>
-                    )}
                 </div>
             </div>
         </div>
@@ -361,4 +349,90 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
     } else {
         showBanner();
     }
+</script>
+
+<script is:inline>
+    (function() {
+        const apiUrl = 'https://v1.hitokoto.cn/?c=d&c=i&c=k';
+        
+        // 核心修复 1: 定义全局变量名，用于跨页面清除定时器
+        const TIMER_KEY = 'bannerTimer';
+
+        // 打字机效果
+        function typeWriter(text, element, speed = 150) {
+            let i = 0;
+            element.textContent = "";
+            
+            function type() {
+                // 核心修复 2: 安全检查
+                // 如果页面切走了，元素不在文档里了，立刻停止打字，防止报错或内存泄漏
+                if (!document.body.contains(element)) return;
+
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    const randomSpeed = speed + (Math.random() * 50 - 25);
+                    
+                    // 核心修复 3: 将定时器 ID 存入全局 window 对象
+                    window[TIMER_KEY] = setTimeout(type, randomSpeed);
+                } else {
+                    const cursor = document.getElementById('cursor');
+                    if(cursor) {
+                        setTimeout(() => cursor.style.opacity = '0', 3000);
+                    }
+                }
+            }
+            type();
+        }
+
+        // 获取数据
+        function fetchHitokoto() {
+            const textEl = document.getElementById('hitokoto-text');
+            const cursor = document.getElementById('cursor');
+            
+            // 如果找不到元素（比如当前不是首页），直接退出
+            if (!textEl) return;
+
+            // 核心修复 4: 启动新任务前，先杀掉旧的定时器
+            // 无论上一次是正在打字还是在等待，统统清除，确保只有一个打字机在运行
+            if (window[TIMER_KEY]) {
+                clearTimeout(window[TIMER_KEY]);
+                window[TIMER_KEY] = null;
+            }
+
+            // 重置光标显示
+            if(cursor) cursor.style.opacity = '1';
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    // 防止网络请求期间页面切走，再次清理
+                    if (window[TIMER_KEY]) clearTimeout(window[TIMER_KEY]);
+
+                    window[TIMER_KEY] = setTimeout(() => {
+                        // 拼接逻辑
+                        let fullText = data.hitokoto;
+                        const author = data.from_who || data.from; 
+                        
+                        if (author) {
+                            fullText += ` —${author}`;
+                        }
+                        
+                        typeWriter(fullText, textEl);
+                    }, 300);
+                })
+                .catch(err => {
+                    console.error('一言获取失败:', err);
+                    if (window[TIMER_KEY]) clearTimeout(window[TIMER_KEY]);
+                    textEl.textContent = "生活明朗，万物可爱。";
+                });
+        }
+
+        // 初始化
+        // 核心修复 5: 直接调用，移除 addEventListener
+        // 因为这段脚本是 inline 的，每次首页组件加载时它都会自动运行一次
+        // 加了监听器反而会导致多次切换页面后监听器堆叠，触发多次
+        fetchHitokoto();
+    })();
+</script>
 </script>

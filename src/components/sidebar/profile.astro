@@ -1,16 +1,15 @@
 ---
-import { Icon } from "astro-icon/components";
-
-import { profileConfig, umamiConfig } from "@/config";
-import { url } from "@utils/url";
-import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { url } from "@utils/url";
+import { Icon } from "astro-icon/components";
 import ImageWrapper from "@/components/common/imageWrapper.astro";
-
+import { profileConfig, umamiConfig } from "@/config";
 
 // 解析 umami
 const umamiEnabled = umamiConfig.enabled || false;
-const umamiWebsiteId = umamiConfig.scripts.match(/data-website-id="([^"]+)"/)?.[1] || "";
+const umamiWebsiteId =
+    umamiConfig.scripts.match(/data-website-id="([^"]+)"/)?.[1] || "";
 const umamiApiKey = umamiConfig.apiKey || "";
 const umamiBaseUrl = umamiConfig.baseUrl || "";
 
@@ -37,20 +36,44 @@ const id = `profile-${side}`;
     </a>
     <div class="px-2">
         <div class="font-bold text-xl text-center mb-1 dark:text-neutral-50 transition">{profileConfig.name}</div>
-        <div class="h-1 w-5 bg-(--primary) mx-auto rounded-full mb-2 transition"></div>
+        <div class="h-1 w-5 bg-[var(--primary)] mx-auto rounded-full mb-2 transition"></div>
         <div class="text-center text-neutral-400 mb-2.5 transition">{profileConfig.bio}</div>
+        
         <div class="flex gap-2 justify-center mb-1">
-            {profileConfig.links.length > 1 && profileConfig.links.map(item =>
-                    <a rel="me" aria-label={item.name} href={item.url} target="_blank" class="btn-regular rounded-lg h-10 w-10 active:scale-90">
+            {profileConfig.links.map(item => {
+                // 🟢 核心修复：增加了对 url === '#wechat-qrcode' 的判断
+                // 无论你的 name 或 icon 写成什么，只要 url 是这个，就认为是微信触发器
+                const isWechat = item.url === '#wechat-qrcode' || 
+                                 item.name.toLowerCase().includes('wechat') || 
+                                 item.name === '公众号' || 
+                                 item.icon.includes('wechat');
+                return (
+                    <a 
+                        rel="me" 
+                        aria-label={item.name} 
+                        /*如果是微信，href 设为 javascript:void(0) 防止跳转*/
+                        href={isWechat ? "javascript:void(0)" : item.url} 
+                        /*如果是微信，target 设为 self*/
+                        target={isWechat ? "_self" : "_blank"} 
+                        /*如果是微信，加上 wechat-trigger 这个关键 class*/
+                        class={`btn-regular rounded-lg h-10 w-10 active:scale-90 ${isWechat ? 'wechat-trigger' : ''}`}
+                    >
                         <Icon name={item.icon} class="text-[1.5rem]"></Icon>
                     </a>
-            )}
-            {profileConfig.links.length == 1 && <a rel="me" aria-label={profileConfig.links[0].name} href={profileConfig.links[0].url} target="_blank"
-                                            class="btn-regular rounded-lg h-10 gap-2 px-3 font-bold active:scale-95">
-                <Icon name={profileConfig.links[0].icon} class="text-[1.5rem]"></Icon>
-                {profileConfig.links[0].name}
-            </a>}
+                );
+            })}
         </div>
+
+        <div id="wx-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity opacity-0 cursor-pointer">
+            <div class="wx-modal-content relative bg-white dark:bg-[#1e1e1e] p-1 rounded-xl shadow-2xl transform scale-95 transition-transform duration-300 w-[90%] max-w-[550px] cursor-default" onclick="event.stopPropagation()">
+                <div class="overflow-hidden rounded-lg">
+                    <img src="/assets/images/wechat-qr.png" 
+                         alt="关注公众号" 
+                         class="block w-full h-auto object-contain select-none pointer-events-none">
+                </div>
+            </div>
+        </div>
+
         {umamiEnabled && (
             <hr class="my-2 border-t border-dashed border-gray-300 dark:border-gray-700" />
             <div class="text-sm text-gray-500 mt-2 text-center"
@@ -70,29 +93,22 @@ const id = `profile-${side}`;
 {umamiEnabled && (
     <script>
         import "@/plugins/umami-share";
-
-        // 客户端统计文案生成函数
         function generateStatsText(pageViews, visits) {
             return `浏览量 ${pageViews} · 访问次数 ${visits}`;
         }
-        // 获取访问量统计
         async function fetchSiteStats() {
             const container = document.getElementById('site-stats-container');
             if (!container) return;
-
             const umamiBaseUrl = container.dataset.umamiBaseUrl;
             const umamiApiKey = container.dataset.umamiApiKey;
             const umamiWebsiteId = container.dataset.umamiWebsiteId;
             const i18nError = container.dataset.i18nError;
 
             try {
-                // 调用全局工具获取 Umami 统计数据
                 // @ts-ignore
                 const stats = await window.getUmamiWebsiteStats(umamiBaseUrl, umamiApiKey, umamiWebsiteId);
-                // 从返回的数据中提取页面浏览量和访客数
                 const pageViews = stats.pageviews || 0;
                 const visits = stats.visits || 0;
-                // 更新页面上的显示内容
                 const displayElement = document.getElementById('site-stats-display');
                 if (displayElement) {
                     displayElement.textContent = generateStatsText(pageViews, visits);
@@ -105,8 +121,113 @@ const id = `profile-${side}`;
                 }
             }
         }
-        // 页面加载完成后获取统计数据
         fetchSiteStats();
         document.addEventListener('astro:page-load', fetchSiteStats);
     </script>
 )}
+
+<script is:inline>
+    (function() {
+        const MODAL_ID = 'wx-modal';
+        const TRIGGER_SELECTOR = '.wechat-trigger'; 
+
+        function initModal() {
+            const modal = document.getElementById(MODAL_ID);
+            
+            if (!modal) {
+                setTimeout(initModal, 100); 
+                return;
+            }
+            
+            // 🧹 清理重复的 Modal
+            // 如果页面发生重绘，可能会产生新的 modal DOM，导致 ID 冲突
+            // 我们保留 body 下的那一个，移除当前组件内新生成的（如果有的话）
+            const allModals = document.querySelectorAll(`#${MODAL_ID}`);
+            if (allModals.length > 1) {
+                allModals.forEach(m => {
+                    if (m !== modal && m.parentElement !== document.body) {
+                        m.remove();
+                    }
+                });
+            }
+
+            // 将 modal 移动到 body
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+
+            const content = modal.querySelector('.wx-modal-content');
+            const triggers = document.querySelectorAll(TRIGGER_SELECTOR);
+
+            if (triggers.length === 0) return;
+
+            const openModal = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+                
+                requestAnimationFrame(() => {
+                    modal.classList.remove('opacity-0');
+                    if (content) {
+                        content.classList.remove('scale-95');
+                        content.classList.add('scale-100');
+                    }
+                });
+            };
+
+            const closeModal = () => {
+                modal.classList.add('opacity-0');
+                if (content) {
+                    content.classList.remove('scale-100');
+                    content.classList.add('scale-95');
+                }
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
+                }, 300);
+            };
+
+            // 🟢 核心修复：防止重复绑定
+            triggers.forEach(btn => {
+                // 如果这个按钮已经绑定过了，直接跳过
+                if (btn.dataset.wxBound === 'true') {
+                    return;
+                }
+
+                // 绑定事件
+                btn.addEventListener('click', openModal);
+                
+                // 打上“已绑定”的标签
+                btn.dataset.wxBound = 'true';
+            });
+
+            // 点击遮罩关闭 (只需要绑定一次，给 modal 加个标记)
+            if (modal.dataset.wxBound !== 'true') {
+                modal.onclick = (e) => {
+                    closeModal();
+                };
+                modal.dataset.wxBound = 'true';
+            }
+
+            // ESC 关闭 (Document 上的事件需要小心处理，先移除再添加是安全的)
+            const handleEsc = (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            };
+            document.removeEventListener('keydown', handleEsc);
+            document.addEventListener('keydown', handleEsc);
+        }
+
+        // 生命周期
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initModal);
+        } else {
+            initModal();
+        }
+        document.addEventListener('astro:page-load', initModal);
+        document.addEventListener('swup:contentReplaced', initModal);
+    })();
+</script>

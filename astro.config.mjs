@@ -1,20 +1,22 @@
-import { defineConfig } from "astro/config";
+﻿import { defineConfig } from "astro/config";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import svelte, { vitePreprocess } from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 import sitemap from "@astrojs/sitemap";
-import vercel from "@astrojs/vercel";
-import cloudflarePages from "@astrojs/cloudflare";
+
+// 🟢 1. 引入 Cloudflare 适配器
+import cloudflare from "@astrojs/cloudflare";
+
 import decapCmsOauth from "astro-decap-cms-oauth";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeComponents from "rehype-components"; /* Render the custom directive content */
+import rehypeComponents from "rehype-components";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
-import remarkDirective from "remark-directive"; /* Handle directives */
+import remarkDirective from "remark-directive";
 import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
@@ -31,24 +33,26 @@ import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
 import { remarkMermaid } from "./src/plugins/remark-mermaid.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 
-
-// https://astro.build/config
-// Choose adapter depending on deployment environment
-const adapter = process.env.CF_PAGES ? cloudflarePages() : vercel({ mode: "serverless" });
-
 export default defineConfig({
     site: siteConfig.siteURL,
     base: "/",
     trailingSlash: "always",
-    adapter: adapter,
+
+    // 🟢 2. 保持 output 为 static (适合博客)
+    // 如果你以后要用 SSR 功能，可以改成 'server' 或 'hybrid'
+    output: 'static',
+
+    // 🟢 3. 启用 Cloudflare 适配器
+    adapter: cloudflare(),
+
     integrations: [
         decapCmsOauth({
             decapCMSVersion: "3.9.0",
-            oauthDisabled: true, // Disable it to use oauth, requires .env configuration
+            oauthDisabled: true,
         }),
         swup({
             theme: false,
-            animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
+            animationClass: "transition-swup-",
             containers: [
                 "#swup-container",
                 "#left-sidebar",
@@ -60,12 +64,10 @@ export default defineConfig({
             updateHead: true,
             updateBodyClass: false,
             globalInstance: true,
-            // Scroll related configuration optimization
-            smoothScrolling: false, // Disable smooth scrolling to improve performance and avoid conflicts with anchor navigation
+            smoothScrolling: false,
             resolveUrl: (url) => url,
             animateHistoryBrowsing: false,
             skipPopStateHandling: (event) => {
-                // Skip anchor link handling, let the browser handle it natively
                 return event.state && event.state.url && event.state.url.includes("#");
             },
         }),
@@ -191,7 +193,6 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 onwarn(warning, warn) {
-                    // temporarily suppress this warning
                     if (
                         warning.message.includes("is dynamically imported by") &&
                         warning.message.includes("but also statically imported by")

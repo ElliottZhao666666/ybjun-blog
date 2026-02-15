@@ -1,19 +1,22 @@
-# About This Site
+# 关于本站
 
-Twilight is a CMS integrated static blog template built with [Astro](https://astro.build) framework.
-
-::github{repo="Spr-Aachen/Twilight"}
+一名计算机技术爱好者、摄影爱好者、铁路爱好者、电子爱好者，热衷于“折腾”，运营有微信公众号“月半菌”，擅长电脑技术、网络技术、摄影、媒体创作等内容。也是一个**阳光开朗大男孩**。
 
 
-## Milestones
 
-- Integrated content management system in [#1](https://github.com/Spr-Aachen/Twilight/pull/1)
-- Seamless wallpaper mode switching in [#2](https://github.com/Spr-Aachen/Twilight/pull/2)
-- Dynamic content container response in [#47](https://github.com/Spr-Aachen/Twilight/pull/47)
-- Seamless page component loading in [#48](https://github.com/Spr-Aachen/Twilight/pull/48)
-- Smart music playback handling in [#49](https://github.com/Spr-Aachen/Twilight/pull/49)
-- Infinite-level navigation system in [#50](https://github.com/Spr-Aachen/Twilight/pull/50)
-- Comprehensive statistics dashboard in [#51](https://github.com/Spr-Aachen/Twilight/pull/51)
-- Low-barrier configuration scheme in [#58](https://github.com/Spr-Aachen/Twilight/pull/58)
-- Dynamic breakpoint handling in [#68](https://github.com/Spr-Aachen/Twilight/pull/68)
-- Advanced content management in [#73](https://github.com/Spr-Aachen/Twilight/pull/73)
+> Site framework based on Astro & Twilight.
+> 
+> Personal Avatar designed by CityDog.
+
+
+
+
+## 每一个脚印，都值得被记录
+
+- **2021-05-20**   正式创建“月半菌”微信公众号
+- **2025-03-01**   胖哥WinPE 3.0在公众号发布，阅读量突破5.5w
+- **2026-01-17**   注册ybjun.com域名
+- **2026-01-21**   第一个网站 胖哥必应美图库 正式上线
+- **2026-02-05**   正式开始博客建站工作
+- **2026-02-12**   本站预览版上线，开始内部测试与查错工作
+- **2026-02-17**   2026年春节之际，本站正式上线

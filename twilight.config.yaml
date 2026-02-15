@@ -1,17 +1,17 @@
 # 站点配置
 site:
     # 站点 URL（以斜杠结尾）
-    siteURL: "https://twilight.spr-aachen.com/"
+    siteURL: "https://www.ybjun.com/"
     # 站点标题
-    title: "Twilight"
+    title: "月半菌的Blog"
     # 站点副标题
-    subtitle: "Blog Template"
+    subtitle: "用通俗的语言，传递实用的干货，还有好玩的资源，尽在月半菌!"
     # 语言配置
-    lang: "en"
+    lang: "zh"
     # 翻译配置
     translate:
         # 启用翻译功能
-        enable: true
+        enable: false
         # 翻译服务
         service: "client.edge"
         # 显示语言选择下拉框
@@ -33,16 +33,16 @@ site:
     timeZone: 8
     # 字体配置
     font:
-        # 示例字体配置 - Zen Maru Gothic
-        "Example - ZenMaruGothic":
-            # 字体源 (字体 CSS 链接 | 字体文件路径)
-            src: "https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic&display=swap"
-            # 字体名 (font-family)
-            family: "Zen Maru Gothic"
+        # 示例字体配置 - 默认ZenMaruGothic
+        "LXGW WenKai Screen":
+            # 字体源 (字体 CSS 链接 | 字体文件路径 | 默认https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic&display=swap)
+            src: "https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-web/style.css"
+            # 字体名 (font-family,默认Zen Maru Gothic)
+            family: "LXGW WenKai Screen"
     # 主题色配置
     themeColor:
         # 主题色的默认色相 (范围从 0 到 360。例如：红色：0，青色：200，蓝绿色：250，粉色：345)
-        hue: 255
+        hue: 180
     # 默认主题 ("system" 跟随系统 | "light" 浅色 | "dark" 深色)
     defaultTheme: "dark"
     # 壁纸配置
@@ -53,13 +53,24 @@ site:
         src:
             # 桌面壁纸图片 (相对于 /public 目录; 支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播)
             desktop:
-                - "/assets/images/desktopWallpaper_1.jpg"
-                - "/assets/images/desktopWallpaper_2.jpg"
-                - "/assets/images/desktopWallpaper_3.jpg"
+                - "/assets/images/desktopWallpaper_1.webp"
+                - "/assets/images/desktopWallpaper_2.webp"
+                - "/assets/images/desktopWallpaper_3.webp"
+                - "/assets/images/desktopWallpaper_4.webp"
+                - "/assets/images/desktopWallpaper_5.webp"
+                - "/assets/images/desktopWallpaper_6.webp"
+                - "/assets/images/desktopWallpaper_7.webp"
+                - "/assets/images/desktopWallpaper_8.webp"
             # 移动壁纸图片 (相对于 /public 目录; 支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播)
             mobile:
-                - "/assets/images/mobileWallpaper_1.jpg"
-                - "/assets/images/mobileWallpaper_2.jpg"
+                - "/assets/images/mobileWallpaper_1.webp"
+                - "/assets/images/mobileWallpaper_2.webp"
+                - "/assets/images/mobileWallpaper_3.webp"
+                - "/assets/images/mobileWallpaper_4.webp"
+                - "/assets/images/mobileWallpaper_5.webp"
+                - "/assets/images/mobileWallpaper_6.webp"
+                - "/assets/images/mobileWallpaper_7.webp"
+                - "/assets/images/mobileWallpaper_8.webp"
         # 壁纸位置 ('top' | 'center' | 'bottom')
         position: "center"
         # 轮播配置 (fullscreen 和 banner 模式共享)
@@ -77,8 +88,8 @@ site:
                 # 在主页显示文本
                 enable: true
                 # 主标题
-                title: "Twilight"
-                # 副标题，支持单个字符串或字符串数组
+                title: "月半菌的Blog"
+                # 副标题，支持单个字符串或字符串数组,已经替换为名言
                 subtitle:
                     - "Illuminate Our Paths"
                 # 副标题打字机效果
@@ -94,11 +105,11 @@ site:
             # 横幅图片来源文本
             credit:
                 # 显示横幅图片来源文本
-                enable: false
+                enable: true
                 # 要显示的来源文本
-                text: "Describe"
+                text: "背景图来自 Bing"
                 # (可选) 原始艺术品或艺术家页面的 URL 链接
-                url: ""
+                url: "https://www.bing.com"
             # 导航栏配置
             navbar:
                 # 导航栏透明模式 ("semi" 半透明加圆角 | "full" 完全透明 | "semifull" 动态透明)
@@ -162,39 +173,42 @@ umami:
 navbar:
     # 链接配置 (链接预设位于 src/constants/link-presets.ts 的 LinkPresets)
     links:
-        - # 一级导航链接 - 主页 (预设)
-            "Home"
-        - # 一级导航链接 - 归档 (预设)
-            "Archive"
-        - # 一级导航链接 - 展览 (自定义)
-            # 导航名称
-            name: "Exhibition"
-            # 导航链接
-            url: "/exhibition/"
-            # 导航图标
-            icon: "material-symbols:person"
-            # 导航描述
-            description: "A collection of my creative works and experiences"
-            # 子链接
-            children:
-                - # 二级导航链接 - 项目 (预设)
-                    "Projects"
-                - # 二级导航链接 - 技能 (预设)
-                    "Skills"
-                - # 二级导航链接 - 历程 (预设)
-                    "Timeline"
-                - # 二级导航链接 - 日记 (预设)
-                    "Diary"
-                - # 二级导航链接 - 相册 (预设)
-                    "Albums"
-                - # 二级导航链接 - 动画 (预设)
-                    "Anime"
-        - # 一级导航链接 - 好友 (预设)
-            "Friends"
-        - # 一级导航链接 - 关于 (预设)
-            "About"
+            - Home          # 首页 (Preset)
+            - Archive       # 时间轴 (Preset)
+        
+            # === 自定义链接 ===
+            - name: "相册"
+              url: "/gallery/"
+              icon: "material-symbols:photo-library"
+        
+            # === 胖哥出品 (下拉菜单) ===
+            - name: "胖哥出品"
+              icon: "material-symbols:widgets-rounded"
+              description: "胖哥打造的软件合集"
+              children:
+                - name: "壁纸库"
+                  url: "https://dailywall.ybjun.com/"
+                  icon: "material-symbols:imagesmode"
+              
+                - name: "歌词大师"
+                  url: "https://lrc.ybjun.com/"
+                  icon: "material-symbols:music-note"
+              
+                - name: "胖哥WinPE"
+                  # 微信公众号链接比较长，注意不要断行
+                  url: "https://mp.weixin.qq.com/mp/homepage?__biz=Mzg4NDYyOTA2NA==&hid=1&sn=86e8a70e45fc81e022c0d9d02dc83b35&scene=18"
+                  # 这里用了 mdi 图标库的 Windows logo，通常 Astro 主题都支持
+                  icon: "mdi:microsoft-windows" 
+              
+                - name: "更多"
+                  url: "https://mp.weixin.qq.com/mp/appmsgalbum?__biz=Mzg4NDYyOTA2NA==&action=getalbum&album_id=1954109779866337283#wechat_redirect"
+                  icon: "material-symbols:read-more"
 
-# 侧边栏配置
+            - name: "朋友们"
+              url: "/friends/"
+              icon: "material-symbols:group"
+          
+            - About         # 关于 (Preset)
 sidebar:
     # 侧边栏组件配置列表 (侧栏组件预设位于 src/types/config.ts 的 WidgetComponentType)
     components:
@@ -230,6 +244,11 @@ sidebar:
                     collapseThreshold: 20
         # 右侧侧边栏
         right:
+            - # 组件 - 文章统计 (预设)
+                # 类型
+                type: "statistics"
+                # 位置策略 ("top" 顶部固定 | "sticky" 粘性)
+                position: "top"
             - # 组件 - 文章目录 (预设)
                 # 类型
                 type: "toc"
@@ -239,9 +258,9 @@ sidebar:
                 customProps:
                     # 目录深度 (1-6，1 表示只显示 h1 标题，2 表示显示 h1 和 h2 标题，依此类推)
                     depth: 3
-            - # 组件 - 文章统计 (预设)
+            - # 组件 - 用户信息
                 # 类型
-                type: "statistics"
+                type: "visitorinfo"
                 # 位置策略 ("top" 顶部固定 | "sticky" 粘性)
                 position: "sticky"
 
@@ -250,25 +269,40 @@ profile:
     # 头像配置 (相对于 /public 目录)
     avatar: "/assets/images/avatar.jpg"
     # 信息配置
-    name: "Twilight"
+    name: "月半菌"
     # 简介配置
-    bio: "Hi"
+    bio: "用通俗的语言，传递实用的干货，还有好玩的资源，尽在月半菌!"
     # 链接配置
-    links:
-        - # 链接示例
-            # 名字
-            name: "GitHub"
-            # 图标
-            icon: "fa6-brands:github"
-            # 链接
-            url: "https://github.com/Spr-Aachen/Twilight"
+    links:  # 注意：原主题这里通常叫 social，你的配置里是 links，请确认 key 名是否正确，通常是 social
+        - name: "微信公众号"
+          icon: "fa6-brands:weixin"       # 微信官方图标
+          url: "#wechat-qrcode"
+          
+        - name: "Bilibili"
+          icon: "fa6-brands:bilibili"    # B站官方图标
+          url: "https://space.bilibili.com/306479391"
+          
+        - name: "知乎"
+          icon: "fa6-brands:zhihu"       # 知乎官方图标
+          url: "https://www.zhihu.com/people/elliot-69-70"
+          
+        - name: "图虫摄影网"
+          icon: "material-symbols:camera" # 用相机图标代替，保持风格统一
+          url: "https://tuchong.com/25406319"
+          
+        - name: "邮箱"
+          icon: "material-symbols:mail"   # 邮箱图标
+          url: "mailto:yuebanjun666@outlook.com
+"
+
+    
 
 # 公告配置
 announcement:
     # 公告标题
-    title: "Announcement"
+    title: "公告"
     # 公告内容
-    content: "Welcome to my blog!"
+    content: "欢迎来到月半菌的博客！现在博客还处于内部预览阶段，将于2026年春节正式上线！感谢您的浏览测试，欢迎提出宝贵意见！"
     # 允许用户关闭公告
     closable: true
     # 链接配置
@@ -276,7 +310,7 @@ announcement:
         # 启用链接
         enable: true
         # 链接文本
-        text: "Learn More"
+        text: "了解更多"
         # 链接 URL
         url: "/about/"
         # 是否外部链接
@@ -303,7 +337,7 @@ post:
     # 评论配置
     comment:
         # 启用评论功能
-        enable: false
+        enable: true
         # Twikoo 评论系统配置
         twikoo:
             # 环境 ID
@@ -323,7 +357,7 @@ particle:
     # 启用粒子特效
     enable: true
     # 粒子数量
-    particleNum: 12
+    particleNum: 8
     # 粒子越界限制次数，-1为无限循环
     limitTimes: -1
     # 粒子尺寸配置
@@ -393,7 +427,7 @@ musicPlayer:
                 # 时长
                 duration: 146
     # 是否自动播放
-    autoplay: true
+    autoplay: false
 
 # 看板娘配置
 pio:

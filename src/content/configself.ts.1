@@ -1,0 +1,39 @@
+﻿import { defineCollection, z } from 'astro:content';
+
+const postsCollection = defineCollection({
+    schema: z.object({
+        // 核心字段
+        title: z.string(),
+        published: z.date(),
+        updated: z.date().optional(),
+        draft: z.boolean().optional(),
+
+        // 描述与封面
+        description: z.string().optional(),
+        image: z.string().optional(),
+        cover: z.string().optional(),
+
+        // 分类与标签
+        category: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+
+        // 功能字段
+        pinned: z.boolean().optional(),
+
+        // 加密相关 (参考 encryption.md)
+        encrypted: z.boolean().optional(),
+        password: z.string().optional(),
+
+        // 版权与作者 (参考 license.astro)
+        licenseName: z.string().optional(),
+        author: z.string().optional(),
+        sourceLink: z.string().optional(),
+
+        // 我们新增的外链字段
+        externalUrl: z.string().optional(),
+    }),
+});
+
+export const collections = {
+    posts: postsCollection,
+};
