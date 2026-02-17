@@ -1,15 +1,17 @@
 ---
 title: 第一篇文章
-published: 2026-02-11
-description: "欢迎光临月半菌的博客"
-cover: "./cover.jpg"
+published: '2026-02-11'
+description: 欢迎光临月半菌的博客
+author: ''
+cover: ./cover.jpg
 pinned: true
-tags: ["随笔"]
+tags:
+  - 随笔
 category: 随想
+encrypted: false
 draft: false
+updated: '2026-02-17'
 ---
-
-
 
 ## 欢迎光临月半菌的博客！
 
@@ -23,9 +25,9 @@ draft: false
 
 ### 先放个视频测试一下：
 
-```html
+
 <iframe width="100%" height="468" src="//player.bilibili.com/player.html?bvid=BV1bGpdeQEwP&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" &autoplay=0> </iframe>
-```
+
 
 
 
@@ -80,4 +82,3 @@ www.ybjun.com
 * **公众号“月半菌”：**![qrcode](/assets/images/wechat-qr.png)
 * **本博客 RSS 订阅：**[点击访问](https://www.ybjun.com/rss)
 * **本博客 Atom 订阅：**[点击访问](https://www.ybjun.com/atom)
-
