@@ -10,7 +10,7 @@ tags:
   - 网络
 category: 技术备忘
 encrypted: false
-draft: true
+draft: false
 ---
 
 在当今的 Web 应用开发中，账号安全至关重要。虽然市面上有许多成熟的身份验证服务，但作为一个技术爱好者，了解其背后的原理并亲手实现一套 **Serverless 架构的 TOTP（基于时间的一次性密码）** 验证系统，不仅能降低依赖成本，更是对加密算法的一次认识实践。
