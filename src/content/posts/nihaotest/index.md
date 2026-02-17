@@ -1,14 +1,18 @@
 ---
-title: '516161'
-published: ''
-description: ''
+title: 编辑器测试
+published: '2026-02-17'
+description: 测试
 author: ''
-cover: ''
+cover: ./cover.jpg
 pinned: false
-tags: []
-category: ''
-encrypted: false
+tags:
+  - 测试
+category: 技术备忘
+encrypted: true
 draft: true
+password: '114514'
 ---
 
-Write your content here...
+测试图片!
+![image](./Bloom-wallpaper-Dark.jpg)
+![image](./1601138219095.jpeg)
