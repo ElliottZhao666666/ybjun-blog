@@ -26,7 +26,7 @@ draft: false
     * **客户端（绑定端）**：展示二维码，让用户使用手机验证器 App 扫描绑定。
     * **客户端（登录端）**：验证码输入界面，请求服务端验证。
 * **技术栈**：
-    * **后端**：Cloudflare Workers (Runtime 环境 + Web Crypto API)。
+    * **后端**：Cloudflare Workers。
     * **前端**：原生 HTML/JS + QRious (二维码生成库)。
     * **协议**：标准 TOTP (RFC 6238)。
 
@@ -55,7 +55,8 @@ TOTP 是基于 **HMAC-SHA1** 算法的，它实际上是 **HOTP (HMAC-Based One-
 
 ## 后端实现：CF Worker
 
-假设我们将 Worker 部署在 `totp.example.com`。
+假设我们将 Worker 部署在 `totp.example.com`，将`JBSWY3DPEHPK3PXP`作为示例密钥。
+在创建完成新的Worker后，要先为Worker创建一个新的变量叫做`TOTP_SECRET`来存储你的密钥，当然你也可以使用D1数据库存储密钥，这样配合前端可以轻松生成多个不同的密钥，以便使用多套认证。之后就开始写代码了。
 
 ### 3.1 完整源码 (`worker.js`)
 
@@ -73,9 +74,9 @@ export default {
 
     // 路由：获取绑定配置
     if (url.pathname === "/config" && request.method === "GET") {
-      const secret = env.TOTP_SECRET || "JBSWY3DPEHPK3PXP"; // 示例密钥
-      const issuer = "MySecureSystem";
-      const account = "admin@example.com";
+      const secret = env.TOTP_SECRET; // 示例密钥
+      const issuer = "MySecureSystem"; // 认证的网站或平台名称
+      const account = "admin@example.com"; // 帐户名
       const otpauth = `otpauth://totp/${issuer}:${account}?secret=${secret}&issuer=${issuer}`;
       
       return new Response(JSON.stringify({ otpauth }), { 
@@ -164,7 +165,7 @@ async function verifyTOTP(token, secret) {
         const { otpauth } = await res.json();
         new QRious({
             element: document.getElementById('qr-code'),
-            value: otpauth,
+            value: otpauth, // 传入Worker生成的url
             size: 200
         });
     }
