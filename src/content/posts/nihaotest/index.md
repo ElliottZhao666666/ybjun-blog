@@ -9,7 +9,7 @@ tags:
   - 测试
 category: 技术备忘
 encrypted: true
-draft: true
+draft: false
 password: '114514'
 ---
 
