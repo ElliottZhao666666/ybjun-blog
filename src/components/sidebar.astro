@@ -1,7 +1,6 @@
 ---
 import Announcement from "@components/sidebar/announcement.astro";
 import Categories from "@components/sidebar/categories.astro";
-
 import Profile from "@components/sidebar/profile.astro";
 import Tags from "@components/sidebar/tags.astro";
 import TOC from "@components/sidebar/toc.astro";
@@ -13,129 +12,150 @@ import Statistics from "./sidebar/statistics.astro";
 import VisitorInfo from "./sidebar/VisitorInfo.svelte";
 
 interface Props {
-	id?: string;
-	class?: string;
-	headings?: MarkdownHeading[];
-	side: "left" | "right" | "middle";
+    id?: string;
+    class?: string;
+    headings?: MarkdownHeading[];
+    side: "left" | "right" | "middle";
 }
 
 const { id, class: className, headings, side } = Astro.props;
 
-// 过滤掉配置里的 statistics，防止重复
+// 1. 获取配置中的组件，但过滤掉 statistics 和 visitorinfo
+// (因为我们要手动控制它们的位置，避免配置和硬编重复)
 const topComponents = widgetManager
-	.getComponentsBySideAndPosition(side, "top")
-	.filter((c) => c.type !== "statistics");
+    .getComponentsBySideAndPosition(side, "top")
+    .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo");
+    
 const stickyComponents = widgetManager
-	.getComponentsBySideAndPosition(side, "sticky")
-	.filter((c) => c.type !== "statistics");
+    .getComponentsBySideAndPosition(side, "sticky")
+    .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo");
 
 const componentMap = {
-	profile: Profile,
-	announcement: Announcement,
-	categories: Categories,
-	tags: Tags,
-	toc: TOC,
+    profile: Profile,
+    announcement: Announcement,
+    categories: Categories,
+    tags: Tags,
+    toc: TOC,
+    // statistics 和 visitorinfo 在这里不需要映射，因为我们下面手动渲染
 };
 
 function renderComponent(component: any, index: number) {
-	const ComponentToRender =
-		componentMap[component.type as keyof typeof componentMap];
-	if (!ComponentToRender) return null;
-	const componentClass = widgetManager.getComponentClass(
-		component,
-		index,
-		side,
-	);
-	const componentStyle = widgetManager.getComponentStyle(component, index);
-	return {
-		Component: ComponentToRender,
-		props: {
-			class: componentClass,
-			style: componentStyle,
-			headings: component.type === "toc" ? headings : undefined,
-			...component.customProps,
-		},
-	};
+    const ComponentToRender =
+        componentMap[component.type as keyof typeof componentMap];
+    if (!ComponentToRender) return null;
+    
+    const componentClass = widgetManager.getComponentClass(
+        component,
+        index,
+        side,
+    );
+    const componentStyle = widgetManager.getComponentStyle(component, index);
+
+    return {
+        Component: ComponentToRender,
+        props: {
+            class: componentClass,
+            style: componentStyle,
+            headings: component.type === "toc" ? headings : undefined,
+            ...component.customProps,
+        },
+    };
 }
 ---
 
-<div id={id || "sidebar"} data-side={side} class:list={[className, "w-full h-full"]}>
+<div id={id || "sidebar"} class:list={[className, "w-full h-full"]}>
     
+    {/* ========================================= */}
+    {/* 场景 A: 左侧边栏 (Left Sidebar)           */}
+    {/* 适用设备: 电脑 (XL) 和 平板 (LG)          */}
+    {/* ========================================= */}
     {side === "left" && (
-        <>
-            {/* 1. 顶部固定组件 (如 Profile) */}
-            {topComponents.length > 0 && (
-                <div class:list={["flex flex-col w-full gap-4", { "mb-4": stickyComponents.length > 0 }]}>
-                    {topComponents.map((component, index) => {
-                        const renderData = renderComponent(component, index);
-                        if (!renderData) return null;
-                        const { Component, props } = renderData;
-                        return <Component {...props} side={side} />;
-                    })}
+        <div class="flex flex-col w-full gap-4">
+            {/* 1. 渲染配置的 Top 组件 (Profile, Announcement) */}
+            {topComponents.map((component, index) => {
+                const renderData = renderComponent(component, index);
+                if (!renderData) return null;
+                const { Component, props } = renderData;
+                return <Component {...props} side={side} />;
+            })}
+
+            {/* 2. 渲染配置的 Sticky 组件 (Categories, Tags) */}
+            <div class="sticky top-4 flex flex-col w-full gap-4">
+                {stickyComponents.map((component, index) => {
+                    const renderData = renderComponent(component, index);
+                    if (!renderData) return null;
+                    const { Component, props } = renderData;
+                    return <Component {...props} side={side} />;
+                })}
+
+                {/* 核心优化：平板模式下的补充显示
+                   原理：当屏幕 < LG 时，右侧栏会被 CSS 隐藏。
+                   所以我们需要在左侧栏底部显示这两个组件。
+                   但当屏幕 >= LG 时，右侧栏会出现，所以我们要用 lg:hidden 隐藏左边的这份，防止重复。
+                */}
+                <div class="flex flex-col gap-4 lg:hidden">
+                    <Statistics class="onload-animation" style="animation-delay: 0ms" />
+                    <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
                 </div>
-            )}
-            {/* 2. 粘性组件 (如 Tags) */}
-            {stickyComponents.length > 0 && (
-                <div id="sidebar-sticky" class="flex flex-col w-full gap-4 sticky top-4">
-                    {stickyComponents.map((component, index) => {
-                        const renderData = renderComponent(component, index);
-                        if (!renderData) return null;
-                        const { Component, props } = renderData;
-                        return <Component {...props} side={side} />;
-                    })}
-                </div>
-            )}
-        </>
+            </div>
+        </div>
     )}
 
-{side === "right" && (
-        <>
-            {/* 📦 粘性容器开始：包含 目录、统计、访客 */}
-            <div id="sidebar-sticky" class="flex flex-col w-full gap-4 sticky top-4 mb-4">
-                
-                {/* 1. 目录 TOC (如果有) */}
-                {stickyComponents.length > 0 && (
-                    stickyComponents.map((component, index) => {
-                        const renderData = renderComponent(component, index);
-                        if (!renderData) return null;
-                        const { Component, props } = renderData;
-                        return <Component {...props} side={side} />;
-                    })
-                )}
 
-                {/* 2. 自定义统计模块 */}
+    {/* ========================================= */}
+    {/* 场景 B: 右侧边栏 (Right Sidebar)          */}
+    {/* 适用设备: 仅电脑 (lg 以上)                */}
+    {/* ========================================= */}
+    {side === "right" && (
+        <div class="flex flex-col w-full gap-4 h-full">
+             {/* 右栏通常没有 Top 组件，但为了兼容性保留渲染逻辑 */}
+            {topComponents.map((component, index) => {
+                const renderData = renderComponent(component, index);
+                if (!renderData) return null;
+                const { Component, props } = renderData;
+                return <Component {...props} side={side} />;
+            })}
+
+            {/* Sticky 区域：包含 TOC、统计、访客 */}
+            <div class="sticky top-4 flex flex-col w-full gap-4">
+                {/* 1. 先渲染 TOC (文章目录) */}
+                {stickyComponents.map((component, index) => {
+                    const renderData = renderComponent(component, index);
+                    if (!renderData) return null;
+                    const { Component, props } = renderData;
+                    return <Component {...props} side={side} />;
+                })}
+
+                {/* 2. 站点统计 (始终显示) */}
                 <Statistics class="onload-animation" style="animation-delay: 0ms" />
                 
-                {/* 3. 访客信息模块 */}
+                {/* 3. 访客信息 (始终显示) */}
                 <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
-            
             </div>
-            {/* 📦 粘性容器结束 */}
-
-            {/* 4. 其他普通组件 (如果有，会显示在粘性模块下方，随页面滚动消失) */}
-            {topComponents.length > 0 && (
-                <div class="flex flex-col w-full gap-4">
-                    {topComponents.map((component, index) => {
-                        const renderData = renderComponent(component, index);
-                        if (!renderData) return null;
-                        const { Component, props } = renderData;
-                        return <Component {...props} side={side} />;
-                    })}
-                </div>
-            )}
-        </>
+        </div>
     )}
 
+
+    {/* ========================================= */}
+    {/* 场景 C: 中间/底部栏 (Middle Sidebar)      */}
+    {/* 适用设备: 手机 (Mobile)                   */}
+    {/* ========================================= */}
     {side === "middle" && (
          <div class="flex flex-col w-full gap-4">
-             {/* 中间栏逻辑通常比较简单，直接渲染即可 */}
+             {/* 1. 渲染配置的组件 (Profile, Announcement) */}
              {topComponents.map((component, index) => {
                 const renderData = renderComponent(component, index);
                 if (!renderData) return null;
                 const { Component, props } = renderData;
                 return <Component {...props} side={side} />;
             })}
+            
+            {/* 🟢 核心优化：手机端补充显示 
+                手机端没有 Sticky 概念，所有内容都是从上到下流式排列。
+                我们直接把统计和访客加在最后即可。
+            */}
+            <Statistics class="onload-animation" style="animation-delay: 0ms" />
+            <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
          </div>
     )}
-
 </div>
