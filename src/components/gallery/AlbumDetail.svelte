@@ -1,6 +1,6 @@
 ﻿<script lang="ts">
 import Icon from "@iconify/svelte";
-import { onMount } from "svelte";
+import { onMount, onDestroy } from "svelte";
 import { fade, fly } from "svelte/transition";
 
 interface Photo {
@@ -63,6 +63,12 @@ onMount(async () => {
 	return () => {
 		window.removeEventListener("keydown", handleKeydown);
 	};
+});
+
+// 新增：当组件被销毁（如按浏览器返回键离开）时，强制解除页面锁定
+onDestroy(() => {
+    document.body.style.overflow = "";
+    document.body.classList.remove("lightbox-open");
 });
 
 // --- 格式化函数 ---
@@ -226,7 +232,7 @@ function handleMouseMove() {
 
     {#if viewerOpen && album}
         <div 
-            class="fixed inset-0 z-100000] bg-black text-white flex items-center justify-center"
+            class="fixed inset-0 z-[100000] bg-black text-white flex items-center justify-center"
             transition:fade={{ duration: 200 }}
             on:mousemove={handleMouseMove}
             on:click={handleMouseMove}
@@ -255,7 +261,7 @@ function handleMouseMove() {
                 
                 <button 
                     class="absolute top-6 right-6 p-2 rounded-full bg-black/30 hover:bg-red-500/80 backdrop-blur-md text-white pointer-events-auto transition cursor-pointer z-50"
-                    on:click={closeViewer}
+                    on:click|stopPropagation={closeViewer}
                 >
                     <Icon icon="material-symbols:close" class="text-3xl" />
                 </button>
