@@ -97,7 +97,7 @@ DigitalPlat 一共提供了四种后缀，`.dpdns.org`、`.us.kg`、`.qzz.io` �
 随后回到CF页面，点击页面最底部的**立即检查名称服务器**，出现这个页面，就已经完全没问题了。
 ![image](./ScreenShot_2026-02-20_104033_291.png)
 
-## 域名解析的简单介绍
+## 5 域名解析的简单介绍
 稍等几分钟，回到 CF Dashboard的**域管理**界面，就可以看到我们的`yueban.dpdns.org`已经出现了，点击进去就可以对该域名的解析和安全策略等进行设置。我们这里先来示范一个最简单的用法，为NAS的IP做一个域名解析。
 ![image](./ScreenShot_2026-02-20_104244_215.png)
 进入上图的域名管理页面后，点击左栏**DNS-记录**，点击**添加记录**。我们先来添加一条**AAAA (IPv6)记录**，将根域指向我们NAS的IPv6地址。点击保存就添加完成啦！
@@ -107,7 +107,7 @@ DigitalPlat 一共提供了四种后缀，`.dpdns.org`、`.us.kg`、`.qzz.io` �
 
 总之，现在你已经有一个自己的免费域名了，可以开始折腾了！
 
-## WHOIS保护和后续续签
+## 6 WHOIS保护和后续续签
 最后，我们要回到DigitalPlat Dashboard，为域名设置WHOIS信息保护，并说说怎么续签。
 
 在DigitalPlat Dashboard点击顶栏**Domain List**，选择刚注册的域名，进入管理页面。
