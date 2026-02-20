@@ -40,7 +40,7 @@ DigitalPlat 注册得到的域名属于公共子域，不支持在中国大陆�
 如果遇到网络无法访问的问题，请自行解决。
 :::
 点击**Register a domain**，会让你登录账号，此时选择界面下方的**Sign up**，进入注册。
-![image](./image.png)
+![img_1771557648144.png](blob:https://blog.ybjun.com/b5af99b9-4396-458c-bda2-96bb495213f8)
 
 这里面，所有信息都可以按照自己的想法随便填，但**邮箱必须填写自己的真实邮箱**！qq、126、163这种国内邮箱也可以。
 至于地址和电话，可以直接使用 [美国地址生成器](https://usaddressgen.com/) 随机生成，注意地址信息要复制完整地址，因为DigitalPlat要求地址内至少要包含两个逗号；电话要以美国代号 **+1-** 开头，后面出现的数字中括号和连字符全部删除。
@@ -48,14 +48,15 @@ DigitalPlat 注册得到的域名属于公共子域，不支持在中国大陆�
 
 ---
 
-接着，返回DigitalPlat主页登录你的账号，登录后会提醒你需要KYC验证，此时下拉选择**GitHub OAuth**，然后使用GitHub账号登录，只要满足条件，验证就会通过。![image](./ScreenShot_2026-02-20_102540_640.png)
-![image](./ScreenShot_2026-02-20_102603_340.png)
+接着，返回DigitalPlat主页登录你的账号，登录后会提醒你需要KYC验证，此时下拉选择**GitHub OAuth**，然后使用GitHub账号登录，只要满足条件，验证就会通过。
+![img_1771558114385.png](blob:https://blog.ybjun.com/b96519aa-03f2-4f1b-b8d4-f31dc3df2243)
+![img_1771558211763.png](blob:https://blog.ybjun.com/0df2bbf4-1259-4799-b2b6-6001e8958fd1)
 
 ## 3 开始注册域名
 
 验证通过确定后就会直接进入Dashboard。
 
-![image](./ScreenShot_2026-02-20_103126_617.png)
+![img_1771558245342.png](blob:https://blog.ybjun.com/6167f2d8-05db-4cbf-b417-7910b8c07b55)
 
 普通用户只有一个免费域名的额度，一般是够用了，如果不够，相信你也看到dashboard中的提示了，**给该项目在GitHub上点个star即可多加一个免费域名额度**。
 该项目的GitHub地址为：[https://github.com/DigitalPlatDev/FreeDomain](https://github.com/DigitalPlatDev/FreeDomain)
