@@ -61,12 +61,21 @@ DigitalPlat 注册得到的域名属于公共子域，不支持在中国大陆�
 普通用户只有一个免费域名的额度，一般是够用了，如果不够，相信你也看到dashboard中的提示了，**给该项目在GitHub上点个star即可多加一个免费域名额度**。
 该项目的GitHub地址为：[https://github.com/DigitalPlatDev/FreeDomain](https://github.com/DigitalPlatDev/FreeDomain)
 用你验证用过的GitHub账号进去点一个star，然后回DigitalPlat Dashboard，点击**clickhere to verity**完成验证，这样你的可用免费域名数就变成了2个。
-![image](./ScreenShot_2026-02-20_103224_084.png)
+![img_1771558723313.png](blob:https://blog.ybjun.com/8508a9ce-9e95-4465-9bc4-ab0ab34a7e04)
 接着点击顶栏的**Register**，划到页面最底部，就可以选择自己想要的公共子域，并输入自己想注册的域名了。因为是公共子域，所以虽然其提供的是`.dpdns.org`这样的两级后缀，但其实是和`.com.cn`、`.edu.cn`这样，可以独立托管。我们就以注册`yueban.dpdns.org`为例。
-![image](./ScreenShot_2026-02-20_103527_975.png)
+![img_1771559145818.png](blob:https://blog.ybjun.com/acddfe8c-3a53-48a0-81b4-673b91baf10b)
 
 :::note[关于后缀怎么选]
 DigitalPlat 一共提供了四种后缀，`.dpdns.org`、`.us.kg`、`.qzz.io` 和 `.xx.kg`。
 其中 `.us.kg` 和 `.xx.kg` 需要有key才能用（好像要付费），且 `.us.kg` 目前在中国大陆有被DNS污染的情况。
 建议个人使用，还是用`.dpdns.org`，至少有`.org`托底，应该会比较稳定。
 :::
+
+输入好后点击**Check Availablity**，如果你输入的域名未被注册，则会直接进入如下页面：
+![image](./ScreenShot_2026-02-20_103545_805.png)
+此时，就把这一页暂时放着，我们去Cloudflare那边设置。
+
+## 4 Cloudflare 托管
+点此进入[Cloudflare 官网](https://www.cloudflare.com/zh-cn/)，登录你的账号。如果还没有账号则需要注册，具体注册流程本文不再赘述。
+登录后进入你的dashboard，进入**域管理**，点击**加入域**。
+![image](./ScreenShot_2026-02-20_103617_984.png)
