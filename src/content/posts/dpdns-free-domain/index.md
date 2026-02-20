@@ -102,7 +102,7 @@ DigitalPlat 一共提供了四种后缀，`.dpdns.org`、`.us.kg`、`.qzz.io` �
 ![image](./ScreenShot_2026-02-20_104244_215.png)
 进入上图的域名管理页面后，点击左栏**DNS-记录**，点击**添加记录**。我们先来添加一条**AAAA (IPv6)记录**，将根域指向我们NAS的IPv6地址。点击保存就添加完成啦！
 这时候如果你在浏览器地址栏输入`yueban.dpdns.org`，并加上NAS管理页面的端口号，应该就可以看到NAS的登录界面了！
-![image](./image.png)
+![img_1771574784817.png](blob:https://blog.ybjun.com/2eacb6f6-5ab6-4fec-a555-50d026a02f28)
 当然，上述操作并不完整，如果真的要实现NAS的完整域名托管，考虑到现在家宽基本已经没有了公网IPv4，我们必须要使用DDNS，后续还需要完成**A(IPv4)记录**配置和DDNS-GO的安装和配置。不过这些不是本文要介绍的内容了。
 
 总之，现在你已经有一个自己的免费域名了，可以开始折腾了！
@@ -119,4 +119,4 @@ DigitalPlat 一共提供了四种后缀，`.dpdns.org`、`.us.kg`、`.qzz.io` �
 根据DigitalPlat的域名使用要求，**注册的免费域名使用期限为1年，但可以在距离域名到期180天以内续签一年**，因此，只要确保我们每年到期前都续签，即可让这个域名保留下去！进入**Renew**，点一下**Request free renewal**即可续签。
 
 到期日期在这页左栏就写着，例如我们`yueban.dpdns.org`的到期时间**即Expiration date**为2027-2-20，我只要在2027年2月初来续一次即可。不过快到期的时候，应该会给你邮箱发邮件的。
-![image](./image.png)
+![image](./ScreenShot_2026-02-20_160821_431.png)
