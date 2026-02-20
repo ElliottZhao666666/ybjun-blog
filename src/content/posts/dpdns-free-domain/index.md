@@ -1,11 +1,61 @@
 ---
 title: 使用DigitalPlat快速获得永久免费域名，Cloudflare可托管
-published: 2026-02-20
-description: ""
+published: '2026-02-20'
+description: 本文免费域名平台DigitalPlat的完整域名注册教程。它使用GitHub快捷验证（无需上传身份证/无需信用卡），也能完美托管到 Cloudflare。
+author: ''
+cover: ''
 pinned: false
-tags: []
-category: ""
+tags:
+  - 网络
+category: 技术备忘
+encrypted: false
 draft: true
 ---
 
-开始写内容吧...
+对于技术爱好者而言，拥有一个**属于自己的域名**还是很有用的。不仅可以为NAS做DDNS以便外部访问，还可以搭建个人网站、个人博客，对计算机专业的学生，也可以用于临时托管自己的web课设项目。
+但域名是要买的，如果我们使用需求很小，且仅限于自用，可能就会感觉不太值得每年花费几十块钱去维持这个域名。
+对这种个人自用需求来说，**xyz顶域的1.111B域名**其实就是个很不错的选择，在Spaceship注册，可以使用支付宝，一年只要四块钱。不过我们今天要介绍的，则是由一个非营利组织The Hack Foundation运营的开源免费域名项目**DigitalPlat**。通过这个项目我们就可以获得永久免费的、可以通过Cloudflare托管的顶级域名。
+
+
+:::warning
+本文教程仅供技术交流与个人学习使用。免费资源来之不易，请大家合规使用，切勿滥用于非法用途，共同维护良好的网络环境。
+:::
+
+
+## 1 前置条件
+你需要有一个GitHub账号，并至少满足以下条件：
+> 1. 注册满30天
+> 2. 近期内有提交过内容或给别的项目点过star
+
+以上条件是因为，虽然DigitalPlat的注册无需身份信息和支付信息，但其使用**GitHub KYC**作身份验证，证明你是活跃着的真人。
+
+
+:::important
+DigitalPlat 注册得到的域名属于公共子域，不支持在中国大陆备案，请大家在使用时务必遵守法规。如果是企业或团队需要构建网站，建议还是注册正规域名并依规建站。
+:::
+
+## 2 注册 DigitalPlat 账号
+首先，打开 [DigitalPlat网站](https://domain.digitalplat.org/) 。
+:::tip
+如果遇到网络无法访问的问题，请自行解决。
+:::
+点击**Register a domain**，会让你登录账号，此时选择界面下方的**Sign up**，进入注册。
+![image](./image.png)
+
+这里面，所有信息都可以按照自己的想法随便填，但**邮箱必须填写自己的真实邮箱**！qq、126、163这种国内邮箱也可以。
+至于地址和电话，可以直接使用 [美国地址生成器](https://usaddressgen.com/) 随机生成，注意地址信息要复制完整地址，因为DigitalPlat要求地址内至少要包含两个逗号；电话要以美国代号 **+1-** 开头，后面出现的数字中括号和连字符全部删除。
+填好全部信息后，点击下方**Register**完成注册，此时你的邮箱会收到一封验证邮件，点击邮件内的链接完成验证。
+
+---
+
+接着，返回DigitalPlat主页登录你的账号，登录后会提醒你需要KYC验证，此时下拉选择**GitHub OAuth**，然后使用GitHub账号登录，只要满足条件，验证就会通过。![image](./ScreenShot_2026-02-20_102540_640.png)
+![image](./ScreenShot_2026-02-20_102603_340.png)
+
+## 3 开始注册域名
+
+验证通过确定后就会直接进入Dashboard。
+
+![image](./ScreenShot_2026-02-20_103126_617.png)
+
+普通用户只有一个免费域名的额度，一般是够用了，如果不够，相信你也看到dashboard中的提示了，**给该项目在GitHub上点个star即可多加一个免费域名额度**。
+该项目的GitHub地址为：[https://github.com/DigitalPlatDev/FreeDomain](https://github.com/DigitalPlatDev/FreeDomain)
