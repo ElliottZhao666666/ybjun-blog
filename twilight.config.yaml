@@ -141,7 +141,7 @@ sidebar:
           collapseThreshold: 20
     right:
       - type: statistics
-        position: top
+        position: sticky
       - type: toc
         position: sticky
         customProps:
