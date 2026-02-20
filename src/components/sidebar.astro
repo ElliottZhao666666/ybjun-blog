@@ -108,14 +108,6 @@ function renderComponent(component: any, index: number) {
     {/* ========================================= */}
     {side === "right" && (
         <div class="flex flex-col w-full gap-4 h-full">
-             {/* 右栏通常没有 Top 组件，但为了兼容性保留渲染逻辑 */}
-            {topComponents.map((component, index) => {
-                const renderData = renderComponent(component, index);
-                if (!renderData) return null;
-                const { Component, props } = renderData;
-                return <Component {...props} side={side} />;
-            })}
-
             {/* Sticky 区域：包含 TOC、统计、访客 */}
             <div class="sticky top-4 flex flex-col w-full gap-4">
                 {/* 1. 先渲染 TOC (文章目录) */}
