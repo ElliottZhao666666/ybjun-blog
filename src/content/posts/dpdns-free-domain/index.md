@@ -1,7 +1,7 @@
 ---
 title: 使用DigitalPlat快速获得永久免费域名，Cloudflare可托管
 published: '2026-02-20'
-description: 本文免费域名平台DigitalPlat的完整域名注册教程。它使用GitHub快捷验证（无需上传身份证/无需信用卡），也能完美托管到 Cloudflare。
+description: 本文介绍了免费域名平台DigitalPlat的域名注册步骤。它使用GitHub快捷验证（无需上传身份证/无需信用卡），也能完美托管到 Cloudflare。
 author: ''
 cover: ''
 pinned: false
