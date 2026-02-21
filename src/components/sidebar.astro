@@ -106,10 +106,8 @@ function renderComponent(component: any, index: number) {
     {/* 场景 B: 右侧栏 (Right Sidebar)            */}
     {/* ========================================= */}
     {side === "right" && (
-        {/* 1. 外侧容器：添加 h-full 确保占满网格，防止中途断崖 */}
         <div id={id} class={`flex flex-col w-full h-full gap-4 ${className || ""}`}>
             
-            {/* 2. 动态组件：增加防御性判断，防止渲染出带 margin/gap 的空 div */}
             {topComponents.length > 0 && topComponents.map((component, index) => {
                 const renderData = renderComponent(component, index);
                 if (!renderData) return null;
@@ -117,13 +115,8 @@ function renderComponent(component: any, index: number) {
                 return <Component {...props} side={side} />;
             })}
 
-            {/* 3. Sticky 容器：✨ 核心修复 ✨ 
-                加入 `self-start` 强制它紧贴外层 Flex 容器的顶部，无视任何拉伸或居中对齐；
-                加入 `h-fit` 防止它本身被拉伸导致 sticky 判断错乱。
-            */}
+
             <div class="flex flex-col gap-4 sticky top-4 mb-4 lg:hidden xl:flex self-start h-fit w-full">
-                
-                {/* 先渲染 TOC (文章目录) */}
                 {stickyComponents.map((component, index) => {
                     const renderData = renderComponent(component, index);
                     if (!renderData) return null;
