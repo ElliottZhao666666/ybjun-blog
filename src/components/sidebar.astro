@@ -103,20 +103,21 @@ function renderComponent(component: any, index: number) {
 
 
     {/* ========================================= */}
-    {/* 场景 B: 右侧栏 (Right Sidebar)            */}
+    {/* 场景 B: 右侧边栏 (Right Sidebar)          */}
+    {/* 适用设备: 仅电脑 (lg 以上)                */}
     {/* ========================================= */}
     {side === "right" && (
-        <div id={id} class={`flex flex-col w-full h-full gap-4 ${className || ""}`}>
-            
-            {topComponents.length > 0 && topComponents.map((component, index) => {
+        <div class="flex flex-col w-full gap-4 h-full">
+             {/* 右栏通常没有 Top 组件，但为了兼容性保留渲染逻辑 */}
+            {topComponents.map((component, index) => {
                 const renderData = renderComponent(component, index);
                 if (!renderData) return null;
                 const { Component, props } = renderData;
                 return <Component {...props} side={side} />;
             })}
-
-
-            <div class="flex flex-col gap-4 sticky top-4 mb-4 lg:hidden xl:flex self-start h-fit w-full">
+            {/* Sticky 区域：包含 TOC、统计、访客 */}
+            <div class="sticky top-4 flex flex-col w-full gap-4">
+                {/* 1. 先渲染 TOC (文章目录) */}
                 {stickyComponents.map((component, index) => {
                     const renderData = renderComponent(component, index);
                     if (!renderData) return null;
@@ -124,10 +125,10 @@ function renderComponent(component: any, index: number) {
                     return <Component {...props} side={side} />;
                 })}
 
-                {/* 站点统计 */}
+                {/* 2. 站点统计 (始终显示) */}
                 <Statistics class="onload-animation" style="animation-delay: 0ms" />
                 
-                {/* 访客信息 */}
+                {/* 3. 访客信息 (始终显示) */}
                 <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
             </div>
         </div>
