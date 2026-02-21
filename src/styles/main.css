@@ -698,3 +698,21 @@
 :root:not(.dark) .custom-md spoiler {
     --_spoiler-mask: color-mix(in oklch, var(--primary) 55%, white 45%);
 }
+
+/* ==================================================== */
+/*  首页侧边栏 Sticky 错位补丁                     */
+/* ==================================================== */
+
+/* 当且仅当在首页 (is-home-sidebar) 且 是Banner模式（祖先没有 .no-banner-layout）时生效 */
+:not(.no-banner-layout) #right-sidebar.is-home-sidebar .flex > .sticky:first-child {
+    margin-top: 0px;
+    top: -256px !important;
+    /* 防护垫：防止 flex 容器高度塌陷导致 sticky 失效 */
+    align-self: flex-start !important;
+}
+
+/* 当用户在客户端手动切换壁纸到“无”或“纯色”时，页面会自动被加上 .no-banner-layout */
+/* 此时我们要立刻撤销拉升，保证布局不崩 */
+.no-banner-layout #right-sidebar.is-home-sidebar .flex > .sticky:first-child {
+    top: 16px !important;
+}

@@ -205,7 +205,7 @@ const {
                             <Sidebar
                                 id="right-sidebar"
                                 side="right"
-                                class={`${rightSidebarClass} ${transparentClass} onload-animation-up`}
+                                class={`${rightSidebarClass} ${isHomePage ? 'is-home-sidebar' : ''} wallpaper-transparent onload-animation-up w-full h-full`}
                                 headings={headings}
                             />
                         ) : (
