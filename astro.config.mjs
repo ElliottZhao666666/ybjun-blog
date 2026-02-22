@@ -38,12 +38,17 @@ export default defineConfig({
     base: "/",
     trailingSlash: "always",
 
-    // 🟢 2. 保持 output 为 static (适合博客)
+    // 保持 output 为 static (适合博客)
     // 如果你以后要用 SSR 功能，可以改成 'server' 或 'hybrid'
     output: 'static',
 
-    // 🟢 3. 启用 Cloudflare 适配器
+    // 启用 Cloudflare 适配器
     adapter: cloudflare(),
+
+    // 添加重定向规则，将admin重定向到现有管理后台blog.ybjun.com
+    redirects: {
+        '/admin': 'https://blog.ybjun.com',
+    },
 
     integrations: [
         decapCmsOauth({
