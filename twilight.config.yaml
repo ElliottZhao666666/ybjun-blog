@@ -23,7 +23,7 @@ site:
       src: https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-web/style.css
       family: LXGW WenKai Screen
   themeColor:
-    hue: '30'
+    hue: '190'
   defaultTheme: system
   wallpaper:
     mode: banner
