@@ -1,10 +1,14 @@
 ---
 title: GNAME推出的免费域名，短后缀，CF可托管
-published: 2026-02-24
-description: ""
+published: '2026-02-24'
+description: ''
+author: ''
+cover: ''
 pinned: false
-tags: []
-category: ""
+tags:
+  - 网络
+category: ''
+encrypted: false
 draft: true
 ---
 
