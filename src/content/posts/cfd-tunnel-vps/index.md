@@ -13,7 +13,7 @@ draft: false
 ---
 
 众所周知，如果我们将未备案的域名添加解析记录到一台位于国内的VPS，那么在域名访问时，大概率会被云服务商因为域名未备案而拦截。但最近博主发现，可以通过创建**Cloudflare ZeroTrust 网络连接器**的方式实现正常访问，此外还能获取 CF 的全球 CDN 加速、自动设置 HTTPS 证书、安全防护等其他功能。
-![img_1772006752763.png](blob:https://blog.ybjun.com/9bd297ac-cb2c-4779-8f5e-a1486db4d27b)
+![img_1772006752763.png](./ScreenShot_2026-02-24_234622_445.png)
 
 
 :::warning
@@ -25,14 +25,14 @@ draft: false
 首先登录你的CF账号，在左栏中找到 **Zero Trust** 点击进入。如果是第一次进入，可能会提示需要绑定支付方式后开通。这里的绑卡支持VISA、万事达等国际卡，自行操作即可。然后点击开通，不用担心扣费，因为我们大概率是用不完免费额度的。*（CF的恩情还不完呐👋😭👋）*
 
 然后，在ZeroTrust的左栏中，找到**网络-连接器**进入，点击页面下方的**添加隧道**。
-![img_1772012597519.png](blob:https://blog.ybjun.com/7e22d38f-0d8a-4b6d-bc3d-dec98fa1b603)
+![img_1772012597519.png](./ScreenShot_2026-02-24_234756_466.png)
 
 隧道类型选择**Cloudflared**，这种方式无需复杂配置，对不同的操作系统也比较友好。点击后输入一个隧道的名字，然后点击**保存隧道**即可。
-![img_1772012681626.png](blob:https://blog.ybjun.com/d30d3fda-2751-4aad-92d3-5f0a89e45318)
-![img_1772012684804.png](blob:https://blog.ybjun.com/0ce0c423-4baf-41a9-a1c7-3bcca307be70)
+![img_1772012681626.png](./ScreenShot_2026-02-24_234808_191.png)
+![img_1772012684804.png](./ScreenShot_2026-02-24_234825_003.png)
 
 保存隧道后，就会弹出不同操作系统下Cloudflared部署方法和命令了，只要**选择你的服务器对应的系统和架构并按要求操作**即可。博主做测试的VPS是Ubuntu 24，所以用**Docker形式**部署。
-![img_1772012815134.png](blob:https://blog.ybjun.com/60bf4aa5-36ea-4a38-9d11-15ac71a907c3)
+![img_1772012815134.png](./ScreenShot_2026-02-24_234931_651.png)
 
 ## 2 服务器的配置
 
@@ -47,10 +47,10 @@ docker run cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ****
 ```
 
 打开服务器的宝塔面板，点击**Docker-本地镜像-导入镜像-命令拉取**，将上述命令粘贴进去，点击**执行命令**，等待部署成功。
-![img_1772013267767.png](blob:https://blog.ybjun.com/99f1ecbc-cab0-4d8f-a029-758804642cf7)
+![img_1772013267767.png](./ScreenShot_2026-02-24_235317_182.png)
 
 部署成功后回到刚才CF的网页，下方显示我们刚添加的服务器已经连接了。点击下一步，然后切回宝塔面板，进行网站的部署和配置。
-![img_1772013349767.png](blob:https://blog.ybjun.com/f0941946-8391-41d3-9f01-29856ee35925)
+![img_1772013349767.png](./ScreenShot_2026-02-24_235429_443.png)
 
 ### 2.2 部署网站或服务
 
