@@ -10,7 +10,8 @@ import { LinkPreset } from "@/types/config";
 import { sortedMoments } from "@/utils/diary";
 
 const pageTitle = LinkPresets[LinkPreset.Diary].name;
-const pageDescription = LinkPresets[LinkPreset.Diary].description;
+const title2 = "个人日记与生活碎碎念";
+const pageDescription = "月半菌的个人日记本。在这里，我不写硬核的代码和长篇的文章，只记录生活中的点滴感悟、心情随笔、读书笔记以及那些转瞬即逝的碎碎念。欢迎来到我的树洞。";
 
 // 时间格式化函数
 function formatTime(dateString: string): string {
@@ -36,7 +37,7 @@ function formatTime(dateString: string): string {
 }
 ---
 
-<GridLayout title={pageTitle} description={pageDescription}>
+<GridLayout title={pageTitle} description={pageDescription} title2={title2}>
     <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-4 py-4 md:px-6 md:py-5 relative w-full">
             <BackwardButton currentPath={Astro.url.pathname} />
@@ -46,7 +47,7 @@ function formatTime(dateString: string): string {
                     <div class="header-content">
                         <div class="header-info">
                             <h1 class="moments-title text-xl md:text-2xl lg:text-3xl font-bold text-90 mb-1">{pageTitle}</h1>
-                            <p class="moments-subtitle text-sm md:text-base lg:text-lg text-75">{pageDescription}</p>
+                            <p class="moments-subtitle text-sm md:text-base lg:text-lg text-75">随时随地，分享生活</p>
                         </div>
                         <div class="header-stats">
                             <div class="stat-item text-center">

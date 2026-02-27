@@ -8,7 +8,7 @@ const posts = (await getSortedPosts()).filter((post) => !post.data.encrypted);
 const recentPosts = posts.slice(0, 6);
 ---
 
-<GridLayout title="Atom 订阅" description="订阅获取最新更新">
+<GridLayout title="Atom 订阅" description="月半菌的Blog文章订阅页面。提供标准的 Atom 源链接，帮助您使用喜爱的阅读器随时订阅本站最新文章，不错过任何精彩更新。">
 
     <div class="onload-animation-up">
         <div class="card-base rounded-[var(--radius-large)] p-8 mb-6">

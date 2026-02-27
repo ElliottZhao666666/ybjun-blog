@@ -18,7 +18,8 @@ import {
 import { LinkPreset } from "@/types/config";
 
 const title = LinkPresets[LinkPreset.Projects].name;
-const subtitle = LinkPresets[LinkPreset.Projects].description;
+const title2 = "开源项目与个人作品集"
+const subtitle = "这里是月半菌的个人项目与开源作品展示区。收录了我独立开发或参与折腾的项目、工具及实用脚本等。欢迎探索我用代码创造的各种有趣且实用的工具。";
 
 // 获取项目统计信息
 const stats = getProjectStats();
@@ -58,7 +59,7 @@ const getCategoryText = (category: string) => {
 };
 ---
 
-<GridLayout title={title} description={subtitle}>
+<GridLayout title={title} description={subtitle} title2={title2}>
     <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <BackwardButton currentPath={Astro.url.pathname} />

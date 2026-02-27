@@ -26,7 +26,7 @@ const sortedPostsList = allPosts.filter((post) =>
 );
 
 const pageTitle = LinkPresets[LinkPreset.Archive].name;
-const pageDescription = LinkPresets[LinkPreset.Archive].description;
+const pageDescription = `这里是月半菌Blog中【${categoryName}】分类下的全部文章归档。在这里您可以浏览所有该领域下的技术干货、折腾记录与实用教程，方便您进行系统性地查阅与学习。`;
 ---
 
 <GridLayout title={`${pageTitle} - ${categoryName}`} description={pageDescription}>
