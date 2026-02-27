@@ -18,6 +18,27 @@ site:
       - code
       - pre
   timeZone: 8
+  keywords:
+    - 月半菌
+    - ybjun
+    - yuebanjun
+    - 博客
+    - 计算机
+    - 电脑技术
+    - 网络技术
+    - 重装系统
+    - Cloudflare
+    - Cloudflare Workers
+    - AI应用
+    - 网站搭建
+    - 前端开发
+    - Astro
+    - 实用工具
+    - 摄影
+    - 风光摄影
+    - 相机
+    - 铁路
+    - 火车
   font:
     LXGW WenKai Screen:
       src: https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-web/style.css

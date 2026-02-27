@@ -9,7 +9,8 @@ import GridLayout from "@layouts/grid.astro";
 import { LinkPreset } from "@/types/config";
 
 const pageTitle = LinkPresets[LinkPreset.About].name;
-const pageDescription = LinkPresets[LinkPreset.About].description;
+const title2 = "更多地了解我"
+const pageDescription = "这是月半菌的个人简介页面。这里有我的自述，以及建立月半菌的时间线。欢迎在这里深入了解我。";
 
 const aboutPost = await getEntry("spec", "about");
 

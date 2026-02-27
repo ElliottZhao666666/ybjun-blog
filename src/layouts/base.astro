@@ -93,7 +93,11 @@ const enableBanner = siteConfig.wallpaper.mode === "banner";
 
 let pageTitle: string;
 if (title) {
-	pageTitle = `${title} - ${siteConfig.title}`;
+	if (title2) {
+        pageTitle = `${title} - ${siteConfig.title} | ${title2}`;
+    } else {
+        pageTitle = `${title} - ${siteConfig.title}`;
+    } 
 } else {
 	pageTitle = siteConfig.subtitle
 		? `${siteConfig.title} - ${siteConfig.subtitle}`
