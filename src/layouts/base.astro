@@ -33,6 +33,7 @@ import ClickEffect from "@components/common/ClickEffect.astro";
 
 interface Props {
 	title?: string;
+    title2?: string;
 	banner?: string;
 	description?: string;
 	lang?: string;
@@ -40,7 +41,7 @@ interface Props {
 	postSlug?: string;
 }
 
-let { title, banner, description, lang, setOGTypeArticle, postSlug } =
+let { title, title2, banner, description, lang, setOGTypeArticle, postSlug } =
 	Astro.props;
 
 // apply a class to the body element to decide the height of the banner, only used for initial page load
