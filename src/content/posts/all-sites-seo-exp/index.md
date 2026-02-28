@@ -42,8 +42,8 @@ draft: false
 ### 原因分析
 
 为了保护部署在 IIS 上的一个资源站，笔者在 Cloudflare WAF 中写了一条安全拦截规则，意图拦截该子域下非亚洲 IP 或者请求特定文件后缀（如 .zip / .exe）的访问。
-然而，由于理解错了 WAF 表达式逻辑编辑器的机制，导致“拦截非亚洲 IP”这个条件脱离了域名的绑定，变成了全局生效！
-极其不巧的是，Bingbot 和 Googlebot 的爬虫服务器绝大多数都位于北美（NA）。当它们尽职尽责地来抓取笔者博客的 Sitemap 时，直接被当成境外恶意请求，无情地吃了一记 403 闭门羹。
+然而，由于**理解错了 WAF 表达式逻辑编辑器的机制**，导致“拦截非亚洲 IP”这个条件脱离了域名的绑定，变成了全局生效！
+极其不巧的是，Bingbot 和 Googlebot 的爬虫服务器**绝大多数都位于北美（NA）**。当它们尽职尽责地来抓取笔者博客的 Sitemap 时，直接被当成境外恶意请求，无情地吃了一记 403 闭门羹。
 
 ### 解决方案
 
@@ -194,12 +194,12 @@ if (path.startsWith('/detail/')) {
 
 ### 原因分析
 
-SEO 的语义化规范要求网页的 `<body>` 中必须且只能有一个明确指示核心主题的 `<h1>`。但这里有一个绝对的红线：**千万不要使用 display: none、opacity: 0 或将文字颜色与背景色一致的方式来隐藏 H1！** 这种操作属于典型的**黑帽 SEO**，一旦被现代爬虫的渲染引擎抓到，网站会面临直接被降权甚至踢出索引的惩罚！
+SEO 的语义化规范要求网页的 `<body>` 中必须且只能有一个明确指示核心主题的 `<h1>`。但这里有一个绝对的红线：**千万不要使用 `display: none`、`opacity: 0` 或将文字颜色与背景色一致的方式来隐藏 H1！** 这种操作属于典型的**黑帽 SEO**，一旦被现代爬虫的渲染引擎抓到，网站会面临直接被降权甚至踢出索引的惩罚！
 
 ### 解决方案：无障碍阅读器专属类
 
 
-笔者采用了现代 CSS 框架（如 Tailwind / Bootstrap）的标准合规方案：**sr-only** (Screen Reader Only)  。它通过 **CSS 的 clip 属性**，把包含完整关键词的 H1 元素硬性裁剪成 1 像素。这样它在普通用户的视觉上**完全隐形**，但在 HTML 文档流中是真实存在的。
+笔者采用了现代 CSS 框架（如 Tailwind / Bootstrap）的标准合规方案：`sr-only`(Screen Reader Only)  。它通过 **CSS 的 clip 属性**，把包含完整关键词的 H1 元素硬性裁剪成 1 像素。这样它在普通用户的视觉上**完全隐形**，但在 HTML 文档流中是真实存在的。
 
 ``` css
 .sr-only {
@@ -216,12 +216,12 @@ SEO 的语义化规范要求网页的 `<body>` 中必须且只能有一个明确
 ```
 
 ``` html
-            <div class="logo" onclick="showAboutModal()" style="cursor: pointer;" title="关于歌词大师">
-                <img src="src/icon.png" alt="Logo" style="height: 32px; width: 32px; border-radius: 6px;">
-                <span data-i18n="app_name">歌词大师</span>
-                <span class="version-tag" data-i18n="version_beta">Beta</span>
-                <h1 class="sr-only">歌词大师 (Lyric Master) - 专业的在线LRC歌词编辑器</h1>
-            </div>
+<div class="logo" onclick="showAboutModal()" style="cursor: pointer;" title="关于歌词大师">
+	   <img src="src/icon.png" alt="Logo" style="height: 32px; width: 32px; border-radius: 6px;">
+	   <span data-i18n="app_name">歌词大师</span>
+	   <span class="version-tag" data-i18n="version_beta">Beta</span>
+	   <h1 class="sr-only">歌词大师 (Lyric Master) - 专业的在线LRC歌词编辑器</h1>
+</div>
 ```
 
 这么做，既满足了 SEO 爬虫对语义标签和关键词密度的要求，又**兼顾了 Web 无障碍访问**（a11y），堪称优雅。
@@ -289,13 +289,13 @@ const pageDescription = `这里是月半菌的Blog中关于【${categoryName}】
 
 只在首页渲染 `<h1>`，而在其他页面全部服务端降级渲染为长得一模一样、且不会破坏 Swup 动画的 `<div>`。双 H1 冲突瞬间迎刃而解！
 
-现在，如果我们像常规一样从博客主页点击顶栏进入其它页面，打开F12会发现banner的标题依然是 `<h1>`，这是因为 Swup 是通过拦截链接点击、无刷新替换内容区的方式工作的，外层的 Banner 元素并不会随之刷新，**这属于一种“视觉假象”**。而爬虫在抓取页面，或我们直接通过输入URL打开这些子页面时，**并不会触发这些前端路由跳转**，而是直接请求服务器返回的静态 HTML 源码。 此时服务端就会根据三元判断正确输出 <div> 标签，完美避开多 H1 报错。
+现在，如果我们像常规一样从博客主页点击顶栏进入其它页面，打开F12会发现banner的标题依然是 `<h1>`，这是因为 Swup 是通过拦截链接点击、无刷新替换内容区的方式工作的，外层的 Banner 元素并不会随之刷新，**这属于一种“视觉假象”**。而爬虫在抓取页面，或我们直接通过输入URL打开这些子页面时，**并不会触发这些前端路由跳转**，而是直接请求服务器返回的静态 HTML 源码。 此时服务端就会根据三元判断正确输出 `<div>` 标签，完美避开多 H1 报错!
 
 ## 5 总结与启发
 
 **经过这一套连轴转的深度优化，三个站点从骨架到皮囊，都已经彻底满足了 Bing 的网页规范。**
 
-在 Gemini 3.1 Pro 协助笔者优化的过程中，它生成了一句话：**“为 Bing 做的底层优化，就是为 Google 铺的红地毯”**。因为这两大搜索引擎在对网页结构、语义化标签的底层评判逻辑上是高度一致的，甚至Google 的机器人可以处理js，对SPA的支持会更友好，就好像我们之前壁纸库在页面内动态替换描述的逻辑，在Bing报错，但在Google没有报错。
+在 Gemini 3.1 Pro 协助笔者优化的过程中，它生成了一句话：**“为 Bing 做的底层优化，就是为 Google 铺的红地毯”**。因为这两大搜索引擎在对网页结构、语义化标签的底层评判逻辑上是高度一致的，甚至 Google 的机器人可以处理js，对SPA的支持会更友好，就好像我们之前壁纸库在页面内动态替换描述的逻辑，在Bing报错，但在 Google 没有报错。
 
 所以完成一系列修改优化后，这些单 H1 结构、无障碍标签和不重复的高质量元数据，**恰恰正中 Googlebot 的下怀**，极大地迎合了其对 Core Web Vitals (核心网页指标) 的要求。
 
