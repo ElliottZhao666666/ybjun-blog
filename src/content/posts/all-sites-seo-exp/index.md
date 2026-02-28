@@ -14,7 +14,7 @@ tags:
   - SEO
 category: 技术备忘
 encrypted: false
-draft: true
+draft: false
 ---
 
 建站容易，优化不易。目前笔者一共维护着三个形态各异的网站：
