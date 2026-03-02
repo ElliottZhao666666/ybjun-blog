@@ -196,7 +196,7 @@ const slug = (post as any).slug || post.id;
             const content = dom.content.value.trim();
 
             if (!mail || !content) {
-                showMessage('请填写邮箱和评论内容', 'error');
+                showMessage('请填写邮箱和评论内容！', 'error');
                 return;
             }
 
@@ -218,7 +218,7 @@ const slug = (post as any).slug || post.id;
                 const result = await res.json();
 
                 if (res.ok) {
-                    showMessage('评论成功！', 'success');
+                    showMessage(result.message || '评论成功！', 'success');
                     dom.content.value = '';
                     if (dom.cancelBtn) dom.cancelBtn.click();
                     loadComments(); 
