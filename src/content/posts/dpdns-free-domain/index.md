@@ -9,6 +9,7 @@ cover: ''
 pinned: false
 tags:
   - 网络
+  - 域名
 category: 经验分享
 encrypted: false
 draft: false

@@ -8,6 +8,8 @@ pinned: false
 tags:
   - 计算机
   - 网络
+  - Cloudflare
+  - 建站
 category: 技术备忘
 encrypted: false
 draft: false

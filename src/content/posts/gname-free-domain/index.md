@@ -8,6 +8,8 @@ cover: ''
 pinned: false
 tags:
   - 网络
+  - 域名
+  - 建站
 category: 经验分享
 encrypted: false
 draft: false

@@ -3,7 +3,7 @@ title: 歌词大师 (Lyric Master) 开发复盘
 published: 2026-02-14
 description: '从易语言到现代 Web 应用的进化之路'
 cover: "./cover.png"
-tags: ["计算机","软件"]
+tags: ["计算机","软件","歌词大师"]
 category: 小作品
 draft: false 
 ---

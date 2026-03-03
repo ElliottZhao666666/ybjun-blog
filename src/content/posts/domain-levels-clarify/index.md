@@ -8,8 +8,8 @@ author: ''
 cover: ''
 pinned: false
 tags:
-  - 计算机
   - 网络
+  - 域名
 category: 学习笔记
 encrypted: false
 draft: false
