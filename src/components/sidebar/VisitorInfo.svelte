@@ -25,8 +25,10 @@
   onMount(async () => {
   // 1. 设置问候语
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) greeting = "上午好！";
-	else if (hour >= 12 && hour < 18) greeting = "下午好！";
+  if (hour >= 8 && hour < 11) greeting = "上午好！";
+  else if (hour >= 5 && hour < 8) greeting = "早上好！";
+  else if (hour >= 11 && hour < 14) greeting = "中午好！";
+	else if (hour >= 14 && hour < 18) greeting = "下午好！";
 	else if (hour >= 18 && hour < 22) greeting = "晚上好！";
 	else greeting = "夜深了";
 
@@ -144,7 +146,7 @@
       <div class="flex flex-col justify-center overflow-hidden min-w-0 flex-1">
         <div class="text-[10px] text-neutral-500 dark:text-neutral-400 leading-tight">网络接入</div>
         <div class="font-bold text-neutral-900 dark:text-neutral-100 text-sm truncate leading-tight mt-0.5 flex items-center justify-between w-full">
-          <span class="truncate max-w-[8rem] cursor-help" title="{info.isp}">{info.isp}</span>
+          <span class="truncate max-w-[8.5rem] cursor-help" title="{info.isp}">{info.isp}</span>
           <span class={"text-[10px] font-mono ${info.pingColor} bg-neutral-100 dark:bg-neutral-800 px-1.5 rounded"}>
             {loading ? '...' : `${info.ping}ms`}
           </span>
