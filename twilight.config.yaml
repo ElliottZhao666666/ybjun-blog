@@ -55,9 +55,10 @@ site:
         - /assets/images/desktopWallpaper_2.webp
         - /assets/images/desktopWallpaper_3.webp
         - /assets/images/desktopWallpaper_4.webp
+        - /assets/images/desktopWallpaper_1772640099830_48.webp
+        - /assets/images/desktopWallpaper_1772640099585_69.webp
+        - /assets/images/desktopWallpaper_1772640099367_81.webp
         - /assets/images/desktopWallpaper_5.webp
-        - /assets/images/desktopWallpaper_6.webp
-        - /assets/images/desktopWallpaper_7.webp
         - /assets/images/desktopWallpaper_8.webp
       mobile:
         - /assets/images/mobileWallpaper_1.webp
@@ -65,9 +66,10 @@ site:
         - /assets/images/mobileWallpaper_3.webp
         - /assets/images/mobileWallpaper_4.webp
         - /assets/images/mobileWallpaper_5.webp
-        - /assets/images/mobileWallpaper_6.webp
-        - /assets/images/mobileWallpaper_7.webp
+        - /assets/images/mobileWallpaper_1772640130368_40.webp
         - /assets/images/mobileWallpaper_8.webp
+        - /assets/images/mobileWallpaper_1772640130117_41.webp
+        - /assets/images/mobileWallpaper_1772640130638_86.webp
     position: center
     carousel:
       enable: true
