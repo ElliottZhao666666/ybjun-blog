@@ -31,4 +31,4 @@ password: '234'
 
 再来一张
 
-![img_1772682363928.png](blob:http://localhost:5050/af117c15-772e-4f47-bae9-89b4591506e3)
+![img_1772682397482.png](./img_1772682397482.png)
