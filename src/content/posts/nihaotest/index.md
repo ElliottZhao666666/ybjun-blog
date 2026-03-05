@@ -1,20 +1,25 @@
 ---
 title: 编辑器测试
 published: '2026-02-17'
-description: 测试
+description: ''
 author: ''
-cover: ./cover.jpg
+cover: ''
 pinned: false
-tags:
-  - 测试
-category: 技术备忘
-encrypted: true
+tags: []
+category: ''
+encrypted: false
 draft: true
-password: '114514'
 ---
 
-测试图片!
+## 测试图片!
 ![image](./Bloom-wallpaper-Dark.jpg)
 ![image](./1601138219095.jpeg)
 
-测试修改！
+:::important
+再来一张测试图
+:::
+![img_1772681298954.png](blob:http://localhost:5050/15d52d92-0937-4cbf-aee2-3328acb6e7d5)
+
+还有高手？
+
+![img_1772681384592.png](./img_1772681384592.png)
