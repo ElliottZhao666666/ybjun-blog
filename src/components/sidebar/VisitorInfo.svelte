@@ -25,12 +25,12 @@
   onMount(async () => {
   // 1. 设置问候语
   const hour = new Date().getHours();
-  if (hour >= 8 && hour < 11) greeting = "上午好！";
-  else if (hour >= 5 && hour < 8) greeting = "早上好！";
-  else if (hour >= 11 && hour < 14) greeting = "中午好！";
-	else if (hour >= 14 && hour < 18) greeting = "下午好！";
-	else if (hour >= 18 && hour < 22) greeting = "晚上好！";
-	else greeting = "夜深了";
+  if (hour >= 8 && hour < 11) greeting = "上午好！保持高效专注";
+  else if (hour >= 5 && hour < 8) greeting = "早上好！开启新的一天";
+  else if (hour >= 11 && hour < 14) greeting = "中午好！记得午休一下";
+	else if (hour >= 14 && hour < 18) greeting = "下午好！喝杯茶继续加油";
+	else if (hour >= 18 && hour < 22) greeting = "晚上好！享受悠闲时光";
+	else greeting = "夜深了，早点休息";
 
 	// 2. 解析本地环境 (OS & Browser)
 	const parser = new UAParser();
