@@ -93,7 +93,7 @@ site:
         transparentMode: semifull
       waves:
         enable: true
-        performanceMode: false
+        performanceMode: true
     fullscreen:
       zIndex: -1
       opacity: 0.9
@@ -218,7 +218,7 @@ footer:
   enable: false
   customHtml: ''
 particle:
-  enable: true
+  enable: false
   particleNum: 8
   limitTimes: -1
   size:
@@ -238,7 +238,7 @@ particle:
     fadeSpeed: 0.12
   zIndex: 100
 musicPlayer:
-  enable: true
+  enable: false
   mode: meting
   meting:
     meting_api: https://api.i-meto.com/meting/api
