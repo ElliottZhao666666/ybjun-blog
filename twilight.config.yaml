@@ -96,7 +96,7 @@ site:
     carousel:
       enable: true
       interval: 6
-      kenBurns: true
+      kenBurns: false
     banner:
       homeText:
         enable: true
@@ -213,7 +213,7 @@ profile:
       url: https://tuchong.com/25406319
     - name: 邮箱
       icon: material-symbols:mail
-      url: 'mailto:yuebanjun666@outlook.com '
+      url: 'mailto:main@ybjun.com '
 announcement:
   title: 公告
   content: 欢迎来到月半菌的博客！博客于2026年春节正式上线！欢迎提出宝贵意见！
