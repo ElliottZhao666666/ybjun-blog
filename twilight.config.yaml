@@ -96,7 +96,7 @@ site:
     carousel:
       enable: true
       interval: 6
-      kenBurns: false
+      kenBurns: true
     banner:
       homeText:
         enable: true
