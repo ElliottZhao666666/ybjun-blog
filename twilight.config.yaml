@@ -148,6 +148,7 @@ navbar:
     - name: 相册
       url: /gallery/
       icon: material-symbols:photo-library
+    - Diary
     - name: 胖哥出品
       icon: material-symbols:widgets-rounded
       description: 胖哥打造的软件合集
