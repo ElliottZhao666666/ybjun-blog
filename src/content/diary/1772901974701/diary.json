@@ -1,0 +1,10 @@
+{
+  "title": "Hello",
+  "content": "这是一条测试内容，看看从后台发出的日记能不能正常显示",
+  "date": "2026-03-07T16:46:14Z",
+  "images": [
+    "./img_1772901883184_bjopz7.webp",
+    "./img_1772901884389_bsb8it.webp",
+    "https://www.bing.com/th?id=OHR.KirkjufellAurora_ZH-CN7878752057_800x600.jpg"
+  ]
+}
