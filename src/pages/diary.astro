@@ -1,6 +1,7 @@
 ---
 import BackwardButton from "@components/backwardButton.astro";
 import ImageWrapper from "@components/common/imageWrapper.astro";
+import Icon from "@components/common/icon.astro";
 import { LinkPresets } from "@constants/link-presets";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
@@ -13,27 +14,26 @@ const pageTitle = LinkPresets[LinkPreset.Diary].name;
 const title2 = "个人日记与生活碎碎念";
 const pageDescription = "月半菌的个人日记本。在这里，我不写硬核的代码和长篇的文章，只记录生活中的点滴感悟、心情随笔、读书笔记以及那些转瞬即逝的碎碎念。欢迎来到我的树洞。";
 
-// 时间格式化函数
-function formatTime(dateString: string): string {
-	var TG = 8;
-	if (siteConfig.timeZone >= -12 && siteConfig.timeZone <= 12)
-		TG = siteConfig.timeZone;
-	const timeGap = TG;
-	const now = new Date();
-	const date = new Date(dateString);
-	const diffInMinutes = Math.floor(
-		(now.getTime() + timeGap * 60 * 60 * 1000 - date.getTime()) / (1000 * 60),
-	);
-	if (diffInMinutes < 60) {
-		return `${diffInMinutes}${i18n(I18nKey.diaryMinutesAgo)}`;
-	}
-	if (diffInMinutes < 1440) {
-		// 24小时
-		const hours = Math.floor(diffInMinutes / 60);
-		return `${hours}${i18n(I18nKey.diaryHoursAgo)}`;
-	}
-	const days = Math.floor(diffInMinutes / 1440);
-	return `${days}${i18n(I18nKey.diaryDaysAgo)}`;
+// 时间格式化函数：将UTC时间（如 2026-03-07T16:00:00Z）按配置时区偏移后显示
+function formatDiaryDateTime(dateString: string): string {
+    let tz = 8;
+    if (siteConfig.timeZone >= -12 && siteConfig.timeZone <= 12) tz = siteConfig.timeZone;
+
+    const utcMs = new Date(dateString).getTime();
+    if (Number.isNaN(utcMs)) return dateString;
+
+    // 将UTC时间整体平移 tz 小时，然后用 UTC getter 读取，避免受用户本地时区影响
+    const shifted = new Date(utcMs + tz * 60 * 60 * 1000);
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+
+    const yyyy = shifted.getUTCFullYear();
+    const mm = pad2(shifted.getUTCMonth() + 1);
+    const dd = pad2(shifted.getUTCDate());
+    const hh = pad2(shifted.getUTCHours());
+    const mi = pad2(shifted.getUTCMinutes());
+    const ss = pad2(shifted.getUTCSeconds());
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
 }
 ---
 
@@ -85,9 +85,9 @@ function formatTime(dateString: string): string {
                                 <hr class="moment-divider border-t border-(--line-divider) my-3 md:my-4" />
                                 <div class="moment-footer flex justify-between items-center">
                                     <div class="moment-time flex items-center gap-1.5 text-75 text-xs md:text-sm lg:text-base">
-                                        <i class="time-icon text-xs md:text-sm">🕐</i>
+										<Icon icon="material-symbols:access-time" class="time-icon" size="sm" fallback="·" loading="eager" />
                                         <time datetime={moment.date}>
-                                            {formatTime(moment.date)}
+										{formatDiaryDateTime(moment.date)}
                                         </time>
                                     </div>
                                 </div>
