@@ -15,7 +15,7 @@ tags:
   - 网络
 category: 技术备忘
 encrypted: false
-draft: false
+draft: true
 ---
 
 要说最近计算机圈什么最火，想必一定是**养龙虾**了。
@@ -215,4 +215,6 @@ docker run -d \
    docker compose exec openclaw-gateway node dist/index.js devices approve <REQUEST_ID>
    ```
 
-批准后，刷新浏览器，重新连接，控制台大门正式敞开。
+批准后，刷新浏览器，重新连接，控制台就此正式敞开，应该就可以直接看到聊天界面了。
+![img_1774434587592.png](./img_1774434587592.png)
+
