@@ -16,7 +16,7 @@ tags:
   - Docker
 category: 技术备忘
 encrypted: false
-draft: true
+draft: false
 ---
 
 要说最近计算机圈什么最火，想必一定是**养龙虾**了。
@@ -65,6 +65,7 @@ services:
 ```
 
 最后，执行 `docker-compose up -d` 启动内核。此时，NAS 本地的 `7890` 端口（默认）就已经具备了科学访问能力。
+![img_1774436789959.png](./img_1774436789959.png)
 
 ### 1.2 Metacubexd 面板的安装配置
 
@@ -88,9 +89,10 @@ services:
    ```
 
 4. 构建并启动项目。利用群晖的这种方式部署，后续会自动让你直接在 **Web Station** 中为其创建一个基于域名的 Web 门户，访问极其优雅。
+![img_1774436686332.png](./img_1774436686332.png)
 
 5. 浏览器访问你的面板地址，输入 API 基础地址 `http://127.0.0.1:9090`，即可接入 Mihomo 进行节点切换。
-
+![img_1774436727756.png](./img_1774436727756.png)
 
 :::tip
 虽然我们在Web Station中添加门户时需要填一个域名，但实际上添加后，我们依然可以直接使用NAS的ip访问面板。
@@ -240,3 +242,43 @@ docker compose -f docker-compose.yml -f docker-compose.extra.yml -f docker-compo
 ```
 
 安装后会生成一个二维码，只要使用8.0.70版本的iOS微信扫描，即可完成ClawBot机器人的添加！
+![img_1774436332190.png](./img_1774436332190.png)
+
+## 5 问题踩坑与解决方法总结
+
+在这次部署中，博主遇到了一些极其折磨人的报错，以下是排雷合集：
+
+### 坑一：CLI 工具下载超时（`npm ERR! ETIMEDOUT`）
+
+- **现象**：执行安装脚本时网络超时。
+- **原因**：即使 NAS 有代理，处于 Bridge 网桥内的容器默认无法访问宿主机的 `127.0.0.1`。
+- **解法**：必须使用 `--network host`，并注入宿主机代理的环境变量（见第4章代码）。
+
+### 坑二：控制台连接提示 `disconnected (1006): no reason`
+
+- **现象**：Web 界面配置页点击连接后秒断开。
+- **原因**：Web 界面的 WebSocket URL 错误地填了 `wss://localhost:18789`。浏览器会去连接你**当前使用的电脑**的端口，而不是 NAS地localhost。
+- **解法**：将 WebSocket URL 改为你的 CF 隧道公网域名（例如 `wss://claw.yourdomain.com`），注意**不带端口号**。
+
+:::warning
+此外，这个提示还可能的原因是网断了，请排查你的电脑、CF隧道、NAS的隧道docker、NAS联网情况这四个环节，但凡一个环节有问题就会报此错误。
+:::
+
+### 坑三：AI 疯狂空转，几千 Token 瞬间蒸发
+
+- **现象**：日志里每隔 30 分钟出现 `Read HEARTBEAT.md if it exists...`，余额飞速下降。
+
+- **原因**：OpenClaw 的 Autonomous Pulse（自主脉搏）机制在空转。
+
+- **解法**：在交互式配置中关闭，或者直接通过命令硬改配置，然后重启容器：
+
+  ```bash
+  docker compose exec openclaw-gateway node dist/index.js config set agent.pulse.enabled false
+  ```
+
+
+## 6. 总结
+
+通过群晖 Docker + OpenClaw + Cloudflare Tunnel 的组合，我们成功打通了底层网络和权限的壁垒，在保证数据隐私的前提下，在群晖NAS上为自己搭建了一个全天候响应的微信 AI 助理。
+
+从 UDP 协议带来的隧道假死，到终端二维码的显示乱码，每解决一个不起眼的 Bug，都让我们对 Linux 网络栈和容器底层机制有了更深的理解。希望这篇“踩坑实录”，能为喜欢折腾的各位提供一份靠谱的工程化部署参考。
