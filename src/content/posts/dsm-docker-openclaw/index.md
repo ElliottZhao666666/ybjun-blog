@@ -228,7 +228,12 @@ docker run -d \
 现在我们来演示一下微信ClawBot的接入。正巧最近微信向iOS用户开放了灰度内测，我们就来试试。
 ![img_1774435486927.png](./img_1774435486927.png)
 
-微信官方使用npx的部署命令如下，但这条命令**仅适用于直接在机内安装OpenClaw的情况**，对于Docker情况是不适用的，而且即使使用`docker compose`直接穿梭运行也不可取，因为输入 `docker compose run npx ...` 时，系统会把其中的npx错误地识别为一项docker服务，我们必须把npx指定为接入点。
+微信官方提供的，使用npx的部署命令如下：
+
+```bash
+npx -y @tencent-weixin/openclaw-weixin-cli@latest install
+```
+但这条命令**仅适用于直接在机内安装OpenClaw的情况**，对于Docker情况是不适用的，而且即使使用`docker compose`直接穿梭运行也不可取，因为输入 `docker compose run npx ...` 时，系统会把其中的npx错误地识别为一项docker服务，我们必须把npx指定为接入点。
 
 所以，这个安装命令需要改成下面这样。利用我们修改好的 `host` 网络和代理环境变量，执行即可：
 
