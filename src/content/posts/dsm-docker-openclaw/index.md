@@ -13,6 +13,7 @@ tags:
   - AI
   - OpenClaw
   - 网络
+  - Docker
 category: 技术备忘
 encrypted: false
 draft: true
@@ -38,7 +39,7 @@ draft: true
 
 使用管理员组的帐户通过 SSH 连接到群晖DSM，并使用`sudo -i`，再次输入你的管理员帐户密码，进入root环境。然后执行以下两条命令：
 
-```bash
+``` bash
 cd /volume1/docker/mihomo
 
 # 使用 wget 下载订阅配置并重命名为 config.yaml，请将下方的 URL 替换为你自己的真实订阅地址
@@ -110,7 +111,7 @@ OpenClaw 是一个极其轻量且强大的 AI 网关，它能够将各大模型 
 
 ### 2.2 核心网络与权限优化
 
-官方提供的默认配置采用 Bridge 虚拟网桥模式，这在DSM环境下会引发两个致命问题：一是严格的读写权限导致容器启动失败，二是处于网桥内的容器无法顺畅访问宿主机的 `127.0.0.1:7890` 代理。
+官方提供的默认配置采用 Bridge 虚拟网桥模式，这在DSM环境下会引发**两个致命问题**：一是严格的读写权限导致容器启动失败，二是处于网桥内的容器无法顺畅访问宿主机的 `127.0.0.1:7890` 代理。
 
 **解决方案：创建一个用户叠加配置 `docker-compose.user.yml`。**
 
@@ -134,14 +135,14 @@ EOF
 
 加载所有配置文件并后台启动：
 
-```
+```bash
 cd /volume1/docker/openclaw/source
 docker compose -f docker-compose.yml -f docker-compose.extra.yml -f docker-compose.user.yml up -d
 ```
 
 启动后，网关并没有直接就绪，我们需要进入容器跟随脚本的**交互式指引**进行初始化配置。这里有几个选项非常容易让人迷惑，下面是标准答题卡：
 
-```
+```bash
 # 进入交互式配置界面
 docker compose exec openclaw-gateway node dist/index.js setup
 ```
@@ -211,10 +212,31 @@ docker run -d \
 
 2. 批准该浏览器接入：
 
-   ```
+   ```bash
    docker compose exec openclaw-gateway node dist/index.js devices approve <REQUEST_ID>
    ```
 
 批准后，刷新浏览器，重新连接，控制台就此正式敞开，应该就可以直接看到聊天界面了。
 ![img_1774434587592.png](./img_1774434587592.png)
 
+## 4. 微信 ClawBot 在 Docker 中的安装和接入
+
+控制台就绪后，我们就可以开始接入各种各样的功能和通道了，具体的大家可以自行探索。
+
+现在我们来演示一下微信ClawBot的接入。正巧最近微信向iOS用户开放了灰度内测，我们就来试试。
+![img_1774435486927.png](./img_1774435486927.png)
+
+微信官方使用npx的部署命令如下，但这条命令**仅适用于直接在机内安装OpenClaw的情况**，对于Docker情况是不适用的，而且即使使用`docker compose`直接穿梭运行也不可取，因为输入 `docker compose run npx ...` 时，系统会把其中的npx错误地识别为一项docker服务，我们必须把npx指定为接入点。
+
+所以，这个安装命令需要改成下面这样。利用我们修改好的 `host` 网络和代理环境变量，执行即可：
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.extra.yml -f docker-compose.user.yml run --rm \
+  -e http_proxy="[http://127.0.0.1:7890](http://127.0.0.1:7890)" \
+  -e https_proxy="[http://127.0.0.1:7890](http://127.0.0.1:7890)" \
+  --entrypoint npx \
+  openclaw-cli \
+  -y @tencent-weixin/openclaw-weixin-cli@latest install
+```
+
+安装后会生成一个二维码，只要使用8.0.70版本的iOS微信扫描，即可完成ClawBot机器人的添加！
