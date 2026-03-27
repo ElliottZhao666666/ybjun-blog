@@ -14,9 +14,11 @@ tags:
   - OpenClaw
   - 网络
   - Docker
+  - Cloudflare
 category: 技术备忘
 encrypted: false
 draft: false
+updated: '2026-03-27'
 ---
 
 要说最近计算机圈什么最火，想必一定是**养龙虾**了。
@@ -167,7 +169,7 @@ curl https://api.example.com/v1/models -H "Authorization: Bearer sk-your-api-key
 记得要把API链接和token换成你自己的哦！执行后终端会返回一段 JSON，其中的 id 字段即为你需要在配置脚本中填写的模型名称。
 :::
 
-## 3. 为控制台构建隧道
+## 3 为控制台构建隧道
 
 至此，OpenClaw我们就安装好了，并且会在宿主机（NAS本地网络）的 `18789` 端口暴露出 Web 控制台。
 
@@ -221,7 +223,7 @@ docker run -d \
 批准后，刷新浏览器，重新连接，控制台就此正式敞开，应该就可以直接看到聊天界面了。
 ![img_1774434587592.png](./img_1774434587592.png)
 
-## 4. 微信 ClawBot 在 Docker 中的安装和接入
+## 4 微信 ClawBot 在 Docker 中的安装和接入
 
 控制台就绪后，我们就可以开始接入各种各样的功能和通道了，具体的大家可以自行探索。
 
@@ -249,7 +251,55 @@ docker compose -f docker-compose.yml -f docker-compose.extra.yml -f docker-compo
 安装后会生成一个二维码，只要使用8.0.70版本的iOS微信扫描，即可完成ClawBot机器人的添加！
 ![img_1774436332190.png](./img_1774436332190.png)
 
-## 5 问题踩坑与解决方法总结
+## 5 QQ 机器人的申请接入与防拦截部署
+
+对于经常使用 QQ 频道的用户，OpenClaw 也提供了完善的 QQ 机器人插件。但在最新的 2026.3.24 版本中，Docker 部署会遭遇极其严苛的安全沙箱拦截。所以本章来说明一下这个问题可以如何解决。
+
+### 5.1 创建 QQ 机器人
+
+1. 访问腾讯官方开放平台：[QQ 机器人开发者注册页](https://q.qq.com/qqbot/openclaw/index.html)。
+2. 使用你的 QQ 账号登录并注册为开发者。
+3. 创建一个全新的机器人应用，在控制台中你会获得一对核心凭证：`AppID` 和 `AppSecret`。
+4. 我们稍后需要用到的 Token 格式为这二者的拼接：`<你的AppID:你的AppSecret>`。这个 Token 会直接写入到下方供我们复制的命令里。
+![img_1774581157318.png](./img_1774581157318.png)
+
+### 5.2 避雷：官方的安装命令在2026.3后的OpenClaw中可能运行失败
+
+如果你直接按照官方教程执行 `openclaw plugins install @tencent-connect/openclaw-qqbot@latest`，在 Docker 环境下会稳定报错 `Invalid path: must stay within extensions directory`。
+
+这是因为， OpenClaw 的新版安全沙箱开启了严格的防路径穿越保护。由于腾讯插件是一个带 `@tencent-connect` 作用域的包，解压时会创建嵌套子目录，直接被网关判定为恶意 Hook 并拦截销毁；同时，网关也**拒绝识别任何软链接（`ln -s`）**，所以也别想着创建个软链接过去就能解决。
+
+### 5.3 最后的安装方式：NPM 原生安装 + 物理提取
+
+为了绕过沙箱，我们需要直接在容器内使用原生 NPM 下载，然后用命令行强制将插件文件夹“拽”到网关能识别的最外层目录。
+
+因此可以依次执行以下三条命令：
+
+**第一步：原生下载并移动目录**
+
+```bash
+docker compose exec openclaw-gateway sh -c "cd /home/node/.openclaw/extensions && npm install @tencent-connect/openclaw-qqbot@latest && rm -rf openclaw-qqbot && mv node_modules/@tencent-connect/openclaw-qqbot ./openclaw-qqbot"
+```
+
+**第二步：注册通道并注入 Token** *(请将命令中的占位符替换为你真实的拼接 Token)*
+
+```bash
+docker compose exec openclaw-gateway node dist/index.js channels add --channel qqbot --token "<你的AppID:你的AppSecret>"
+```
+
+**第三步：重启网关使扫描生效**
+
+```bash
+docker compose restart openclaw-gateway
+```
+
+重启完成后，在 Web 控制台的 Channels 页面，你就会看到 `qqbot` 稳稳地运行起来了！
+![img_1774580928065.png](./img_1774580928065.png)
+
+再去QQ中找到机器人试试，能用，那就行啦。
+![img_1774581091016.png](./img_1774581091016.png)
+
+## 6 问题踩坑与解决方法总结
 
 在这次部署中，博主遇到了一些极其折磨人的报错，以下是排雷合集：
 
@@ -282,8 +332,8 @@ docker compose -f docker-compose.yml -f docker-compose.extra.yml -f docker-compo
   ```
 
 
-## 6. 总结
+## 7 总结
 
-通过群晖 Docker + OpenClaw + Cloudflare Tunnel 的组合，我们成功打通了底层网络和权限的壁垒，在保证数据隐私的前提下，在群晖NAS上为自己搭建了一个全天候响应的微信 AI 助理。
+通过群晖 Docker + OpenClaw + Cloudflare Tunnel 的组合，我们成功打通了底层网络、权限壁垒以及极其刁钻的安全沙箱，在保证数据隐私的前提下，在群晖NAS上为自己搭建了一个全天候响应的微信+QQ 双轨 AI 助理。
 
-从 UDP 协议带来的隧道假死，到终端二维码的显示乱码，每解决一个不起眼的 Bug，都让我们对 Linux 网络栈和容器底层机制有了更深的理解。希望这篇“踩坑实录”，能为喜欢折腾的各位提供一份靠谱的工程化部署参考。
+每解决一个不起眼的 Bug，都让我们对 Linux 网络栈和容器底层机制有了更深的理解。希望这篇“踩坑实录”，能为喜欢折腾的各位提供一份靠谱的工程化部署参考。
