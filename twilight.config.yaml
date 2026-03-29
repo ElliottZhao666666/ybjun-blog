@@ -73,6 +73,7 @@ site:
         - /assets/images/desktopWallpaper_1772803054206_72.webp
         - /assets/images/desktopWallpaper_1773243294419_34.webp
         - /assets/images/desktopWallpaper_1773801310274_57.webp
+        - /assets/images/desktopWallpaper_1774769589998_25.webp
       mobile:
         - /assets/images/mobileWallpaper_1.webp
         - /assets/images/mobileWallpaper_4.webp
@@ -96,6 +97,7 @@ site:
         - /assets/images/mobileWallpaper_1772802977442_4.webp
         - /assets/images/mobileWallpaper_1773243302057_60.webp
         - /assets/images/mobileWallpaper_1773801318627_46.webp
+        - /assets/images/mobileWallpaper_1774769596574_75.webp
     position: center
     carousel:
       enable: true
