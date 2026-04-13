@@ -129,7 +129,7 @@ fsutil dirty set C:
 
 ### 3.3 劫持运行的原理
 
-编译出我们的原生程序（假设命名为 `yb_boot.exe`）后，只需将其放入 `C:\Windows\System32\` 目录。然后打开注册表编辑器，定位到： `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager` ，双击右侧的 `BootExecute`，在其原有的 `autocheck autochk *` 下方换行追加我们的程序名 `yb_boot`，就能让 `smss.exe` 乖乖地执行我们的代码。`smss`会**串行执行**这里列出的所有程序命令。所以相当于我们的程序会运行到磁盘检查之后。
+编译出我们的原生程序（假设命名为 `yb_boot.exe`）后，只需将其放入 `C:\Windows\System32\` 目录。然后在注册表中的 `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\BootExecute`这个值下追加我们的程序名`yb_boot` ，就能让 `smss.exe` 乖乖地执行我们的代码。`smss`会**串行执行**这里列出的所有程序命令。所以相当于我们的程序会运行到磁盘检查之后。
 
 
 ## 4 开始实战
@@ -237,4 +237,13 @@ link.exe yb_native_v1.obj ntdll.lib /SUBSYSTEM:NATIVE,5.01 /ENTRY:NtProcessStart
 
 #### 4.1.3 部署和运行
 
-现在，打开XP虚拟机，将
+现在，打开 Windows XP 虚拟机，将刚编译出炉的`yb_boot.exe`复制到`C:\WINDOWS\System32`下。
+
+![img_1776069685771.png](./img_1776069685771.png)
+
+然后在“运行”中输入`regedit`，打开注册表编辑器，并定位到：`HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager`，双击右侧的 `BootExecute`，在其原有的 `autocheck autochk *` 下方换行追加我们的程序名 `yb_boot`，确定即可。
+![img_1776069931492.png](./img_1776069931492.png)
+
+现在，重启电脑，系统启动画面过后，**我们写在代码里的字符串成功显示！** 内容持续 5s 后自动消失，开始正常加载鼠标和`LogonUI`。
+
+![img_1776070139162.png](./img_1776070139162.png)
