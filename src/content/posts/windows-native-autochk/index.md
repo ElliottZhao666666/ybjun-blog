@@ -86,7 +86,7 @@ fsutil dirty set C:
 
 ![img_1776066427702.png](./img_1776066427702.png)
 
-但博主刚把VS卸载，所以就在VSCode中开发了。
+但博主刚把VS卸载，所以就演示一下如果要用**VSCode开发**，需要怎么配环境。
 
 首先需要安装Visual Studio Build Tools，我们可以在[Visual Studio 官方下载页](https://visualstudio.microsoft.com/zh-hans/downloads/)下方找到最新版的下载。
 
@@ -100,6 +100,141 @@ fsutil dirty set C:
 
 ![img_1776067009375.png](./img_1776067009375.png)
 
-接着打开VSCode，安装下图三个插件，以便得到C/C++的功能支持：
+接着打开VSCode，安装下图三个插件，以便得到C/C++的功能支持：**C/C++、C/C++ DevTools、C/C++ Extension Pack**。
 
 ![img_1776067083641.png](./img_1776067083641.png)
+
+### 3.2 环境与代码的思维转换
+
+我们刚才说了，硬盘检查的这个阶段属于 Native 状态，因此我们要编译的也是**Native 程序**。它和普通的 Win32 窗口及控制台程序是有区别的。所以首先我们先来说一下这个问题。
+
+其实，我们在使用Windows时常见的**可执行程序文件`*.exe`**、**动态链接库文件`*.dll`**、**驱动文件`*.sys`**、甚至还有**UEFI启动文件`*.efi`** 等等，在二进制结构上**没有任何区别！** 它们统统都是 **PE（Portable Executable）文件格式**。
+
+既然结构一样，Windows 是怎么区分它们的？秘密在于 PE 文件的**文件头（Header）**里有一个叫 Subsystem（子系统）的标志位：
+
+* 如果 `Subsystem = WINDOWS_GUI`，系统就知道这是个带窗口的 `.exe`。
+* 如果 `Subsystem = WINDOWS_CUI`，系统就知道这是个控制台黑框框程序。
+* 如果 `Subsystem = NATIVE`，系统就明白这是个不需要用户干预、直接调用底层或内核的原生程序或驱动程序。
+
+所以，我们要想编译在 Native 状态可运行的程序，自然需要确保编译时，将`Subsystem`设置为`NATIVE`。这个倒是问题不大，使用刚才的开发者命令提示符带参数编译即可，这个我们后续再说。而且，这种程序是**无法直接在正常的桌面环境运行**的。比如我们尝试在桌面环境运行`autochk.exe`，就会提示：
+
+![img_1776068134700.png](./img_1776068134700.png)
+
+
+此外，在编写 Native 程序时，我们也需要抛弃过去写 C 语言的习惯：
+
+1. **入口点异变**：程序的入口绝不能是 `main()`，而是标准的 `NtProcessStartup`。
+2. **重塑数据类型**：我们需要手工定义 `NTSTATUS`、`UNICODE_STRING` 等底层结构体。
+3. **系统中断调用**：打印文本只能通过 `NtDisplayString`，延时只能用 `NtDelayExecution`。
+
+### 3.3 劫持运行的原理
+
+编译出我们的原生程序（假设命名为 `yb_boot.exe`）后，只需将其放入 `C:\Windows\System32\` 目录。然后打开注册表编辑器，定位到： `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager` ，双击右侧的 `BootExecute`，在其原有的 `autocheck autochk *` 下方换行追加我们的程序名 `yb_boot`，就能让 `smss.exe` 乖乖地执行我们的代码。`smss`会**串行执行**这里列出的所有程序命令。所以相当于我们的程序会运行到磁盘检查之后。
+
+
+## 4 开始实战
+
+接下来，我们正式进入敲代码环节。我们的挑战分为三关，需求越来越复杂，我们也会逐步深入地体会在系统底层编程的感觉和难度。
+
+### 4.1 第一关：输出自己的slogan
+
+我们的第一个目标很简单：在开机的这个阶段，打印一段 ASCII 字符，展示我们的slogan，停留 5 秒后程序自我了断，让系统继续启动。
+
+#### 4.1.1 写代码
+
+```c
+// yb_native_v1.c
+
+// 只链接ntdll
+#pragma comment(lib, "ntdll.lib")
+
+// ==========================================
+// 1. 手工定义 Windows 底层数据类型
+// ==========================================
+typedef long NTSTATUS;
+typedef unsigned short USHORT;
+typedef void* PVOID;
+typedef long long LONGLONG;
+
+// 著名的 UNICODE_STRING 结构体
+typedef struct _UNICODE_STRING {
+    USHORT Length;
+    USHORT MaximumLength;
+    const unsigned short* Buffer; // PWSTR
+} UNICODE_STRING, *PUNICODE_STRING;
+
+typedef struct _LARGE_INTEGER {
+    LONGLONG QuadPart;
+} LARGE_INTEGER, *PLARGE_INTEGER;
+
+// ==========================================
+// 2. 声明要使用的 ntdll.dll 原生 API
+// ==========================================
+// 初始化字符串
+__declspec(dllimport) void __stdcall RtlInitUnicodeString(PUNICODE_STRING DestinationString, const unsigned short* SourceString);
+// 原生打印文字函数
+__declspec(dllimport) NTSTATUS __stdcall NtDisplayString(PUNICODE_STRING String);
+// 原生延时函数
+__declspec(dllimport) NTSTATUS __stdcall NtDelayExecution(unsigned char Alertable, PLARGE_INTEGER DelayInterval);
+// 结束进程
+__declspec(dllimport) NTSTATUS __stdcall NtTerminateProcess(PVOID ProcessHandle, NTSTATUS ExitStatus);
+
+// ==========================================
+// 3. 程序的入口点，不是main
+// ==========================================
+void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
+    UNICODE_STRING msg;
+    LARGE_INTEGER delay;
+
+    // 准备要打印的内容 (使用 \n 换行，L 代表 UTF-16 宽字符)
+    // 注意：在这个极早的阶段，不支持中文字体渲染！只能用英文或 ASCII 画。
+    const unsigned short* text = L"\n\n\n\n\n\n\n"
+                                 L"        =================================================\n"
+                                 L"        |                                               |\n"
+                                 L"        |   Welcome to YueBanJun's Native Space!        |\n"
+                                 L"        |   This is a pure Ring 3 Native Application.   |\n"
+                                 L"        |                                               |\n"
+                                 L"        =================================================\n\n"
+                                 L"        We bypassed the Win32 subsystem completely.\n"
+                                 L"        The boot process will continue in 5 seconds...\n";
+
+    // 组装字符串
+    RtlInitUnicodeString(&msg, text);
+
+    // 调用系统中断，直接把字拍在屏幕上
+    NtDisplayString(&msg);
+
+    // 设置延时 5 秒
+    // 延迟时间的单位是 100 纳秒（10^-7 秒）。负数表示相对时间。
+    // 5 秒 = 5 * 10,000,000 = 50,000,000 纳秒
+    delay.QuadPart = -50000000LL;
+    NtDelayExecution(0, &delay);
+
+    // 优雅地自我了断，让 smss.exe 继续去加载 Windows 桌面
+    // -1 (0xFFFFFFFF) 代表 CurrentProcess
+    NtTerminateProcess((PVOID)-1, 0); 
+}
+```
+
+#### 4.1.2 编译
+
+写好代码后，以**管理员身份**运行刚才提到的**开发者命令提示符**，先使用`cd /d`命令定位到代码目录下，然后使用下面两条命令来完成编译：
+
+1. 先编译`.obj`文件，用 `/utf-8` 解决中文注释带来的编译警告。
+
+```cmd
+cl.exe /c /GS- /utf-8 yb_native_v1.c
+```
+
+2. 编译最终的exe。指定`subsystem`为`NATIVE`，指定运行版本为`5.01` (Windows XP)，同时为了剥离 C 标准库，我们必须使用 `/NODEFAULTLIB` 链接选项，但这会导致隐式链接失效，所以我们还需要在命令行中显式喂给它 `ntdll.lib`。
+
+```cmd
+link.exe yb_native_v1.obj ntdll.lib /SUBSYSTEM:NATIVE,5.01 /ENTRY:NtProcessStartup /NODEFAULTLIB /OUT:yb_boot.exe
+```
+
+这样，我们就得到了最终的编译结果`yb_boot.exe`。
+![img_1776069281963.png](./img_1776069281963.png)
+
+#### 4.1.3 部署和运行
+
+现在，打开XP虚拟机，将
