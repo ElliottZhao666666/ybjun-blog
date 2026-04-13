@@ -248,13 +248,13 @@ link.exe yb_native_v1.obj ntdll.lib /SUBSYSTEM:NATIVE,5.01 /ENTRY:NtProcessStart
 
 ![img_1776070139162.png](./img_1776070139162.png)
 
-### 4.2 输出外部txt文件中的内容
+### 4.2 第二关：输出外部txt文件中的内容
 
 上面我们成功实现了硬编码slogan的显示，但是有点太死板了，每次换文字都要重新编译。所以接下来我们要让程序能够**动态读取外部的 `.txt` 文本并显示出来**。
 
 但正如前文所言，在这个连 C 盘的概念都尚未存在的阶段，同时还没有 Win32 模式下的`fopen`方法，想读一个文件简直是**限制重重**！所以在写代码时，我们应该注意以下三点：
 
-1. 必须使用** NT 内部设备命名空间**：如`\??\C:\yb_boot_text.txt`。
+1. 必须使用** NT 内部设备命名空间**：如`\??\C:\Windows\System32\yb_boot_text.txt`。
 2. 要读取的文本文件必须另存为 **UTF-16 LE（Unicode）格式**。
 3. 标准 UTF-16 文件开头会自带两个字节的 `0xFF 0xFE` 签名。我们必须**手动将指针向后偏移两个字节**，否则打印出来开头就是一个乱码方块。
 
@@ -339,9 +339,10 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
     PVOID fileHandle = 0;
     LARGE_INTEGER delay;
     
-    // 我们在栈上开辟一块 4096 字节的内存作为读取文件的缓冲区
-    // 现在连 malloc 都没有，栈内存是最可靠的
-    unsigned char buffer[4096] = {0}; 
+    // 我们在栈上开辟一块 2048 字节的内存作为读取文件的缓冲区
+    // 在这个连 malloc 都没有的世界，栈内存是最可靠的
+    // 加上其他局部变量，总栈帧大小将低于 4096 字节，编译器不会再注入 __chkstk并报错。
+    unsigned char buffer[2048];
 
     // 1. 定义 NT 形式的文件路径
     // \??\ 是 NT 对象命名空间中 DOS 设备的根目录
@@ -400,4 +401,235 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
 然后，再使用VSCode新建一个文件`yb_boot_text.txt`，写入想要显示的内容，然后修改编码，**通过编码保存** 为`UTF-16 LE`。必须是`UTF-16 LE`哦！
 ![img_1776071020408.png](./img_1776071020408.png)
 
-接着按照同样的方式编译
+接着按照同样的方式编译并部署。**唯一不同的是**，我们需要把`yb_boot_text.txt`也放到XP虚拟机的`System32`目录下！
+![img_1776071711116.png](./img_1776071711116.png)
+
+然后再次重启虚拟机，运行一次成功！只是 AI 直接生成的字符画还是会有错位的问题，但是已经成功跑通！
+![img_1776072149988.png](./img_1776072149988.png)
+
+### 4.3 第三关：响应键盘交互
+
+既然 `autochk.exe` 能做到“在限定时间内按任意键跳过硬盘检查”，那我们肯定也能做！但在 Native 阶段，没有 `scanf` 或是标准输入流。想读取键盘？必须**直接把线插在主板的键盘接口上**——通过“霸王硬上弓”的方式直接与键盘设备 `\Device\KeyboardClass0`**底层**来交互！
+
+我们读取到的不是字母 A 或 B，而是硬件发出的**扫描码（Scan Code）**。比如回车键是 `0x1C`，Esc 键是 `0x01`。这相当于我们在 C 代码里手搓一个微型的键盘驱动！所以，在实际写代码时，我们需要直接监听键盘发出的 IRP 数据包，并且**做个容错**：如果键盘设备打开失败（比如没插键盘），程序会自动退回到延时 5 秒模式，防止系统永远卡死在启动界面。
+
+```c
+// yb_native_v3.c
+
+#pragma comment(lib, "ntdll.lib")
+// ==========================================
+// 1. 底层数据类型与结构体声明
+// ==========================================
+typedef long NTSTATUS;
+typedef unsigned short USHORT;
+typedef void* PVOID;
+typedef long long LONGLONG;
+typedef unsigned long ULONG;
+
+typedef struct _UNICODE_STRING {
+    USHORT Length;
+    USHORT MaximumLength;
+    const unsigned short* Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
+typedef struct _LARGE_INTEGER {
+    LONGLONG QuadPart;
+} LARGE_INTEGER, *PLARGE_INTEGER;
+
+typedef struct _IO_STATUS_BLOCK {
+    union {
+        NTSTATUS Status;
+        PVOID Pointer;
+    };
+    ULONG Information; 
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+typedef struct _OBJECT_ATTRIBUTES {
+    ULONG Length;
+    PVOID RootDirectory;
+    PUNICODE_STRING ObjectName;
+    ULONG Attributes;
+    PVOID SecurityDescriptor;
+    PVOID SecurityQualityOfService;
+} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+
+// 底层键盘 IRP 数据包结构
+typedef struct _KEYBOARD_INPUT_DATA {
+    USHORT UnitId;
+    USHORT MakeCode; // 核心：硬件扫描码
+    USHORT Flags;    // 按下(0) 还是 抬起(1)
+    USHORT Reserved;
+    ULONG  ExtraInformation;
+} KEYBOARD_INPUT_DATA, *PKEYBOARD_INPUT_DATA;
+
+#define InitializeObjectAttributes( p, n, a, r, s ) { \
+    (p)->Length = sizeof( OBJECT_ATTRIBUTES );          \
+    (p)->RootDirectory = r;                             \
+    (p)->Attributes = a;                                \
+    (p)->ObjectName = n;                                \
+    (p)->SecurityDescriptor = s;                        \
+    (p)->SecurityQualityOfService = 0;                  \
+}
+#define OBJ_CASE_INSENSITIVE 0x00000040L
+#define FILE_GENERIC_READ 0x00120089L
+#define FILE_SHARE_READ 0x00000001L
+#define FILE_SYNCHRONOUS_IO_NONALERT 0x00000020L
+
+// ==========================================
+// 2. 声明 ntdll.dll 原生 API
+// ==========================================
+__declspec(dllimport) void __stdcall RtlInitUnicodeString(PUNICODE_STRING DestinationString, const unsigned short* SourceString);
+__declspec(dllimport) NTSTATUS __stdcall NtDisplayString(PUNICODE_STRING String);
+__declspec(dllimport) NTSTATUS __stdcall NtDelayExecution(unsigned char Alertable, PLARGE_INTEGER DelayInterval);
+__declspec(dllimport) NTSTATUS __stdcall NtTerminateProcess(PVOID ProcessHandle, NTSTATUS ExitStatus);
+__declspec(dllimport) NTSTATUS __stdcall NtOpenFile(PVOID* FileHandle, ULONG DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock, ULONG ShareAccess, ULONG OpenOptions);
+__declspec(dllimport) NTSTATUS __stdcall NtReadFile(PVOID FileHandle, PVOID Event, PVOID ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length, PLARGE_INTEGER ByteOffset, ULONG* Key);
+__declspec(dllimport) NTSTATUS __stdcall NtClose(PVOID Handle);
+
+// ==========================================
+// 3. 键盘监听核心功能
+// ==========================================
+void WaitForEnterOrEscKey() {
+    UNICODE_STRING kbName;
+    OBJECT_ATTRIBUTES kbAttr;
+    IO_STATUS_BLOCK ioStatus;
+    PVOID kbHandle = 0;
+    KEYBOARD_INPUT_DATA kbData;
+    
+    // 直通键盘硬件
+    RtlInitUnicodeString(&kbName, L"\\Device\\KeyboardClass0");
+    InitializeObjectAttributes(&kbAttr, &kbName, OBJ_CASE_INSENSITIVE, 0, 0);
+    
+    if (NtOpenFile(&kbHandle, FILE_GENERIC_READ, &kbAttr, &ioStatus, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_NONALERT) == 0) {
+        
+        UNICODE_STRING promptMsg;
+        RtlInitUnicodeString(&promptMsg, L"\n\n    [YueBanJun] Press [ENTER] to boot Windows, or press [ESC] to cancel...\n");
+        NtDisplayString(&promptMsg);
+
+        while (1) {
+            // 同步阻塞，监听键盘的硬件中断
+            NtReadFile(kbHandle, 0, 0, 0, &ioStatus, &kbData, sizeof(KEYBOARD_INPUT_DATA), 0, 0);
+            
+            // Flags 为 0 代表按键按下 (Make)
+            if (kbData.Flags == 0) {
+                // 扫描码 0x1C 代表回车键 (Enter)
+                if (kbData.MakeCode == 0x1C) {
+                    UNICODE_STRING okMsg;
+                    RtlInitUnicodeString(&okMsg, L"    => [ENTER] detected. Identity verified. Booting...\n");
+                    NtDisplayString(&okMsg);
+                    
+                    LARGE_INTEGER delay;
+                    delay.QuadPart = -15000000LL; // 顺滑过渡，延时 1.5 秒
+                    NtDelayExecution(0, &delay);
+                    break;
+                }
+                // 扫描码 0x01 代表 Esc 键
+                else if (kbData.MakeCode == 0x01) {
+                    UNICODE_STRING escMsg;
+                    RtlInitUnicodeString(&escMsg, L"    => [ESC] detected. Action canceled. Booting...\n");
+                    NtDisplayString(&escMsg);
+                    
+                    LARGE_INTEGER delay;
+                    delay.QuadPart = -15000000LL; // 顺滑过渡，延时 1.5 秒
+                    NtDelayExecution(0, &delay);
+                    break;
+                }
+            }
+        }
+        NtClose(kbHandle);
+    } else {
+        // 容错处理：如果没插键盘或驱动未就绪，退回 5 秒自动跳过模式
+        UNICODE_STRING errMsg;
+        RtlInitUnicodeString(&errMsg, L"\n\n    [WARNING] Keyboard not found. Auto-booting in 5 seconds...\n");
+        NtDisplayString(&errMsg);
+        
+        LARGE_INTEGER delay;
+        delay.QuadPart = -50000000LL;
+        NtDelayExecution(0, &delay);
+    }
+}
+
+// ==========================================
+// 4. 核心入口：NtProcessStartup
+// ==========================================
+void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
+    UNICODE_STRING filePath;
+    OBJECT_ATTRIBUTES objAttr;
+    IO_STATUS_BLOCK ioStatus;
+    PVOID fileHandle = 0;
+    
+    // 还是设置buffer大小为2048字节且不做初始化，避开 __chkstk 和 _memset
+    unsigned char buffer[2048]; 
+
+    RtlInitUnicodeString(&filePath, L"\\??\\C:\\Windows\\System32\\yb_boot_text.txt");
+    InitializeObjectAttributes(&objAttr, &filePath, OBJ_CASE_INSENSITIVE, 0, 0);
+
+    NTSTATUS status = NtOpenFile(
+        &fileHandle, 
+        FILE_GENERIC_READ, 
+        &objAttr, 
+        &ioStatus, 
+        FILE_SHARE_READ, 
+        FILE_SYNCHRONOUS_IO_NONALERT
+    );
+
+    if (status == 0) {
+        NtReadFile(fileHandle, 0, 0, 0, &ioStatus, buffer, sizeof(buffer) - 2, 0, 0);
+        NtClose(fileHandle);
+
+        USHORT bytesRead = (USHORT)ioStatus.Information; 
+        unsigned short* textPtr = (unsigned short*)buffer;
+        
+        // 剥离 BOM 头
+        if (bytesRead >= 2 && buffer[0] == 0xFF && buffer[1] == 0xFE) {
+            textPtr = (unsigned short*)(buffer + 2);
+            bytesRead -= 2;
+        }
+
+        UNICODE_STRING printMsg;
+        printMsg.Buffer = textPtr;
+        printMsg.Length = bytesRead;
+        printMsg.MaximumLength = bytesRead;
+
+        NtDisplayString(&printMsg);
+    } else {
+        UNICODE_STRING errorMsg;
+        RtlInitUnicodeString(&errorMsg, L"\n\n    [ERROR] Cannot find C:\\Windows\\System32\\yb_boot_text.txt\n");
+        NtDisplayString(&errorMsg);
+    }
+
+    // 呼叫键盘监听系统接管控制权
+    WaitForEnterOrEscKey();
+
+    // 优雅地自我了断，交出 Ring 3 
+    NtTerminateProcess((PVOID)-1, 0); 
+}
+
+```
+上面的程序算是“终极版”，融合了第二关的内容，在读取txt的基础上加入了键盘监听。我们可以为txt文件写入一些字符画之类的东西来丰富观感：
+```plaintext
+//yb_boot_text.txt
+
+        __   __  ____        _   _   _   _   _ 
+        \ \ / / | __ )      | | | | | | | \ | |
+         \ V /  |  _ \   _  | | | | | | |  \| |
+          | |   | |_) | | |_| | | |_| | | |\  |
+          |_|   |____/   \___/   \___/  |_| \_|
+
+        =======================================
+
+        This is YueBanJun's Native Space.
+        This text is read from yb_boot_text.txt
+        The Win32 Subsystem is fully bypassed.
+```
+
+
+:::warning[对txt内容及编码的要求]
+* 文件编码必须保存为 UTF-16 LE（早期记事本中称为 Unicode），严禁使用 UTF-8 或 ANSI。
+* 文本内容必须为纯 ASCII 字符（基础英文字母、数字、半角标点），严禁包含中文、全角符号或 Emoji。
+* 排版对齐只能使用空格键（Space），严禁使用制表符（Tab 键 / \t）。
+* 换行格式必须采用标准的 Windows 回车换行符（CRLF）。
+* 文本文件开头默认会生成 `0xFF 0xFE 的` BOM 头签名（需在代码读取层面手动偏移 2 个字节切除，以防首字符乱码，上述示例代码都已经有了）。
+:::
+
+现在，还是使用同样的方法进行编译部署测试
