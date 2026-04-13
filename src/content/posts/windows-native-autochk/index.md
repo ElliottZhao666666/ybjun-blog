@@ -247,3 +247,157 @@ link.exe yb_native_v1.obj ntdll.lib /SUBSYSTEM:NATIVE,5.01 /ENTRY:NtProcessStart
 现在，重启电脑，系统启动画面过后，**我们写在代码里的字符串成功显示！** 内容持续 5s 后自动消失，开始正常加载鼠标和`LogonUI`。
 
 ![img_1776070139162.png](./img_1776070139162.png)
+
+### 4.2 输出外部txt文件中的内容
+
+上面我们成功实现了硬编码slogan的显示，但是有点太死板了，每次换文字都要重新编译。所以接下来我们要让程序能够**动态读取外部的 `.txt` 文本并显示出来**。
+
+但正如前文所言，在这个连 C 盘的概念都尚未存在的阶段，同时还没有 Win32 模式下的`fopen`方法，想读一个文件简直是**限制重重**！所以在写代码时，我们应该注意以下三点：
+
+1. 必须使用** NT 内部设备命名空间**：如`\??\C:\yb_boot_text.txt`。
+2. 要读取的文本文件必须另存为 **UTF-16 LE（Unicode）格式**。
+3. 标准 UTF-16 文件开头会自带两个字节的 `0xFF 0xFE` 签名。我们必须**手动将指针向后偏移两个字节**，否则打印出来开头就是一个乱码方块。
+
+我们先来写代码：
+
+```c
+// yb_native_v2.c
+
+#pragma comment(lib, "ntdll.lib")
+
+// ==========================================
+// 1. 底层数据类型与结构体声明
+// ==========================================
+typedef long NTSTATUS;
+typedef unsigned short USHORT;
+typedef void* PVOID;
+typedef long long LONGLONG;
+typedef unsigned long ULONG;
+
+typedef struct _UNICODE_STRING {
+    USHORT Length;
+    USHORT MaximumLength;
+    const unsigned short* Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
+typedef struct _LARGE_INTEGER {
+    LONGLONG QuadPart;
+} LARGE_INTEGER, *PLARGE_INTEGER;
+
+// IO 状态块（记录文件读取结果）
+typedef struct _IO_STATUS_BLOCK {
+    union {
+        NTSTATUS Status;
+        PVOID Pointer;
+    };
+    ULONG Information; 
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+// 对象属性（用于定义文件路径）
+typedef struct _OBJECT_ATTRIBUTES {
+    ULONG Length;
+    PVOID RootDirectory;
+    PUNICODE_STRING ObjectName;
+    ULONG Attributes;
+    PVOID SecurityDescriptor;
+    PVOID SecurityQualityOfService;
+} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+
+// 底层 API 的宏定义
+#define InitializeObjectAttributes( p, n, a, r, s ) { \
+    (p)->Length = sizeof( OBJECT_ATTRIBUTES );          \
+    (p)->RootDirectory = r;                             \
+    (p)->Attributes = a;                                \
+    (p)->ObjectName = n;                                \
+    (p)->SecurityDescriptor = s;                        \
+    (p)->SecurityQualityOfService = 0;                  \
+}
+#define OBJ_CASE_INSENSITIVE 0x00000040L
+#define FILE_GENERIC_READ 0x00120089L
+#define FILE_SHARE_READ 0x00000001L
+#define FILE_SYNCHRONOUS_IO_NONALERT 0x00000020L
+
+// ==========================================
+// 2. 声明 ntdll.dll 原生 API
+// ==========================================
+__declspec(dllimport) void __stdcall RtlInitUnicodeString(PUNICODE_STRING DestinationString, const unsigned short* SourceString);
+__declspec(dllimport) NTSTATUS __stdcall NtDisplayString(PUNICODE_STRING String);
+__declspec(dllimport) NTSTATUS __stdcall NtDelayExecution(unsigned char Alertable, PLARGE_INTEGER DelayInterval);
+__declspec(dllimport) NTSTATUS __stdcall NtTerminateProcess(PVOID ProcessHandle, NTSTATUS ExitStatus);
+// 新增：文件操作 API
+__declspec(dllimport) NTSTATUS __stdcall NtOpenFile(PVOID* FileHandle, ULONG DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock, ULONG ShareAccess, ULONG OpenOptions);
+__declspec(dllimport) NTSTATUS __stdcall NtReadFile(PVOID FileHandle, PVOID Event, PVOID ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length, PLARGE_INTEGER ByteOffset, ULONG* Key);
+__declspec(dllimport) NTSTATUS __stdcall NtClose(PVOID Handle);
+
+// ==========================================
+// 3. 核心入口：NtProcessStartup
+// ==========================================
+void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
+    UNICODE_STRING filePath;
+    OBJECT_ATTRIBUTES objAttr;
+    IO_STATUS_BLOCK ioStatus;
+    PVOID fileHandle = 0;
+    LARGE_INTEGER delay;
+    
+    // 我们在栈上开辟一块 4096 字节的内存作为读取文件的缓冲区
+    // 现在连 malloc 都没有，栈内存是最可靠的
+    unsigned char buffer[4096] = {0}; 
+
+    // 1. 定义 NT 形式的文件路径
+    // \??\ 是 NT 对象命名空间中 DOS 设备的根目录
+    RtlInitUnicodeString(&filePath, L"\\??\\C:\\Windows\\System32\\yb_boot_text.txt");
+    InitializeObjectAttributes(&objAttr, &filePath, OBJ_CASE_INSENSITIVE, 0, 0);
+
+    // 2. 尝试打开文件
+    NTSTATUS status = NtOpenFile(
+        &fileHandle, 
+        FILE_GENERIC_READ, 
+        &objAttr, 
+        &ioStatus, 
+        FILE_SHARE_READ, 
+        FILE_SYNCHRONOUS_IO_NONALERT
+    );
+
+    if (status == 0) { // 0 代表 STATUS_SUCCESS
+        // 3. 读取文件内容到缓冲区
+        NtReadFile(fileHandle, 0, 0, 0, &ioStatus, buffer, sizeof(buffer) - 2, 0, 0);
+        NtClose(fileHandle);
+
+        // 4. 处理文本并打印
+        // 实际读取到的字节数
+        USHORT bytesRead = (USHORT)ioStatus.Information; 
+        
+        // UTF-16 LE 文本文件通常带有 2 字节的 BOM 标头 (0xFF 0xFE)
+        // 我们需要跳过这两个字节，否则会在屏幕开头打出一个乱码字符
+        unsigned short* textPtr = (unsigned short*)buffer;
+        if (bytesRead >= 2 && buffer[0] == 0xFF && buffer[1] == 0xFE) {
+            textPtr = (unsigned short*)(buffer + 2);
+            bytesRead -= 2;
+        }
+
+        // 手动构造一个 UNICODE_STRING，不用 RtlInitUnicodeString，因为它依赖 \0 结尾
+        UNICODE_STRING printMsg;
+        printMsg.Buffer = textPtr;
+        printMsg.Length = bytesRead;
+        printMsg.MaximumLength = bytesRead;
+
+        NtDisplayString(&printMsg);
+
+    } else {
+        // 如果文件打开失败（比如文件不存在），打印备用错误信息
+        UNICODE_STRING errorMsg;
+        RtlInitUnicodeString(&errorMsg, L"\n\n    [ERROR] Cannot find C:\\Windows\\System32\\yb_boot_text.txt\n    Please check the file path and name.\n");
+        NtDisplayString(&errorMsg);
+    }
+
+    // 延迟 5 秒退出
+    delay.QuadPart = -50000000LL;
+    NtDelayExecution(0, &delay);
+    NtTerminateProcess((PVOID)-1, 0); 
+}
+```
+
+然后，再使用VSCode新建一个文件`yb_boot_text.txt`，写入想要显示的内容，然后修改编码，**通过编码保存** 为`UTF-16 LE`。必须是`UTF-16 LE`哦！
+![img_1776071020408.png](./img_1776071020408.png)
+
+接着按照同样的方式编译
