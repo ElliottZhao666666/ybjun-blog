@@ -413,6 +413,12 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
 
 我们读取到的不是字母 A 或 B，而是硬件发出的**扫描码（Scan Code）**。比如回车键是 `0x1C`，Esc 键是 `0x01`。这相当于我们在 C 代码里手搓一个微型的键盘驱动！所以，在实际写代码时，我们需要直接监听键盘发出的 IRP 数据包，并且**做个容错**：如果键盘设备打开失败（比如没插键盘），程序会自动退回到延时 5 秒模式，防止系统永远卡死在启动界面。
 
+以下代码实现了：
+* 显示` C:\Windows\System32\yb_boot_text.txt`的内容；
+* 轮询计算机中所有`KeyboardClass`，找到可用的就继续执行；
+* 如果有可用的键盘，发出提示，此时按下`Enter`继续启动，按下`Esc`则利用`NTDLL`自带的方法重启电脑；
+* 如果没有可用的键盘，则退回延时 5 秒自动继续启动的模式。
+
 ```c
 // yb_native_v3.c
 
@@ -462,6 +468,13 @@ typedef struct _KEYBOARD_INPUT_DATA {
     ULONG  ExtraInformation;
 } KEYBOARD_INPUT_DATA, *PKEYBOARD_INPUT_DATA;
 
+// 定义重启操作类型
+typedef enum _SHUTDOWN_ACTION {
+    ShutdownNoReboot,
+    ShutdownReboot,
+    ShutdownPowerOff
+} SHUTDOWN_ACTION;
+
 #define InitializeObjectAttributes( p, n, a, r, s ) { \
     (p)->Length = sizeof( OBJECT_ATTRIBUTES );          \
     (p)->RootDirectory = r;                             \
@@ -485,9 +498,10 @@ __declspec(dllimport) NTSTATUS __stdcall NtTerminateProcess(PVOID ProcessHandle,
 __declspec(dllimport) NTSTATUS __stdcall NtOpenFile(PVOID* FileHandle, ULONG DesiredAccess, POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock, ULONG ShareAccess, ULONG OpenOptions);
 __declspec(dllimport) NTSTATUS __stdcall NtReadFile(PVOID FileHandle, PVOID Event, PVOID ApcRoutine, PVOID ApcContext, PIO_STATUS_BLOCK IoStatusBlock, PVOID Buffer, ULONG Length, PLARGE_INTEGER ByteOffset, ULONG* Key);
 __declspec(dllimport) NTSTATUS __stdcall NtClose(PVOID Handle);
+__declspec(dllimport) NTSTATUS __stdcall NtShutdownSystem(SHUTDOWN_ACTION Action);
 
 // ==========================================
-// 3. 键盘监听核心功能
+// 3. 键盘轮询与监听功能
 // ==========================================
 void WaitForEnterOrEscKey() {
     UNICODE_STRING kbName;
@@ -495,19 +509,33 @@ void WaitForEnterOrEscKey() {
     IO_STATUS_BLOCK ioStatus;
     PVOID kbHandle = 0;
     KEYBOARD_INPUT_DATA kbData;
+    NTSTATUS status = -1;
     
-    // 直通键盘硬件
-    RtlInitUnicodeString(&kbName, L"\\Device\\KeyboardClass0");
-    InitializeObjectAttributes(&kbAttr, &kbName, OBJ_CASE_INSENSITIVE, 0, 0);
-    
-    if (NtOpenFile(&kbHandle, FILE_GENERIC_READ, &kbAttr, &ioStatus, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_NONALERT) == 0) {
+    // 遍历常见的键盘设备号，解决虚拟机设备映射偏移问题
+    const unsigned short* kbPaths[] = {
+        L"\\Device\\KeyboardClass0",
+        L"\\Device\\KeyboardClass1",
+        L"\\Device\\KeyboardClass2",
+        L"\\Device\\KeyboardClass3"
+    };
+
+    for (int i = 0; i < 4; i++) {
+        RtlInitUnicodeString(&kbName, kbPaths[i]);
+        InitializeObjectAttributes(&kbAttr, &kbName, OBJ_CASE_INSENSITIVE, 0, 0);
         
+        status = NtOpenFile(&kbHandle, FILE_GENERIC_READ, &kbAttr, &ioStatus, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_NONALERT);
+        if (status == 0) {
+            break; // 成功打开一个有效的键盘设备，跳出轮询
+        }
+    }
+
+    if (status == 0) {
         UNICODE_STRING promptMsg;
-        RtlInitUnicodeString(&promptMsg, L"\n\n    [YueBanJun] Press [ENTER] to boot Windows, or press [ESC] to cancel...\n");
+        RtlInitUnicodeString(&promptMsg, L"\n\n    [SYSTEM LOCKED] Press [ENTER] to boot Windows, or press [ESC] to REBOOT...\n");
         NtDisplayString(&promptMsg);
 
         while (1) {
-            // 同步阻塞，监听键盘的硬件中断
+            // 同步阻塞，监听硬件中断
             NtReadFile(kbHandle, 0, 0, 0, &ioStatus, &kbData, sizeof(KEYBOARD_INPUT_DATA), 0, 0);
             
             // Flags 为 0 代表按键按下 (Make)
@@ -519,28 +547,30 @@ void WaitForEnterOrEscKey() {
                     NtDisplayString(&okMsg);
                     
                     LARGE_INTEGER delay;
-                    delay.QuadPart = -15000000LL; // 顺滑过渡，延时 1.5 秒
+                    delay.QuadPart = -15000000LL; // 延时 1.5 秒
                     NtDelayExecution(0, &delay);
                     break;
                 }
                 // 扫描码 0x01 代表 Esc 键
                 else if (kbData.MakeCode == 0x01) {
                     UNICODE_STRING escMsg;
-                    RtlInitUnicodeString(&escMsg, L"    => [ESC] detected. Action canceled. Booting...\n");
+                    RtlInitUnicodeString(&escMsg, L"    => [ESC] detected. Access Denied. System will reboot now!\n");
                     NtDisplayString(&escMsg);
                     
                     LARGE_INTEGER delay;
-                    delay.QuadPart = -15000000LL; // 顺滑过渡，延时 1.5 秒
+                    delay.QuadPart = -20000000LL; // 延时 2.0 秒，留点时间看提示
                     NtDelayExecution(0, &delay);
+                    
+                    NtShutdownSystem(ShutdownReboot); // 执行底层重启
                     break;
                 }
             }
         }
         NtClose(kbHandle);
     } else {
-        // 容错处理：如果没插键盘或驱动未就绪，退回 5 秒自动跳过模式
+        // 容错处理：没插键盘或轮询失败，退回自动放行模式
         UNICODE_STRING errMsg;
-        RtlInitUnicodeString(&errMsg, L"\n\n    [WARNING] Keyboard not found. Auto-booting in 5 seconds...\n");
+        RtlInitUnicodeString(&errMsg, L"\n\n    [WARNING] Keyboard device not found. Auto-booting in 5 seconds...\n");
         NtDisplayString(&errMsg);
         
         LARGE_INTEGER delay;
@@ -558,9 +588,10 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
     IO_STATUS_BLOCK ioStatus;
     PVOID fileHandle = 0;
     
-    // 还是设置buffer大小为2048字节且不做初始化，避开 __chkstk 和 _memset
+    // 缩小栈空间至 2048 且不初始化，完美避开编译器的 __chkstk 和 _memset
     unsigned char buffer[2048]; 
 
+    // 使用 NT 设备命名空间路径
     RtlInitUnicodeString(&filePath, L"\\??\\C:\\Windows\\System32\\yb_boot_text.txt");
     InitializeObjectAttributes(&objAttr, &filePath, OBJ_CASE_INSENSITIVE, 0, 0);
 
@@ -580,7 +611,7 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
         USHORT bytesRead = (USHORT)ioStatus.Information; 
         unsigned short* textPtr = (unsigned short*)buffer;
         
-        // 剥离 BOM 头
+        // 剥离 UTF-16 LE 的 BOM 头 (0xFF 0xFE)
         if (bytesRead >= 2 && buffer[0] == 0xFF && buffer[1] == 0xFE) {
             textPtr = (unsigned short*)(buffer + 2);
             bytesRead -= 2;
@@ -598,15 +629,15 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
         NtDisplayString(&errorMsg);
     }
 
-    // 呼叫键盘监听系统接管控制权
+    // 呼叫键盘监听系统，挂起启动进程
     WaitForEnterOrEscKey();
 
-    // 优雅地自我了断，交出 Ring 3 
+    // 自我了断，交出控制权给 Win32 子系统
     NtTerminateProcess((PVOID)-1, 0); 
 }
-
 ```
 上面的程序算是“终极版”，融合了第二关的内容，在读取txt的基础上加入了键盘监听。我们可以为txt文件写入一些字符画之类的东西来丰富观感：
+
 ```plaintext
 //yb_boot_text.txt
 
@@ -623,7 +654,6 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
         The Win32 Subsystem is fully bypassed.
 ```
 
-
 :::warning[对txt内容及编码的要求]
 * 文件编码必须保存为 UTF-16 LE（早期记事本中称为 Unicode），严禁使用 UTF-8 或 ANSI。
 * 文本内容必须为纯 ASCII 字符（基础英文字母、数字、半角标点），严禁包含中文、全角符号或 Emoji。
@@ -632,4 +662,18 @@ void __stdcall NtProcessStartup(PVOID ArgumentBlock) {
 * 文本文件开头默认会生成 `0xFF 0xFE 的` BOM 头签名（需在代码读取层面手动偏移 2 个字节切除，以防首字符乱码，上述示例代码都已经有了）。
 :::
 
-现在，还是使用同样的方法进行编译部署测试
+现在，还是使用同样的方法进行编译部署测试，成功运行！并且按键也可以正常使用！
+![img_1776076733268.png](./img_1776076733268.png)
+
+## 5 跨代测试
+
+这套基于 32 位 x86 架构，为 XP 平台写出的上古代码，如果扔进最新的现代 Windows 操作系统里会怎样？博主进行了两组实验。
+
+博主将第一关的程序直接放进了运行**最新 Win11 64 位 UEFI 安全启动的 Surface Pro 7 中**。奇迹发生了——**它居然正常执行了！** 
+
+这也展示了现代 Windows 极其变态的向后兼容性。为了兼容某些上古企业的 32 位底层加密软件，现代内核在极早的 `smss.exe` 阶段，就已经悄悄把 WoW64（32 位转译层）拉进了内存，完美接管了我们的原生代码。
+![img_1776076974941.png](./img_1776076974941.png)
+
+然后将其放在运行**最终版 Win10 32 位 传统 BIOS 启动的虚拟机中**，同样能够**正常运行**。
+![img_1776077122345.png](./img_1776077122345.png)
+
