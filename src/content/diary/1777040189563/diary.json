@@ -1,0 +1,10 @@
+{
+  "title": "解决UltraISO在Win11下无法加载主界面的问题",
+  "content": "作为计算机爱好者最常用、最好用的软件之一，软碟通的这个问题已经困扰了博主很久，有时候Win11突然一更新，就会出现这个问题。\n\n【问题表现】\nUltraISO主界面打不开，任务栏有图标，但主界面预览图如图1所示，一片空白。可是其余窗口和功能（比如右键文件夹，将文件夹打包为ISO文件的功能）是正常的。\n\n【解决方法】\n在注册表编辑器定位到：【HKEY_CURRENT_USER\\Software\\EasyBoot Systems\\UltraISO】，删除所有以【Last】【Log】【Main】【Max】开头的值（图2），重启UltraISO，就会恢复正常了。\n\n最后附一个可用的UltraISO注册码，只可用于简体中文版哦\nGuanjiu\nA06C-83A7-701D-6CFC",
+  "date": "2026-04-24T14:16:29Z",
+  "images": [
+    "./img_1777039610228_thccyi.webp",
+    "./img_1777040044325_jcumh9.webp",
+    "./img_1777040186539_1kobt2.webp"
+  ]
+}
