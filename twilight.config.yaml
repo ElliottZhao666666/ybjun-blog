@@ -223,7 +223,7 @@ profile:
       url: 'mailto:main@ybjun.com '
 announcement:
   title: 博客访问全面提速！
-  content: 自5月10日起，本站已全量接入 Cloudflare 优选 IP 线路，大陆用户访问本站速度将大幅提升！\n为保证最佳体验，博主进行了线路分流：国内访问请认准 www.ybjun.com，海外访问推荐使用 ybjun.com。感谢大家的支持，快来感受丝滑的访问体验吧！
+  content: 自5月10日起，本站已全量接入 Cloudflare 优选 IP 线路，大陆用户访问本站速度将大幅提升！为保证最佳体验，博主进行了线路分流：国内访问请认准 www.ybjun.com，海外访问推荐使用 ybjun.com。感谢大家的支持，快来感受丝滑的访问体验吧！
   closable: true
   link:
     enable: true
