@@ -188,7 +188,7 @@ const jsonLd = {
                     try {
                         // 1. 发送 POST 请求 (计数 +1)
                         const pageTitle = document.title.split(' - ')[0] || document.title;
-                        const res = await fetch(`https://comment.blog.ybjun.com/stats`, {
+                        const res = await fetch(`https://commentblog.ybjun.com/stats`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ 
@@ -203,7 +203,7 @@ const jsonLd = {
                         } else {
                             // 2. 降级处理 (仅读取)
                             console.warn('阅读量上报失败，尝试仅读取...');
-                            const fallbackRes = await fetch(`https://comment.blog.ybjun.com/stats?slug=${encodeURIComponent(slug)}`);
+                            const fallbackRes = await fetch(`https://commentblog.ybjun.com/stats?slug=${encodeURIComponent(slug)}`);
                             const fallbackData = await fallbackRes.json();
                             el.innerText = fallbackData.time || '0';
                         }

@@ -7,7 +7,7 @@
   export let style = "";
 
   // === 配置 ===
-  const INFO_API = "https://info.blog.ybjun.com"; // 你的 Info Worker 地址
+  const INFO_API = "https://infoblog.ybjun.com"; // 你的 Info Worker 地址
 
   // === 状态变量 ===
   let loading = true;

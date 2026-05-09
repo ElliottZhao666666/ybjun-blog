@@ -36,7 +36,7 @@ let currentIndex = 0;
 let showControls = true;
 let controlsTimer: any;
 
-const API_BASE = "https://gallery.blog.ybjun.com";
+const API_BASE = "https://galleryblog.ybjun.com";
 
 onMount(async () => {
 	const urlParams = new URLSearchParams(window.location.search);

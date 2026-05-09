@@ -79,7 +79,7 @@ const slug = (post as any).slug || post.id;
     async function loadComments() {
         if (!dom.list) return;
         try {
-            const res = await fetch(`https://comment.blog.ybjun.com/comment?slug=${encodeURIComponent(slug)}`);
+            const res = await fetch(`https://commentblog.ybjun.com/comment?slug=${encodeURIComponent(slug)}`);
             const data = await res.json();
             commentsData = data;
             renderComments();
@@ -204,7 +204,7 @@ const slug = (post as any).slug || post.id;
             dom.submitBtn.innerText = "发送中...";
 
             try {
-                const res = await fetch('https://comment.blog.ybjun.com/comment', {
+                const res = await fetch('https://commentblog.ybjun.com/comment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

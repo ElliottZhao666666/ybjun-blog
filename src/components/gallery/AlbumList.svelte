@@ -24,7 +24,7 @@ let loading = true;
 let error = "";
 let timelineGroups: TimelineGroup[] = [];
 
-const API_BASE = "https://gallery.blog.ybjun.com";
+const API_BASE = "https://galleryblog.ybjun.com";
 
 onMount(async () => {
 	try {

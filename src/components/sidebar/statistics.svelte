@@ -12,7 +12,7 @@ export let style = "";
 
 // === ⚙️ 配置区域 ===
 const SITE_START_DATE = "2026-02-17"; // 你的建站日期
-const API_BASE = "https://comment.blog.ybjun.com"; // 你的 Worker 地址
+const API_BASE = "https://commentblog.ybjun.com"; // 你的 Worker 地址
 
 // === 📊 状态变量 ===
 let runDays = 0;
