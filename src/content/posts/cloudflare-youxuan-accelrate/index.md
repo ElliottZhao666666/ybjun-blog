@@ -218,7 +218,7 @@ WHERE picurl LIKE 'https://pic.api.ybjun.com%';
 1. *在 Pages 项目中正常绑定自定义域 `www.ybjun.com`。*
 2. *待证书和 DNS 生效后，前往 DNS 记录界面，手动将这条由 Pages 生成的记录改为灰云（仅 DNS），并手动把 `CNAME` 的目标由 `*.pages.dev` 修改为我们的优选 `cdn.ybjun.com`。*
 
-刚修改完确实能**短时间起效**，但只要 GitHub 仓库一有新的 Commit 触发 Pages 的自动构建，或仅仅是过一段时间，www.ybjun.com 的自定义域状态就会变成**已停用**。**浏览器访问时报错**`Error 1000 DNS points to prohibited IP`。
+刚修改完确实能**短时间起效**，但只要 GitHub 仓库一有新的 Commit 触发 Pages 的自动构建，或仅仅是过一段时间，`www.ybjun.com` 的自定义域状态就会变成**已停用**。**浏览器访问时报错**`Error 1000 DNS points to prohibited IP`。
 ![img_1778421045558.png](./img_1778421045558.png)
 
 **原因分析：** Cloudflare Pages 有一套极其严格的 CI/CD 域名校验机制。每当项目重新编译部署，系统都会扫描你的 DNS 记录，确保自定义域依然指向 `*.pages.dev`。一旦发现 DNS 记录对不上，Pages 为了安全起见会认为该域名已失效，从而直接停用。
@@ -248,7 +248,7 @@ WHERE picurl LIKE 'https://pic.api.ybjun.com%';
 接下来需要为`www.ybjun.com`添加灰云的优选 `CNAME` 记录，但问题就这么来了， **“一根筋”就此变为“两头堵”** 。
 
 * 把`CNAME`目标指向`cdn.ybjtest.com`，浏览器访问会`Error 522`。原因是虽然 SaaS 确实被触发了，但回退源`ybjun.ybjtest.com`是一个 Pages 域名。CF 的安全机制中，SaaS 回源到 Pages 项目极其容易触发 522（连接超时），因为 **Pages 的边缘节点拒绝接受带有被篡改的 Host 头的异常回源请求**，直接把连接掐断了。
-* 把`CNAME`目标指向`cdn.ybjun.com`，浏览器访问会`Error 1000`。原因是**在 CF 的底层路由协议中：原生 Zone 内的路由优先级永远大于 SaaS 自定义主机名**。当请求 `www.ybjun.com` 到达优选节点时，节点一看：“哦，`ybjun.com` 就在系统里，我直接去查它的原生 DNS 表。” 节点根本就懒得去查`ybjtest.com` 里的 SaaS 名单。结果节点在 `ybjun.com` 里一看，`www` 是个灰云，而且没有绑 Worker 路由，也没有绑 Pages，**直接判定为“非法回环解析”**，扔回一个无情的 Error 1000。
+* 把`CNAME`目标指向`cdn.ybjun.com`，浏览器访问会`Error 1000`。原因是**在 CF 的底层路由协议中：原生 Zone 内的路由优先级永远大于 SaaS 自定义主机名**。当请求 `www.ybjun.com` 到达优选节点时，节点一看：“哦，`ybjun.com` 就在系统里，我直接去查它的原生 DNS 表。” 节点根本就懒得去查`ybjtest.com` 里的 SaaS 名单。结果节点在 `ybjun.com` 里一看，`www` 是个灰云，而且没有绑 Worker 路由，也没有绑 Pages，**直接判定为“非法回环解析”**，扔回一个无情的 `Error 1000`。
 
 由上可见，网上广为流传的 Cloudflare for SaaS 方案，可能主要还是适用于 VPS 等其它部署方案，**并不适用于 Pages 项目**。Pages 的自定义域是“动不得”的，而 SaaS 路由在同 Zone 下又是“进不来”的。面对这种左右为难的局面，博主最后只能尝试一种**兜底的“曲线救国”方案**——跳出 Pages 的框架，做一个简单的 Worker 代理去转发 Page 的流量。
 
