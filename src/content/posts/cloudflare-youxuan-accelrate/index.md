@@ -277,41 +277,35 @@ export default {
 
 接着重复上文 Workers 优选的步骤：**DNS 设`www.ybjun.com`灰云 `CNAME` 指向`cdn.ybjun.com`，并在 Worker 里添加 `www.ybjun.com/*` 的路由**。主站至此完美起飞！
 
-## 6. 踩坑实录与高价值 Tips
+## 6 踩坑实录
 
-### 🕳️ SSL 证书的“四级域名陷阱”
+在全栈优选的这条路上，可谓是“步步惊心”。这一章博主将把整个过程中几个“坑”进行复盘。方便大家的学习和排查。**当然，许多更折磨人但有教育意义的踩坑已经融合到了前文中，这里就不再赘述了。
+**
+### 6.1 “消失”的证书
 
-在优化初期，为了不修改前端代码，我曾尝试对 `media.blog.ybjun.com` 这个四级域名进行加速，结果遭遇无解的 `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` 报错。 **核心原因**：Cloudflare 免费的 Universal SSL 仅提供三级通配符保护（即 `*.ybjun.com`）。四级及以上的域名必须购买高级证书或使用 SaaS 强行发证。**避坑指南：全栈降维，老老实实把所有 API 和图床都改成三级域名！**
+这是本站优化过程中遇到的第一个“拦路虎”，也是最具隐蔽性的坑。
 
-### 💡 Tips：D1 数据库历史 URL 无缝迁移
+**现象描述：** 当博主尝试对 `pic.api1.ybjun.com` 进行优选后，浏览器直接报错：`ERR_SSL_VERSION_OR_CIPHER_MISMATCH`。无论如何刷新、清除缓存，甚至重新申请证书都无济于事。
 
-将四级域名降维到三级域名后，存在 D1 数据库里几百条旧的图片 URL 怎么办？手改是不可能的，一行 SQLite 代码教你做人：
+**原因分析：** 这是由 Cloudflare Universal SSL（通用证书）的保护范围决定的。CF 为免费版用户提供的**通配符证书仅支持到三级域名**（即 `*.ybjun.com` 和 `ybjun.com`）。一旦你的域名深度达到了四级（如 `pic.api1.ybjun.com`），它就超出了通用证书的覆盖范围。特别是关闭小黄云的时候，边缘节点将无法提供有效证书，导致 TLS 握手瞬间崩溃。
 
-先执行 `SELECT` 预览修改效果（安全第一）：
+不过有个例外，当我们将四级域名直接绑定为 Workers 等内容的自定义域，CF 也会额外为这些域名申请证书保护。具体可以去 CF 域名控制台的 **SSL/TLS -> 边缘证书** 中查看。
 
-```
-SELECT 
-    id, 
-    url AS old_url, 
-    REPLACE(url, '[https://media.blog.ybjun.com](https://media.blog.ybjun.com)', '[https://mediablog.ybjun.com](https://mediablog.ybjun.com)') AS new_url 
-FROM Photos 
-WHERE url LIKE '[https://media.blog.ybjun.com](https://media.blog.ybjun.com)%';
-```
+**解决过程：**“全栈降维”。博主将所有涉及到的四级域名全部重构为三级域名，这就要对前端代码库和数据库内相关内容进行替换。前端代码库让 Agent 直接操作即可，为了处理 D1 数据库中成百上千条历史链接，博主配合 SQL 的 REPLACE 函数完成了自动化替换。
 
-确认无误后，直接执行 `UPDATE` 更新，耗时 0.3ms 搞定历史遗留问题：
+### 6.2 虚惊一场
 
-```
-UPDATE Photos 
-SET url = REPLACE(url, '[https://media.blog.ybjun.com](https://media.blog.ybjun.com)', '[https://mediablog.ybjun.com](https://mediablog.ybjun.com)') 
-WHERE url LIKE '[https://media.blog.ybjun.com](https://media.blog.ybjun.com)%';
-```
+**现象描述：** 在优选工作接近尾声时，DNS 列表中突然跳出了满屏的黄色感叹号警告：“本记录可能会暴露 `api3.ybjun.com` 的源站地址...”。
 
-## 7. 结语与成果展示
+**原因分析：** 这是 Cloudflare 的源站保护误报。当博主在配置优选加速域名时，如果不小心开启了某个优选加速域名的小黄云，而这个域名又指向了一个已经设为灰云的优选中转（`cdn.ybjun.com`），CF 就会认为你试图隐藏源站，却又通过其他记录泄露了它。
 
-经过这一套“抽丝剥茧”的手术，目前博客的访问速度有了质的飞跃。
+**解决过程：**“保持一致性”。在优选架构中，既然我们要接管解析层，**那么所有参与优选的三级子域名都必须统一保持灰云状态**。将这些记录全部修正为灰云后，警告自动消失。所以，添加优选加速域名记录时记得关掉小黄云！
 
-我们来看看测速工具（ITDog）的直观对比，优化前，国内节点一片飘黄/飘红，晚高峰更是惨不忍睹；优化后，全国节点一片绿意盎然，响应时间基本被压榨到了 50-150ms 的物理极限。
+## 7 成果展示
 
-*[此处插入优化前的 ITDog 一片黄截图]* *[此处插入优化后的 ITDog 一片绿截图]*
+经过这一套“抽丝剥茧”的手术，目前博客在中国大陆的访问速度已经有了质的飞跃。
 
-这套“同 Zone 原生降维优选”架构，不仅彻底摆脱了复杂的 SaaS 配置和跨域烦恼，后期的维护成本也趋近于零。尽情享受 Cloudflare 边缘计算带来的极致快感吧！
+我们来看看测速工具（ITDog）的直观对比，优化前，国内节点一片飘黄，晚高峰更是惨不忍睹；优化后，全国节点一片绿意盎然，响应时间基本被压榨到了 50-150ms。
+![img_1778425747407.png](./img_1778425747407.png)
+![img_1778425758515.png](./img_1778425758515.png)
+
