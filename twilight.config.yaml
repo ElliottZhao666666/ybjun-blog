@@ -232,8 +232,8 @@ announcement:
   closable: true
   link:
     enable: true
-    text: 了解更多
-    url: /about/
+    text: 订阅本站
+    url: /rss/
     external: false
 post:
   showLastModified: true
