@@ -52,6 +52,7 @@ site:
     src:
       desktop:
         - /assets/images/desktopWallpaper_1.webp
+        - /assets/images/desktopWallpaper_1780385993468_12.webp
         - /assets/images/desktopWallpaper_4.webp
         - /assets/images/desktopWallpaper_1772640099830_48.webp
         - /assets/images/desktopWallpaper_1772802943667_17.webp
@@ -77,6 +78,7 @@ site:
         - /assets/images/desktopWallpaper_1778463333685_75.webp
       mobile:
         - /assets/images/mobileWallpaper_1.webp
+        - /assets/images/mobileWallpaper_1780386021479_72.webp
         - /assets/images/mobileWallpaper_4.webp
         - /assets/images/mobileWallpaper_1772640130638_86.webp
         - /assets/images/mobileWallpaper_1772802973448_37.webp
