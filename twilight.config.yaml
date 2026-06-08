@@ -49,7 +49,7 @@ site:
   defaultTheme: system
   wallpaper:
     mode: banner
-    IsDailyWall: true
+    IsDailyWall: false
     src:
       desktop:
         - /assets/images/desktopWallpaper_1.webp
