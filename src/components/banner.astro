@@ -12,8 +12,20 @@ interface Props {
 
 const { config, isHomePage, class: className } = Astro.props;
 
+const isDailyWall = config.IsDailyWall === true;
+const dailyWallSources = {
+    desktop: ["http://api.bingpics.ybjun.com/image/latest"],
+    mobile: ["http://api.bingpics.ybjun.com/image/latest/v"],
+};
+const dailyWallFallback = {
+    desktop: "/assets/images/wallpaper_fallback/desktopWallpaper_fallback.webp",
+    mobile: "/assets/images/wallpaper_fallback/mobileWallpaper_fallback.webp",
+};
+
 // 获取当前设备类型的图片源
 const getImageSources = () => {
+    if (isDailyWall) return dailyWallSources;
+
 	const toArray = (src: any) => [src || []].flat();
 	const { src } = config;
 	const isObj = src && typeof src === "object" && !Array.isArray(src);
@@ -28,9 +40,9 @@ const getImageSources = () => {
 const imageSources = getImageSources();
 
 // 轮播配置
-const carouselConfig = config.carousel;
+const carouselConfig = isDailyWall ? undefined : config.carousel;
 const isCarouselEnabled =
-	imageSources.desktop.length > 1 || imageSources.mobile.length > 1;
+    !isDailyWall && (imageSources.desktop.length > 1 || imageSources.mobile.length > 1);
 const carouselInterval = carouselConfig?.interval || 6;
 
 // 样式配置
@@ -89,6 +101,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                 alt="Mobile banner"
                 class:list={["block md:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.mobile[0] || imageSources.desktop[0] || ''}
+                fallbackSrc={isDailyWall ? dailyWallFallback.mobile : undefined}
                 position={config.position}
                 loading="eager"
             />
@@ -97,6 +110,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                 alt="Desktop banner"
                 class:list={["hidden md:block object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.desktop[0] || imageSources.mobile[0] || ''}
+                fallbackSrc={isDailyWall ? dailyWallFallback.desktop : undefined}
                 position={config.position}
                 loading="eager"
             />

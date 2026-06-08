@@ -14,6 +14,7 @@ interface Props {
 	style?: string;
 	loading?: "lazy" | "eager";
 	decoding?: "async" | "auto" | "sync";
+	fallbackSrc?: string;
 }
 
 const {
@@ -25,6 +26,7 @@ const {
 	style,
 	loading = "lazy",
 	decoding = "async",
+	fallbackSrc,
 } = Astro.props;
 const className = Astro.props.class;
 
@@ -59,10 +61,15 @@ if (isLocal) {
 
 const imageClass = "w-full h-full object-cover";
 const imageStyle = `object-position: ${position}`;
+const resolvedFallbackSrc = fallbackSrc
+	? fallbackSrc.startsWith("/")
+		? url(fallbackSrc)
+		: fallbackSrc
+	: undefined;
 ---
 
 <div id={id} class:list={[className, 'overflow-hidden relative']} style={style}>
     <div class="transition absolute inset-0 bg-black/3 dark:bg-black/9 pointer-events-none"></div>
     {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle} loading={loading} decoding={decoding}/>}
-    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle} loading={loading} decoding={decoding}/>}
+    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle} loading={loading} decoding={decoding} data-fallback-src={resolvedFallbackSrc} onerror="if (this.dataset.fallbackSrc && this.src !== this.dataset.fallbackSrc) { this.src = this.dataset.fallbackSrc; }"/>}
 </div>
