@@ -127,6 +127,8 @@ export type SiteConfig = {
 	wallpaper: {
 		// 模式
 		mode: "fullscreen" | "banner" | "none";
+		// 是否固定使用必应每日一图。启用后忽略 src 与 carousel 配置。
+		IsDailyWall?: boolean;
 		src: // 图片源配置 (fullscreen 和 banner 模式共享)
 			| string
 			| string[]
