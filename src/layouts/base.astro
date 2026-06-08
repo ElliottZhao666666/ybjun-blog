@@ -129,6 +129,9 @@ const bannerOffset =
 
 const umamiEnabled = umamiConfig.enabled || false;
 const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
+
+// Canonical URL：始终基于 astro.config.mjs 中配置的主站 site 生成，避免镜像站继承自身域名。
+const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 ---
 
 <!DOCTYPE html>
@@ -136,6 +139,36 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 >
     <head>
         <meta charset="UTF-8" />
+        <!-- Anti-mirror redirect: keep visitors on the official domains before loading heavy resources. -->
+        <script is:inline>
+            (() => {
+                if (typeof window === "undefined") return;
+
+                const decodeHost = (value) => atob(value);
+                const mainDomain = decodeHost("eWJqdW4uY29t");
+                const pagesDomain = decodeHost("eWJqdW4tYmxvZy1kdm0ucGFnZXMuZGV2");
+                const allowedHosts = new Set([
+                    mainDomain,
+                    decodeHost("d3d3LnlianVuLmNvbQ=="),
+                    pagesDomain,
+                    decodeHost("MTI3LjAuMC4x"),
+                    decodeHost("bG9jYWxob3N0"),
+                ]);
+
+                const host = window.location.hostname.toLowerCase();
+                const pagesPreviewPattern = new RegExp(
+                    "^[a-z0-9-]+\\." + pagesDomain.replace(/\\./g, "\\\\.") + "$",
+                    "i",
+                );
+                const isAllowedPagesPreview = pagesPreviewPattern.test(host);
+
+                if (!allowedHosts.has(host) && !isAllowedPagesPreview) {
+                    window.location.replace(
+                        "https://www." + mainDomain + window.location.pathname + window.location.search + window.location.hash,
+                    );
+                }
+            })();
+        </script>
         <!-- Resource Preconnect -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,6 +179,8 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
         <title>{pageTitle}</title>
         <!-- description -->
         <meta name="description" content={description || pageTitle}>
+        <!-- canonical -->
+        <link rel="canonical" href={canonicalURL} />
         <!-- keywords -->
         {siteConfig.keywords && siteConfig.keywords.length > 0 && (
             <meta name="keywords" content={siteConfig.keywords.join(', ')} />
@@ -154,7 +189,7 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
         <meta name="author" content={profileConfig.name}>
         <!-- Open Graph -->
         <meta property="og:site_name" content={siteConfig.title}>
-        <meta property="og:url" content={Astro.url}>
+        <meta property="og:url" content={canonicalURL}>
         <meta property="og:title" content={pageTitle}>
         <meta property="og:description" content={description || pageTitle}>
         {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
@@ -167,7 +202,7 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
         }
         <!-- Twitter -->
         <meta name="twitter:card" content="summary_large_image">
-        <meta property="twitter:url" content={Astro.url}>
+        <meta property="twitter:url" content={canonicalURL}>
         <meta name="twitter:title" content={pageTitle}>
         <meta name="twitter:description" content={description || pageTitle}>
         <!-- viewport -->
