@@ -35,7 +35,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 	return publishedPosts.map((post) => ({
 		params: { slug: post.id },
 		props: { post },
-	});
+	}));
 };
 
 let fontCache: LoadedFonts | null = null;
