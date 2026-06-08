@@ -11,8 +11,8 @@ const { config, class: className } = Astro.props;
 
 const isDailyWall = config.IsDailyWall === true;
 const dailyWallSources = {
-    desktop: ["http://api.bingpics.ybjun.com/image/latest"],
-    mobile: ["http://api.bingpics.ybjun.com/image/latest/v"],
+    desktop: ["https://api.bingpics.ybjun.com/image/latest"],
+    mobile: ["https://api.bingpics.ybjun.com/image/latest/v"],
 };
 const dailyWallFallback = {
     desktop: "/assets/images/wallpaper_fallback/desktopWallpaper_fallback.webp",
