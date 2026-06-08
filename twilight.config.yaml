@@ -43,7 +43,7 @@ site:
   font:
     LXGW WenKai Screen:
       src: /assets/LXGWWenKai/result.css
-      family: LXGW WenKai Mono Screen
+      family: LXGW WenKai Screen
   themeColor:
     hue: '190'
   defaultTheme: system
