@@ -42,8 +42,8 @@ site:
     - 火车
   font:
     LXGW WenKai Screen:
-      src: https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-web/style.css
-      family: LXGW WenKai Screen
+      src: /assets/LXGWWenKai/result.css
+      family: LXGW WenKai Mono Screen
   themeColor:
     hue: '190'
   defaultTheme: system

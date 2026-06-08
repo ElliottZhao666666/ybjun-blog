@@ -11,7 +11,7 @@ const selectedFontFamilies = fonts
 	.map((font) => `"${font.family}"`);
 
 const fallbacks =
-	"system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif";
+    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 const customFontFamily = selectedFontFamilies.join(", ");
 const finalFontFamily = customFontFamily
 	? `${customFontFamily}, ${fallbacks}`
@@ -21,17 +21,13 @@ const finalFontFamily = customFontFamily
 <!-- Font Loading -->
 {
   fonts.map((font) => {
-    const isCss = font.src.endsWith('.css') || font.src.includes('fonts.googleapis.com') || font.src.includes('unpkg.com');
+    const fontSrc = font.src;
+    const isCss = fontSrc.toLowerCase().split('?')[0].endsWith('.css');
     if (isCss) {
-        // If it's a Google Font, we can append &display=swap if it's not already there
-        let fontSrc = font.src;
-        if (fontSrc.includes('fonts.googleapis.com') && !fontSrc.includes('display=')) {
-            fontSrc += (fontSrc.includes('?') ? '&' : '?') + 'display=swap';
-        }
         return (
             <>
-                <link rel="preload" href={fontSrc} as="style" />
-                <link rel="stylesheet" href={fontSrc} />
+                <link rel="stylesheet" href={fontSrc} media="print" onload="this.media='all'" />
+                <noscript><link rel="stylesheet" href={fontSrc} /></noscript>
             </>
         );
     } else if (font.src) {
