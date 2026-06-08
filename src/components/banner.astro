@@ -102,6 +102,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                 class:list={["block md:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.mobile[0] || imageSources.desktop[0] || ''}
                 fallbackSrc={isDailyWall ? dailyWallFallback.mobile : undefined}
+                debugLabel={isDailyWall ? "banner-mobile-daily-wall" : undefined}
                 position={config.position}
                 loading="eager"
             />
@@ -111,6 +112,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                 class:list={["hidden md:block object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.desktop[0] || imageSources.mobile[0] || ''}
                 fallbackSrc={isDailyWall ? dailyWallFallback.desktop : undefined}
+                debugLabel={isDailyWall ? "banner-desktop-daily-wall" : undefined}
                 position={config.position}
                 loading="eager"
             />
