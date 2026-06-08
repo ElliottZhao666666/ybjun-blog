@@ -42,7 +42,7 @@ site:
     - 火车
   font:
     LXGW WenKai Screen:
-      src: https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-web/style.css
+      src: /assets/LXGWWenKai/result.css
       family: LXGW WenKai Screen
   themeColor:
     hue: '190'
@@ -60,7 +60,6 @@ site:
         - /assets/images/desktopWallpaper_1772802946001_17.webp
         - /assets/images/desktopWallpaper_1772802946588_97.webp
         - /assets/images/desktopWallpaper_1772802946867_64.webp
-        - /assets/images/desktopWallpaper_1772802947145_7.webp
         - /assets/images/desktopWallpaper_1772802947754_80.webp
         - /assets/images/desktopWallpaper_1772802948323_98.webp
         - /assets/images/desktopWallpaper_1774769589998_25.webp
