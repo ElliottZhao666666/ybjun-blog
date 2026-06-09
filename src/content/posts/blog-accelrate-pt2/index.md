@@ -43,7 +43,7 @@ draft: false
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 ```
 
-```html
+```astro
 // base.astro
 <head>
 	<!-- 头部信息都改成规范链接 -->
@@ -58,48 +58,47 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 
 它不仅巧妙避开了明文正则扫描，还完美兼容了 Cloudflare Pages 的 .pages.dev 分支预览环境、本地开发环境，以及博主的其他合法子域。只要这段代码位于 `<meta charset>` 和 `<title>` 之后，浏览器在遇到未授权域名时，甚至来不及加载庞大的 CSS 和图片资源，就会瞬间将用户（或支持 JS 渲染的爬虫）强行“弹”回 `www.ybjun.com`。
 
-```html
+```astro
 // base.astro
-    <head>
-        <meta charset="UTF-8" />
-				<script is:inline>
-						(() => {
-								// 确保仅在客户端浏览器环境中执行，避免 Astro SSR 构建报错
-								if (typeof window === "undefined") return;
+<head>
+    <meta charset="UTF-8" />
+    <script is:inline>
+        (() => {
+            // 确保仅在客户端浏览器环境中执行，避免 Astro SSR 构建报错
+            if (typeof window === "undefined") return;
 
-								// Base64 解码函数，混淆域名以躲避静态正则替换爬虫
-								const decodeHost = (value) => atob(value);
-        
-								const mainDomain = decodeHost("eWJqdW4uY29t"); // ybjun.com
-								const pagesDomain = decodeHost("eWJqdW4tYmxvZy1kdm0ucGFnZXMuZGV2"); // ybjun-blog-dvm.pages.dev
-        
-								// 精确匹配的白名单
-								const allowedHosts = new Set([
-										mainDomain,
-										decodeHost("d3d3LnlianVuLmNvbQ=="), // www.ybjun.com
-										decodeHost("MTI3LjAuMC4x"),         // 127.0.0.1
-										decodeHost("bG9jYWxob3N0"),         // localhost
-										decodeHost("*****************"),         // 放入其他需要加入白名单的域名 Base64
-								]);
+            // Base64 解码函数，混淆域名以躲避静态正则替换爬虫
+            const decodeHost = (value) => atob(value);
+            const mainDomain = decodeHost("eWJqdW4uY29t"); // ybjun.com
+            const pagesDomain = decodeHost("eWJqdWxxxxxxxx2"); // xxx.pages.dev
 
-								const host = window.location.hostname.toLowerCase();
-        
-								// 动态校验机制
-								// 1. 允许所有合法的子域 (例如 dailywall.ybjun.com, lrc.ybjun.com)
-								const isAllowedSubdomain = host.endsWith("." + mainDomain);
-								// 2. 严格允许 Cloudflare Pages 分支预览环境 (例如 dev.ybjun-blog-dvm.pages.dev)
-								const isAllowedPagesPreview = new RegExp(`^.+\\.${pagesDomain.replace(/\./g, '\\.')}$`).test(host) || host === pagesDomain;
+            // 精确匹配的白名单
+            const allowedHosts = new Set([
+                mainDomain,
+                decodeHost("d3d3LnlianVuLmNvbQ=="), // www.ybjun.com
+                decodeHost("MTI3LjAuMC4x"),         // 127.0.0.1
+                decodeHost("bG9jYWxob3N0"),         // localhost
+                decodeHost("*****************")      // 放入其他需要加入白名单的域名 Base64
+            ]);
 
-								// 核心防御逻辑：如果当前域名不符合任何白名单规则，则触发重定向
-								if (!allowedHosts.has(host) && !isAllowedSubdomain && !isAllowedPagesPreview) {
-										// 使用 window.location.replace 避免污染用户的浏览器历史记录
-										window.location.replace(
-												"https://www." + mainDomain + window.location.pathname + window.location.search + window.location.hash
-										);
-								}
-						})();
-				</script>
-    <head>
+            const host = window.location.hostname.toLowerCase();
+
+            // 动态校验机制
+            // 1. 允许所有合法的子域 (例如 dailywall.ybjun.com, lrc.ybjun.com)
+            const isAllowedSubdomain = host.endsWith("." + mainDomain);
+            // 2. 严格允许 Cloudflare Pages 分支预览环境 (例如 dev.ybjun-blog-dvm.pages.dev)
+            const isAllowedPagesPreview = new RegExp(`^.+\\.${pagesDomain.replace(/\./g, '\\.')}$`).test(host) || host === pagesDomain;
+
+            // 核心防御逻辑：如果当前域名不符合任何白名单规则，则触发重定向
+            if (!allowedHosts.has(host) && !isAllowedSubdomain && !isAllowedPagesPreview) {
+                // 使用 window.location.replace 避免污染用户的浏览器历史记录
+                window.location.replace(
+                    "https://www." + mainDomain + window.location.pathname + window.location.search + window.location.hash
+                );
+            }
+        })();
+    </script>
+</head>
 ```
 
 ### 1.4 总结
