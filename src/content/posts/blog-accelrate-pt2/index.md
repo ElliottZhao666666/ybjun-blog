@@ -13,7 +13,7 @@ tags:
   - 网络
 category: 技术备忘
 encrypted: false
-draft: true
+draft: false
 ---
 
 建站容易，优化不易。之前为了提升本站（基于 Astro + Svelte 构建，采用 Twilight 框架，属于类 Fuwari，结构比较重型）在国内的访问体验，博主特意给 Cloudflare 全家桶做了国内优选 IP。虽然在 ITDog 上测速一片青葱，看着非常唬人，**但实际在国内真实网络环境下访问时，博客加载依然需要很长时间**，有时候全屏的 Loading 动画甚至要转两到三分钟。
