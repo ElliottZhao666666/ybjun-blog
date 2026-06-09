@@ -108,3 +108,120 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 
 这种依靠大量垃圾内容拼接的所谓“AI导航系统”，由于排版混乱且缺乏实际价值，其生命周期往往极短，很快就会被 Google 和 Bing 的算法自动 K 站。将其防御妥当后，我们终于可以安心地继续推进博客的极致速度优化了。
 ![img_1781008912596.png](./img_1781008912596.png)
+
+## 2 把必应每日一图作为背景图
+
+### 2.1 问题和痛点
+
+本站原本采用了多张博主精选的高清必应美图作为幻灯片轮播背景。这些图片存放在前端的本地仓库中，虽然已经通过 WebP 格式压缩到了 1M 以内，但在使用 CF 全家桶且未经国内分发的情况下，**动辄数十 MB 的初始图片请求会瞬间挤占首屏带宽，极易产生严重阻塞**。
+![img_1781014084244.png](./img_1781014084244.png)
+
+除此之外，多张背景图的幻灯片播放采用 Ken Burns 效果，也会造成极大的性能开销，拖慢加载速度，但关闭后幻灯片过渡会及其生硬，很难看。所以博主认为，有必要动代码了，大幅修改整个背景图片加载机制。
+![img_1781014694642.png](./img_1781014694642.png)
+
+至于如何精简，博主第一时间就想到了建站前的最初想法——**使用必应每日一图作为博客背景**，这样既可以在加载时避免幻灯片形式的网络资源和性能开销，还能确保每天有变化。之所以一开始建站时没这么做，是因为博主看到 Twilight 主题框架默认的背景加载机制本身很不错，并且似乎只支持网站本地的照片，所以就沿用原始框架采用精选图片幻灯片播放了。
+
+### 2.2 必应今日美图边缘流式透传 API
+
+众所周知，这个博客并非博主上线的第一个网站。真正的第一个网站应该是[胖哥必应美图库（dailywall.ybjun.com）](https://dailywall.ybjun.com/)。这也是个 CF 全家桶站点，使用 R2 存储桶储存每日图片，使用 Workers 作为 API 和核心处理层。
+![img_1781015220712.png](./img_1781015220712.png)
+
+所以，博主决定在这个 Worker 上做改造，使其新增一个能够直接返回当日壁纸图的 API 分支，并且**使用流式透传**，而非直接重定向到 R2 存储桶中对应的图片链接：
+```javascript
+// worker.js
+async fetch(request, env, ctx) {
+  try {
+    // === 路由分发 (此处省略其它路由分支) ===
+    // === 获取最新壁纸图片直链 (流式透传，直接返回图片本体) ===
+    if (path.startsWith('/image/latest')) {
+      const { results } = await env.DB.prepare(
+        "SELECT * FROM wallpapers ORDER BY enddate DESC LIMIT 1"
+      ).run();
+      
+      if (!results[0]) {
+        return errorResponse("No wallpaper found", 404, origin);
+      }
+      
+      const dbInfo = results[0];
+      let targetUrl = dbInfo.pic_url_1080; // 默认获取 PC 横屏
+      
+      if (path === '/image/latest/v') {
+        targetUrl = dbInfo.pic_url_1920; // 手机竖屏
+      } else if (path === '/image/latest/uhd') {
+        targetUrl = dbInfo.pic_url_uhd;  // 4K
+      }
+      
+      // 关键 1：从数据库记录的 URL 中提取出 R2 存储桶里的真实文件名
+      const fileName = targetUrl.split('/').pop();
+      
+      // 关键 2：通过绑定的 MY_BUCKET 直接走内网去拿图片对象
+      const object = await env.MY_BUCKET.get(fileName);
+      
+      if (!object) {
+        return errorResponse("Image file not found in R2 bucket", 404, origin);
+      }
+      
+      // 关键 3：组装响应头，继承 R2 的元数据，并注入 CORS 和缓存控制
+      const headers = new Headers({
+        "Content-Type": object.httpMetadata?.contentType || "image/jpeg",
+        "Cache-Control": "public, max-age=7200", // 浏览器缓存 2 小时
+        "ETag": object.httpEtag, // 帮助浏览器做 304 缓存协商
+        ...getCorsHeaders(origin) // 注入跨域头，通杀所有预览分支
+      });
+
+      // 关键 4：直接将 R2 的 ReadableStream (object.body) 返回给前端
+      return new Response(object.body, {
+        status: 200,
+        headers: headers
+      });
+    }
+	}
+}
+```
+
+这样，当访问`api域名/image/latest`时，Worker 会直接从 D1 壁纸数据库中查到 R2 存储桶中今天壁纸的`1920x1080`尺寸的原图链接，并直接将这个链接的图片原始数据返回。`api域名/image/latest/v`同理，只不过返回的是`1920x1080`尺寸的竖屏原图。
+
+:::warning
+**不建议在这里使用 302 直接跳转到直接获取的原图链接**，因为实际应用到网站中时，可能会触发 CF 的防盗链机制，导致一切正常，甚至不报错，就是无法获取图片。**实际上被 CF 无情地 403 了**。
+:::
+
+至此，API 已经准备好了，接下来，我们就把
+
+### 2.3 代码库新增必应每日一图逻辑与无缝 Fallback
+
+在前端代码（例如 `fullscreenWallpaper.astro` 和 `banner.astro`）中，博主将背景图片路径指向了自建的新 API，同时利用原生 `onerror` 属性植入了平滑的 fallback 逻辑。一旦 API 请求失败或网络异常，浏览器会自动回退到极小体积的默认图片，旧逻辑得以完美兜底，且前端渲染层毫无感知。
+
+以下是 `fullscreenWallpaper.astro` 中的关键改造实现：
+
+```
+---
+// 配置云端 API 资源地址与本地 Fallback 兜底图片地址
+const dailyWallSources = {
+    desktop: ["[https://api.bingpics.ybjun.com/image/latest](https://api.bingpics.ybjun.com/image/latest)"],
+    mobile: ["[https://api.bingpics.ybjun.com/image/latest/v](https://api.bingpics.ybjun.com/image/latest/v)"],
+};
+
+const dailyWallFallback = {
+    desktop: "/assets/images/wallpaper_fallback/desktopWallpaper_fallback.webp",
+    mobile: "/assets/images/wallpaper_fallback/mobileWallpaper_fallback.webp",
+};
+---
+
+<!-- 桌面端壁纸渲染逻辑 -->
+<img
+    src={dailyWallSources.desktop[0]}
+    alt="Desktop Wallpaper"
+    class="hidden md:block w-full h-full object-cover transition-opacity duration-700"
+    data-original-src={dailyWallSources.desktop[0]}
+    onerror={`
+        console.error('[DailyWall] image error', {label: 'fullscreen-desktop-daily-wall', fallbackSrc: '${dailyWallFallback.desktop}'});
+        // 检测是否已经应用过 Fallback，避免死循环
+        if (!this.hasAttribute('data-fallback-applied')) {
+            this.setAttribute('data-fallback-applied', 'true');
+            this.src = '${dailyWallFallback.desktop}';
+        }
+    `}
+/>
+```
+
+通过这一层修改，原本阻塞的本地多图加载被替换为轻量级 API 驱动，且具有极高的容错性。
