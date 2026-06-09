@@ -4,7 +4,7 @@ published: '2026-02-11'
 description: 欢迎光临月半菌的博客
 author: ''
 cover: ./cover.jpg
-pinned: true
+pinned: false
 tags:
   - 随笔
 category: 随想
