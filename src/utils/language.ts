@@ -189,19 +189,9 @@ export function initTranslateService(): void {
 
 // 加载并初始化翻译功能
 export async function loadAndInitTranslate(): Promise<void> {
-	if (typeof window === "undefined" || !siteConfig.translate?.enable) return;
-	try {
-		// 检查是否已经加载
-		if (!(window as any).translate) {
-			// 使用动态导入，Vite 会自动处理代码分割
-			await import("@/plugins/translate");
-			(window as any).translateScriptLoaded = true;
-		}
-		// 初始化服务
-		initTranslateService();
-	} catch (error) {
-		console.error("Failed to load or init translate.js:", error);
-	}
+	// Runtime translate.js has been intentionally disabled to reduce page load cost.
+	// Keep this no-op entry for compatibility with older imports and easy rollback.
+	return;
 }
 
 // 切换语言

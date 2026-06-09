@@ -5,7 +5,6 @@ import ConfigCarrier from "@components/configCarrier.astro";
 import FontLoader from "@components/fontLoader.astro";
 import LoadingOverlay from "@components/loadingOverlay.astro";
 import MusicPlayer from "@components/musicPlayer.svelte";
-import Pio from "@components/pio.svelte";
 import {
 	BANNER_HEIGHT,
 	BANNER_HEIGHT_EXTEND,
@@ -20,10 +19,8 @@ import { defaultFavicons } from "@constants/icon";
 import { pathsEqual, url } from "@utils/url";
 import {
 	musicPlayerConfig,
-	pioConfig,
 	profileConfig,
 	siteConfig,
-	umamiConfig,
 } from "@/config";
 import type { Favicon } from "@/types/config";
 import "@styles/navbar.css";
@@ -126,9 +123,6 @@ const bannerOffsetByPosition = {
 };
 const bannerOffset =
 	bannerOffsetByPosition[siteConfig.wallpaper.position || "center"];
-
-const umamiEnabled = umamiConfig.enabled || false;
-const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 
 // Canonical URL：始终基于 astro.config.mjs 中配置的主站 site 生成，避免镜像站继承自身域名。
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
@@ -257,12 +251,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
         }}></style>
         <!-- custom head -->
         <slot name="head"></slot>
-        <!-- Pio 看板娘样式 - 仅在启用时加载 -->
-        {pioConfig.enable && <link rel="stylesheet" href="/pio/static/pio.css" />}
         <!-- rss feed -->
         <link rel="alternate" type="application/rss+xml" title={profileConfig.name} href={`${Astro.site}rss.xml`}/>
-        <!-- Umami Analytics -->
-        {umamiEnabled && umamiScripts && <Fragment set:html={umamiScripts} />}
     </head>
 
     <body class=" min-h-screen " class:list={[{"is-home": isHomePage, "enable-banner": enableBanner}]}
@@ -277,8 +267,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
         <slot />
         <!-- Music Player - 仅在启用时加载 -->
         {musicPlayerConfig.enable && <MusicPlayer client:idle />}
-        <!-- Pio 看板娘组件 - 如果启用了侧边栏，可能需要调整 z-index -->
-        {pioConfig.enable && <Pio client:idle />}
         <!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
         <div id="page-height-extend" class="hidden h-[300vh]"></div>
         <ClickEffect />
@@ -331,7 +319,6 @@ import { initTheme } from "@utils/theme";
 import { initHue } from "@utils/hue";
 import { initMarkdownActions } from "@/utils/markdown";
 import { initFancybox, cleanupFancybox } from "@utils/fancybox";
-import { loadAndInitTranslate } from "@utils/language";
 import { setupParticleEffects } from "@/utils/particle";
 
 
@@ -430,18 +417,6 @@ const setup = () => {
             top: 0,
             behavior: 'smooth'
         });
-        // Check if the current page is a post page, if so, trigger a custom event to initialize the comment system
-        setTimeout(() => {
-            if (document.getElementById('tcomment')) {
-                const pageLoadedEvent = new CustomEvent('twilight:page:loaded', {
-                    detail: {
-                        path: window.location.pathname,
-                        timestamp: Date.now()
-                    }
-                });
-                document.dispatchEvent(pageLoadedEvent);
-            }
-        }, 300);
         // Initialize Fancybox
         initFancybox();
     });
@@ -520,9 +495,6 @@ initWallpaperMode();
 
 // 初始化 Markdown 相关操作以防止因 Swup 无刷新跳转的机制限制而导致操作失效
 initMarkdownActions();
-
-// Initialize translate.js
-loadAndInitTranslate();
 
 // Initialize particle effects
 setupParticleEffects();

@@ -2,9 +2,8 @@
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { formatDateToYYYYMMDD } from "@utils/date";
-import { getCategoryUrl, getTagUrl, url } from "@utils/url";
+import { getCategoryUrl, getTagUrl } from "@utils/url";
 import { Icon } from "astro-icon/components";
-import { umamiConfig } from "@/config";
 
 export interface Props {
 	published: Date;
@@ -26,19 +25,9 @@ const {
 	tags,
 	hideUpdateDate,
 	hideTagsForMobile,
-	isHome,
 	className = "",
-	slug,
-	postUrl,
 } = Astro.props;
-const finalPostUrl = postUrl || (slug ? url(`/posts/${slug}/`) : "");
-
-// 解析 umami
-const umamiEnabled = umamiConfig.enabled || false;
-const umamiWebsiteId =
-	umamiConfig.scripts.match(/data-website-id="([^"]+)"/)?.[1] || "";
-const umamiApiKey = umamiConfig.apiKey || "";
-const umamiBaseUrl = umamiConfig.baseUrl || "";
+const categoryName = category || i18n(I18nKey.uncategorized);
 ---
 
 <div class={`flex flex-wrap text-neutral-500 dark:text-neutral-400 items-center gap-4 gap-y-2 ${className}`}>
@@ -53,8 +42,8 @@ const umamiBaseUrl = umamiConfig.baseUrl || "";
         <div class="text-xl">
             <Icon name="material-symbols:folder-open-outline" />
         </div>
-        <a href={getCategoryUrl(category)} class="text-sm font-medium hover:text-[var(--primary)] whitespace-nowrap transition-colors">
-            {category || i18n(I18nKey.uncategorized)}
+        <a href={getCategoryUrl(categoryName)} class="text-sm font-medium hover:text-[var(--primary)] whitespace-nowrap transition-colors">
+            {categoryName}
         </a>
     </div>
 
@@ -81,16 +70,6 @@ const umamiBaseUrl = umamiConfig.baseUrl || "";
             <span class="text-sm font-medium text-amber-500/90 dark:text-amber-400/90">
                 {formatDateToYYYYMMDD(updated)}
             </span>
-        </div>
-    )}
-
-    {umamiEnabled && !isHome && (
-         <div class="flex items-center gap-1" id={`page-views-container-${slug}`} data-page-url={finalPostUrl}
-             data-i18n-views={i18n(I18nKey.views as any)} data-i18n-visitors={i18n(I18nKey.visitors as any)}>
-            <div class="text-xl">
-                <Icon name="material-symbols:bar-chart-rounded" />
-            </div>
-            <span class="text-sm font-medium page-views-display">...</span>
         </div>
     )}
 </div>
