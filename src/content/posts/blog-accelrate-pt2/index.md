@@ -13,7 +13,7 @@ tags:
   - 网络
 category: 技术备忘
 encrypted: false
-draft: true
+draft: false
 ---
 
 建站容易，优化不易。之前为了提升本站（基于 Astro + Svelte 构建，采用 Twilight 框架，属于类 Fuwari，结构比较重型）在国内的访问体验，博主特意给 Cloudflare 全家桶做了国内优选 IP。虽然在 ITDog 上测速一片青葱，看着非常唬人，**但实际在国内真实网络环境下访问时，博客加载依然需要很长时间**，有时候全屏的 Loading 动画甚至要转两到三分钟。
@@ -334,3 +334,146 @@ site:
 ```
 
 ### 3.3 增加异步渲染机制
+
+不过，仅仅把字体文件本地化还不够。我们还要解决一下串行加载的问题。
+
+因为霞鹜文楷这种 Web 分片字体依赖一个 `result.css` 入口文件来声明后续的几百个 `@font-face` 分片。如果直接用传统方式无脑引入：
+
+```html
+<link rel="stylesheet" href="/assets/LXGWWenKai/result.css">
+```
+
+浏览器依然会把它当作渲染阻塞资源。对于国内访问者来说，即便资源已经走本站域名和优选 IP，只要网络稍微抖动，首屏依然会被这几十 KB 的样式表死死卡住。
+
+为了彻底消除阻塞，博主对字体加载组件`fontLoader.astro`进行了调整，引入了**预加载 + 异步启用 + 无脚本兜底**机制。
+
+```astro
+// fontLoader.astro
+<link rel="preload" as="style" href="/assets/LXGWWenKai/result.css">
+<link rel="stylesheet" href="/assets/LXGWWenKai/result.css" media="print" onload="this.media='all'">
+```
+第一行的 preload 负责告诉浏览器：这个 CSS 很重要，可以提前下载。
+
+第二行才是真正的样式表，但它一开始被设置成了 `media="print"`。因为当前页面不是打印场景，所以浏览器不会把它当作首屏渲染必须等待的样式表。
+等 CSS 文件加载完成后，再通过`onload="this.media='all'"`把它切回正常样式表。这样一来，字体 CSS 依然会被加载，但不会再像以前那样卡住页面首屏渲染。
+
+同时，为了避免极端情况下用户禁用了 JavaScript，代码里还保留了一个 `noscript` 兜底。如果浏览器不执行脚本，那就退回普通 CSS 加载方式，至少保证字体样式仍然可用：
+```astro
+// fontLoader.astro
+<noscript>
+    <link rel="stylesheet" href="/assets/LXGWWenKai/result.css">
+</noscript>
+```
+
+对于非 CSS 入口的字体文件，例如直接配置 `.woff2`、`.ttf` 之类的资源，则继续使用 `@font-face`，并显式加上 `font-display: swap`：
+```astro
+// fontLoader.astro
+<style set:html={`
+    @font-face {
+        font-family: "${font.family}";
+        src: url("${font.src}");
+        font-display: swap;
+    }
+`} />
+```
+其的作用也很直接：先用系统字体把文字显示出来，等自定义字体加载完成后再替换。这样即使字体资源加载较慢，用户也不会面对一片空白文字。最后，再把全局字体变量注入到页面中：
+```astro
+// fontLoader.astro
+<style is:global set:html={`
+    :root {
+        --font-family-fallback: ${fallbacks};
+        --global-font-family: ${finalFontFamily};
+    }
+    body {
+        font-family: var(--global-font-family);
+    }
+`} />
+```
+这样改完后，字体加载逻辑就变成了：
+* 字体文件成为本站本地资源；
+* 字体入口 CSS 通过 `preload` 提前下载；
+* 实际样式表用 `media="print"` 避免阻塞首屏；
+* 加载完成后自动切换为 `media="all"`；
+* 禁用脚本时由 `noscript` 兜底；
+* 字体未就绪前先使用系统字体，避免文字区域空白。
+
+最终效果就是，页面会优先完成首屏渲染，字体则在后台加载并逐步替换。虽然用户可能会短暂看到系统字体到霞鹜文楷的切换，但相比之前被一个字体 CSS 卡住几十秒甚至一分钟，这个代价完全可以接受。
+
+## 4 终极解决，打破卡顿
+
+完成上述步骤后，按理说加载速度会变快不少。但博主发现，海外网络环境访问确实快了很多，基本能“秒加载”。但国内网络环境无缓存硬刷新时，**有时候居然还得加载足足几分钟！** 网络面板显示请求在串行排队，区区几十 KB 的字体切片和文章头图还是要耗费几十秒，**频繁挂起，就像在懒加载一样**。
+
+### 4.1 最大的影响因素：HTTP/3
+
+经过对比分析多次加载的 HAR，博主似乎找到了**最大的影响因素**：原因在于博主为域名`ybjun.com`在 Cloudflare 开启了 **HTTP/3 (QUIC)**。HTTP/3 基于 UDP 协议，所以浏览器经常会在访问时优先走 UDP 。但在国内部分复杂网络环境下，经常会对国际出口的 UDP 流量部署严苛的 **QoS 限速和随机丢包**策略。多路复用下的几百个小字体请求挤在受限的 UDP 通道里，直接触发了队头阻塞，带宽被死死卡在几 KB/s。 
+
+解决方案也很简单，向实际的网络环境妥协。进入 CF 控制台，在域名的“速度设置 - 协议设置”中，**果断关闭 HTTP/3 (使用 QUIC)**，让流量老老实实走 TCP (HTTP/2)。
+![img_1781019898759.png](./img_1781019898759.png)
+
+没想到，这下真的就如同打通了任督二脉，新的加载测试中，国内网络下终于出现了大范围的并行请求，DOM 加载速度也终于降低到最慢 20-30 秒。
+
+### 4.2 重构 Loading 加载画面逻辑
+
+现在，速度已经明显提起来了，但博主很快发现，还有一个很隐蔽的问题：**开场的 Loading 遮罩本身也可能成为白屏制造机**。
+
+Twilight 原本的全屏 Loading 动画是绑定在 `window.onload` 上的。这个思路在资源都很快的情况下没问题，但一旦某个非关键资源卡住，例如字体、背景图、第三方脚本、图片请求等，**Loading 遮罩就会一直盖在页面上**。用户看到的不是“页面加载慢”，而是“整个网站像打不开”。
+![img_1781020708547.png](./img_1781020708547.png)
+
+所以这里的优化思路很简单：Loading 不应该等待所有资源加载完成，而应该**在 DOM 可用后尽快退场**。也就是说，只要 HTML 结构已经解析完成，页面主体可以展示，就先让用户看到内容。至于图片、字体、统计脚本这些资源，可以继续在后台慢慢加载。
+
+```astro
+// base.astro
+if (typeof window !== 'undefined') {
+    let loadingOverlayHidden = false;
+    const finishInitialAnimation = (enableBanner: boolean) => {
+        document.documentElement.classList.remove('is-loading');
+        document.documentElement.classList.add('show-initial-animation');
+        setTimeout(() => {
+            document.documentElement.classList.remove('show-initial-animation');
+            if (enableBanner) {
+                document.documentElement.classList.remove('banner-restoring');
+            }
+        }, 1200);
+    };
+    const hideLoadingOverlay = () => {
+        if (loadingOverlayHidden) return;
+        loadingOverlayHidden = true;
+        const overlay = document.getElementById('loading-overlay');
+        const enableBanner = document.body.classList.contains('enable-banner');
+        if (overlay) {
+            overlay.classList.add('fade-out');
+        }
+        setTimeout(() => {
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            if (enableBanner) {
+                document.documentElement.classList.add('banner-restoring');
+                setTimeout(() => finishInitialAnimation(enableBanner), 600);
+            } else {
+                finishInitialAnimation(enableBanner);
+            }
+        }, 600);
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hideLoadingOverlay, { once: true });
+    } else {
+        hideLoadingOverlay();
+    }
+    // 兜底：即使 DOMContentLoaded 因异常未触发，也最多等待 10 秒。
+    setTimeout(hideLoadingOverlay, 10000);
+}
+```
+
+这段逻辑主要做了三件事：
+* 把退场时机从等待 `window.load` 改成了 `DOMContentLoaded`。`window.load` 要等图片、字体、样式表、脚本等资源全部加载完才触发，而 `DOMContentLoaded` 只要页面 DOM 结构解析完成就会触发。对博客这种内容型网站来说，后者显然更适合首屏体验。
+* 加了一个 `loadingOverlayHidden` 状态锁。这样可以避免 `DOMContentLoaded` 和兜底定时器同时触发时，重复执行 Loading 退场动画。
+* 加了一个 10 秒兜底熔断，哪怕极端情况下 `DOMContentLoaded` 没有正常触发，Loading 也不会无限盖住页面，最多 10 秒就会强制退场。
+
+这样改完后，Loading 画面就不再和所有资源的加载状态强绑定了。页面主体可以更早展示，用户也不会因为某个无关资源卡住，就一直被挡在 Loading 遮罩后面。对于国内网络环境下偶发的字体、图片、第三方请求超时，这个优化尤其有效。
+
+## 5 总结
+
+一番折腾下来，国内环境下无缓存硬重载的 DOM 加载时间终于被**压到了 10 秒以内**，彻底告别了动辄几分钟的转圈梦魇。+
+
+技术优化的乐趣，不仅仅在于让进度条跑得更快，更在于把每一个“加载缓慢”和“恶意镜像”的阻碍，转化为深入理解底层物理网络与前端工程化的阶梯。优化暂告一段落，但折腾永无止境。
