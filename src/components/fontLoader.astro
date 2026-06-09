@@ -26,6 +26,7 @@ const finalFontFamily = customFontFamily
     if (isCss) {
         return (
             <>
+                <link rel="preload" as="style" href={fontSrc} />
                 <link rel="stylesheet" href={fontSrc} media="print" onload="this.media='all'" />
                 <noscript><link rel="stylesheet" href={fontSrc} /></noscript>
             </>
