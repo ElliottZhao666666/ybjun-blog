@@ -272,7 +272,6 @@ const carouselInterval = carouselConfig?.interval || 6;
     position={config.position}
     loading="eager"
 />
-
 <ImageWrapper
     id="banner"
     alt="Desktop banner"
@@ -297,4 +296,41 @@ const carouselInterval = carouselConfig?.interval || 6;
 这样既没有破坏 Twilight 原本的配置结构，又把每日一图接入成了一个独立、可回退、可维护的增强背景模式。
 ![img_1781017614688.png](./img_1781017614688.png)
 
+## 3 字体的非阻塞化调优
 
+### 3.1 字体加载痛点
+
+把背景图从多张变成一张后，国内加载速度有了一点提升，但依然比较慢。
+
+提取了一次耗时 1 分多钟的 HAR 日志后，博主倒吸了一口凉气——另一个拖慢速度的“元凶”竟然是**字体加载**。 
+![img_1781017808905.png](./img_1781017808905.png)
+
+为了实现精美的排版，本站使用了**霞鹜文楷**的 Web 分片字体，其源公共 CDN `cdn.jsdelivr.net` 上。由于该 CDN 在国内环境极易受到干扰，加载一个核心的 `result.css` 有时就要卡上 1 分钟，就比如在一次 2 分多钟加载完成的 HAR 中，明确看出 `cdn.jsdelivr.net` 竟然被解析到了法兰克福！更要命的是，CSS 内部采用 `@import` “套娃”式请求，让原本**能并行的网络瀑布流变成了串行**，会彻底卡死渲染树。
+
+所以，博主决定先把霞鹜文楷留下，尝试将字体分片本地化，看能不能借助优选 IP 的力量加快其加载速度。如果实在不行，那就退回系统字体吧。
+
+### 3.2 将字体分片本地化
+
+其实，这件事很简单了，使用以下命令，在一个空文件夹中下载霞鹜文楷 Web 字体包：
+
+```bash
+npm install lxgw-wenkai-screen-web
+```
+
+安装完成后，进入 `node_modules/lxgw-wenkai-screen-web/` 目录，里面应该有四种字体：
+![img_1781018265951.png](./img_1781018265951.png)
+
+`GB` 当然就是 `GB2312` 字符集的版本，至于普通版和 Mono 版，可以看官方 GitHub 仓库中的说明：
+![img_1781018408013.png](./img_1781018408013.png)
+
+最后，博主选用 `LXGW WenKai Screen` ，直接将文件夹内的全部文件复制到博客前端仓库 `public/assets/LXGWWenKai/` 目录。然后，直接在主配置 `twilight.config.yaml` 中将字体源改写为本地相对路径，确保日后换字体只改配置不改代码。完事。
+```yaml
+//twilight.config.yaml
+site:
+	font:
+    LXGW WenKai Screen:
+      src: /assets/LXGWWenKai/result.css
+      family: LXGW WenKai Screen
+```
+
+### 3.3 增加异步渲染机制
