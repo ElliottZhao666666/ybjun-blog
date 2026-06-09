@@ -107,3 +107,4 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 动态 Canonical URL 确保了无论代码被复制到哪里，搜索引擎收录的“唯一真神”永远是主站。Base64 混淆反弹脚本 拦截了绝大部分依赖浏览器渲染的高级反代镜像，同时保护了 Cloudflare Pages 带宽不被恶意盗刷。
 
 这种依靠大量垃圾内容拼接的所谓“AI导航系统”，由于排版混乱且缺乏实际价值，其生命周期往往极短，很快就会被 Google 和 Bing 的算法自动 K 站。将其防御妥当后，我们终于可以安心地继续推进博客的极致速度优化了。
+![img_1781008912596.png](./img_1781008912596.png)
