@@ -38,13 +38,13 @@ draft: true
 博主在 Astro 全局组件（如 Layout.astro）的 `<head>` 早期注入了动态生成逻辑。由于它是直接读取 `astro.config.mjs` 中的主站 `site` 域名配置，从根本上杜绝镜像站继承自身域名的可能性：
 
 ```javascript
-// \src\layouts\base.astro
+// base.astro
 // Canonical URL：始终基于 astro.config.mjs 中配置的主站 site 生成，避免镜像站继承自身域名。
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 ```
 
 ```html
-// \src\layouts\base.astro
+// base.astro
 <head>
 	<!-- 头部信息都改成规范链接 -->
   <link rel="canonical" href={canonicalURL} />
@@ -59,7 +59,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 它不仅巧妙避开了明文正则扫描，还完美兼容了 Cloudflare Pages 的 .pages.dev 分支预览环境、本地开发环境，以及博主的其他合法子域。只要这段代码位于 `<meta charset>` 和 `<title>` 之后，浏览器在遇到未授权域名时，甚至来不及加载庞大的 CSS 和图片资源，就会瞬间将用户（或支持 JS 渲染的爬虫）强行“弹”回 `www.ybjun.com`。
 
 ```html
-// \src\layouts\base.astro
+// base.astro
     <head>
         <meta charset="UTF-8" />
 				<script is:inline>
@@ -185,43 +185,116 @@ async fetch(request, env, ctx) {
 **不建议在这里使用 302 直接跳转到直接获取的原图链接**，因为实际应用到网站中时，可能会触发 CF 的防盗链机制，导致一切正常，甚至不报错，就是无法获取图片。**实际上被 CF 无情地 403 了**。
 :::
 
-至此，API 已经准备好了，接下来，我们就把
+至此，API 已经准备好了，接下来，我们就把 API 接入到博客前端代码库。
 
-### 2.3 代码库新增必应每日一图逻辑与无缝 Fallback
+### 2.3 代码逻辑新增
 
-在前端代码（例如 `fullscreenWallpaper.astro` 和 `banner.astro`）中，博主将背景图片路径指向了自建的新 API，同时利用原生 `onerror` 属性植入了平滑的 fallback 逻辑。一旦 API 请求失败或网络异常，浏览器会自动回退到极小体积的默认图片，旧逻辑得以完美兜底，且前端渲染层毫无感知。
+这里博主并不想把“必应每日一图作为背景”的逻辑直接写死进去。毕竟 Twilight 原本的壁纸系统已经比较完善，支持横幅模式、全屏模式、多图轮播、位置控制、Ken Burns 动效等配置。如果为了接入每日一图就把原逻辑大改一通，后续想切回原来的精选壁纸幻灯片反而会很麻烦。
 
-以下是 `fullscreenWallpaper.astro` 中的关键改造实现：
+所以这次改造的核心思路是：**把必应每日一图做成壁纸系统里的一个可选模式。** 也就是说，原来的配置全部保留，只在壁纸配置里新增一个开关`IsDailyWall` ：
 
+```yaml
+//twilight.config.yaml
+site:
+  wallpaper:
+    mode: banner
+    IsDailyWall: true
+    src:
+      desktop:
+        - /assets/images/desktopWallpaper_1.webp
+      mobile:
+        - /assets/images/mobileWallpaper_1.webp
 ```
----
-// 配置云端 API 资源地址与本地 Fallback 兜底图片地址
-const dailyWallSources = {
-    desktop: ["[https://api.bingpics.ybjun.com/image/latest](https://api.bingpics.ybjun.com/image/latest)"],
-    mobile: ["[https://api.bingpics.ybjun.com/image/latest/v](https://api.bingpics.ybjun.com/image/latest/v)"],
-};
 
+当它为 `true` 时，博客不会再读取本地配置里的多张壁纸，也不会启用原来的轮播逻辑，而是固定使用刚才做好的 API 获取今日美图，如果获取不到，就 Fallback 到网站本地目录中提前准备好的备用图。当它为 `false` 或者不写时，主题会完全回到 Twilight 原本的壁纸逻辑，继续使用 `src` 里配置的本地图片和轮播配置。
+
+为了让 TypeScript 不报错，还需要在配置结构里补上`IsDailyWall`这个字段：
+
+```typescript
+// config.ts
+wallpaper: {
+    mode: "fullscreen" | "banner" | "none";
+    // 是否固定使用必应每日一图。启用后忽略 src 与 carousel 配置。
+    IsDailyWall?: boolean;
+    src:
+        | string
+        | string[]
+        | {
+                desktop?: string | string[];
+                mobile?: string | string[];
+          };
+    position?: "top" | "center" | "bottom";
+    };
+};
+```
+
+接下来，就要分别改动两个真正负责显示背景图的组件：横幅壁纸模式的`banner.astro`，以及全局壁纸模式的`FullscreenWallpaper.astro`。
+
+首先是 `banner.astro`。原本这个组件会从 `config.src` 中读取桌面端和移动端图片，如果配置了多张图片，就进入轮播逻辑。**现在我们在它前面加一层判断**：如果 `IsDailyWall` 为 `True`，就直接把图片源替换成每日一图 API。
+```astro
+// banner.astro
+const dailyWallSources = {
+    desktop: ["https://API地址/image/latest"],
+    mobile: ["https://API地址/image/latest/v"],
+};
 const dailyWallFallback = {
     desktop: "/assets/images/wallpaper_fallback/desktopWallpaper_fallback.webp",
     mobile: "/assets/images/wallpaper_fallback/mobileWallpaper_fallback.webp",
 };
----
-
-<!-- 桌面端壁纸渲染逻辑 -->
-<img
-    src={dailyWallSources.desktop[0]}
-    alt="Desktop Wallpaper"
-    class="hidden md:block w-full h-full object-cover transition-opacity duration-700"
-    data-original-src={dailyWallSources.desktop[0]}
-    onerror={`
-        console.error('[DailyWall] image error', {label: 'fullscreen-desktop-daily-wall', fallbackSrc: '${dailyWallFallback.desktop}'});
-        // 检测是否已经应用过 Fallback，避免死循环
-        if (!this.hasAttribute('data-fallback-applied')) {
-            this.setAttribute('data-fallback-applied', 'true');
-            this.src = '${dailyWallFallback.desktop}';
-        }
-    `}
-/>
+// 获取当前设备类型的图片源
+const getImageSources = () => {
+    if (isDailyWall) return dailyWallSources;
+    const toArray = (src: any) => [src || []].flat();
+    const { src } = config;
+    const isObj = src && typeof src === "object" && !Array.isArray(src);
+    const desktop = toArray(isObj ? (src as any).desktop : src);
+    const mobile = toArray(isObj ? (src as any).mobile : src);
+    return {
+        desktop: desktop.length > 0 ? desktop : mobile,
+        mobile: mobile.length > 0 ? mobile : desktop,
+    };
+};
+const imageSources = getImageSources();
+// 每日一图模式下禁用原生轮播
+const carouselConfig = isDailyWall ? undefined : config.carousel;
+const isCarouselEnabled =
+    !isDailyWall && (imageSources.desktop.length > 1 || imageSources.mobile.length > 1);
+const carouselInterval = carouselConfig?.interval || 6;
 ```
+然后，在实际渲染单张图片的地方，把备用图也传进去。这样即使 API 短时间异常，页面也不会直接空背景:
+```astro
+// banner.astro
+<ImageWrapper
+    alt="Mobile banner"
+    class:list={["block md:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
+    src={imageSources.mobile[0] || imageSources.desktop[0] || ""}
+    fallbackSrc={isDailyWall ? dailyWallFallback.mobile : undefined}
+    position={config.position}
+    loading="eager"
+/>
 
-通过这一层修改，原本阻塞的本地多图加载被替换为轻量级 API 驱动，且具有极高的容错性。
+<ImageWrapper
+    id="banner"
+    alt="Desktop banner"
+    class:list={["hidden md:block object-cover h-full w-full transition duration-600 opacity-100"]}
+    src={imageSources.desktop[0] || imageSources.mobile[0] || ""}
+    fallbackSrc={isDailyWall ? dailyWallFallback.desktop : undefined}
+    position={config.position}
+    loading="eager"
+/>
+``` 
+
+这样，横幅模式下的背景图加载逻辑就变成了：
+* `IsDailyWall: true`：只加载每日一图；
+* `IsDailyWall: false`：继续使用 Twilight 原来的本地壁纸配置；
+* 每日一图模式下强制禁用轮播；
+* 壁纸位置、横幅高度、文字层、波浪效果等原有配置全部保留。
+
+对全局壁纸模式的 `FullscreenWallpaper.astro` 如法炮制，只是作用区域从顶部横幅变成了全屏背景，相关代码这里就省略了。
+
+**最终效果就是：开关打开后，博客每天只请求一张当天桌面端背景或一张移动端背景，不再加载一整个本地幻灯片列表，也不再执行 Ken Burns 轮播动画；开关关闭后，原来的精选壁纸轮播系统仍然可以继续使用。**
+
+这样既没有破坏 Twilight 原本的配置结构，又把每日一图接入成了一个独立、可回退、可维护的增强背景模式。
+![img_1781017614688.png](./img_1781017614688.png)
+
+
