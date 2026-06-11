@@ -139,6 +139,40 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 >
     <head>
         <meta charset="UTF-8" />
+        <script is:inline>
+            (function() {
+                if (typeof window === 'undefined') return;
+                var ua = navigator.userAgent;
+
+                // 1. 斩杀古董浏览器：IE全系 (MSIE/Trident) 与 老旧版 Edge (EdgeHTML)
+                var isIE = ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1;
+                var isLegacyEdge = ua.indexOf('Edge/') > -1;
+
+                // 2. 提取现代主流浏览器大版本号
+                var chromeMatch = ua.match(/Chrome\/(\d+)/);
+                var firefoxMatch = ua.match(/Firefox\/(\d+)/);
+                // 排除假装自己是 Safari 的 Chrome 浏览器
+                var isRealSafari = ua.indexOf('Safari') > -1 && ua.indexOf('Chrome') === -1;
+                var safariMatch = isRealSafari ? ua.match(/Version\/(\d+)/) : null;
+
+                var chromeVersion = chromeMatch ? parseInt(chromeMatch[1], 10) : null;
+                var firefoxVersion = firefoxMatch ? parseInt(firefoxMatch[1], 10) : null;
+                var safariVersion = safariMatch ? parseInt(safariMatch[1], 10) : null;
+
+                // 3. 核心判定阈值 (Chrome >= 112, Firefox >= 113, Safari >= 16)
+                var isUnsupported = isIE || isLegacyEdge ||
+                                    (chromeVersion !== null && chromeVersion < 112) ||
+                                    (firefoxVersion !== null && firefoxVersion < 113) ||
+                                    (safariVersion !== null && safariVersion < 16);
+
+                // 4. 拦截与重定向
+                if (isUnsupported) {
+                    window.location.replace('/browser_too_old.html');
+                    // 物理停止后续的 DOM 解析与重型资源下载
+                    if (window.stop) { window.stop(); } else { document.execCommand("Stop"); }
+                }
+            })();
+        </script>
         <!-- Anti-mirror redirect: keep visitors on the official domains before loading heavy resources. -->
         <script is:inline>
             (() => {
