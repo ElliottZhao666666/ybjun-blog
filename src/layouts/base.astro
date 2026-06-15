@@ -142,6 +142,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
         <script is:inline>
             (function() {
                 if (typeof window === 'undefined') return;
+                var path = window.location.pathname;
+                if (path === '/browser_too_old.html' || path === '/browser_too_old') return;
+
                 var ua = navigator.userAgent;
 
                 // 1. 斩杀古董浏览器：IE全系 (MSIE/Trident) 与 老旧版 Edge (EdgeHTML)
@@ -168,8 +171,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
                 // 4. 拦截与重定向
                 if (isUnsupported) {
                     window.location.replace('/browser_too_old.html');
-                    // 物理停止后续的 DOM 解析与重型资源下载
-                    if (window.stop) { window.stop(); } else { document.execCommand("Stop"); }
+                    return;
                 }
             })();
         </script>
