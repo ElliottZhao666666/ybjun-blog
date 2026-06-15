@@ -112,7 +112,6 @@ site:
       blur: 1
       navbar:
         transparentMode: semi
-    isdailywall: true
   loadingOverlay:
     enable: true
     title:

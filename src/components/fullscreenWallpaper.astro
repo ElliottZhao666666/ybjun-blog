@@ -9,7 +9,7 @@ interface Props {
 
 const { config, class: className } = Astro.props;
 
-const isDailyWall = config.IsDailyWall === true;
+const isDailyWall = config.isdailywall === true;
 const dailyWallSources = {
     desktop: ["https://api.bingpics.ybjun.com/image/latest"],
     mobile: ["https://api.bingpics.ybjun.com/image/latest/v"],
