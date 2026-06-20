@@ -182,7 +182,7 @@ services:
     environment:
       - POSTGRES_USER=postgres # 用户名，一般保持默认即可
       - POSTGRES_PASSWORD="YourPasswordHere" # 请替换为你的密码。注意：密码请务必加上双引号！
-      - POSTGRES_DB=AQXYNAS_DaVinci # 这个变量不仅是数据库名，它也将是你在达芬奇里填入的“项目库名称”！
+      - POSTGRES_DB=NAS_DaVinci # 这个变量不仅是数据库名，它也将是你在达芬奇里填入的“项目库名称”！
     ports:
       - "10.4.7.2:5432:5432" # 强制指定局域网IP，解决群晖系统127.0.0.1端口冲突
     volumes:
