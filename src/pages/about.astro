@@ -4,6 +4,7 @@ export const prerender = true;
 import { getEntry, render } from "astro:content";
 import BackwardButton from "@components/backwardButton.astro";
 import Markdown from "@components/common/markdown.astro";
+import Comment from "@components/post/comment.astro";
 import { LinkPresets } from "@constants/link-presets";
 import GridLayout from "@layouts/grid.astro";
 import { LinkPreset } from "@/types/config";
@@ -31,6 +32,7 @@ const { Content } = await render(aboutPost);
             </Markdown>
         </div>
     </div>
+    <Comment slug="about_guestbook" />
 </GridLayout>
 
 <style is:global>
