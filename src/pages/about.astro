@@ -4,6 +4,7 @@ export const prerender = true;
 import { getEntry, render } from "astro:content";
 import BackwardButton from "@components/backwardButton.astro";
 import Markdown from "@components/common/markdown.astro";
+import Comment from "@components/post/comment.astro";
 import { LinkPresets } from "@constants/link-presets";
 import GridLayout from "@layouts/grid.astro";
 import { LinkPreset } from "@/types/config";
@@ -22,7 +23,7 @@ const { Content } = await render(aboutPost);
 ---
 
 <GridLayout title={pageTitle} description={pageDescription} title2={title2}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32 mb-4">
         <div class="card-base z-10 px-9 py-6 relative w-full ">
             <BackwardButton currentPath={Astro.url.pathname} />
             
@@ -31,6 +32,7 @@ const { Content } = await render(aboutPost);
             </Markdown>
         </div>
     </div>
+    <Comment slug="about_guestbook" />
 </GridLayout>
 
 <style is:global>
