@@ -205,16 +205,14 @@ profile:
       icon: material-symbols:mail
       url: 'mailto:main@ybjun.com '
 announcement:
-  title: 博客访问全面提速！
+  title: 留言板正式开启
   content: >-
-    自5月10日起，本站已全量接入 Cloudflare 优选 IP
-    线路，大陆用户访问本站速度将大幅提升！为保证最佳体验，博主进行了线路分流：国内访问请认准 www.ybjun.com，海外访问推荐使用
-    ybjun.com。感谢大家的支持，快来感受丝滑的访问体验吧！
+    自6月22日起，本站正式开通留言板，欢迎大家分享想法和建议！打开“关于”页面就可以看到啦！
   closable: true
   link:
     enable: true
-    text: 订阅本站
-    url: /rss/
+    text: 前往留言板
+    url: /about/
     external: false
 post:
   showLastModified: true
