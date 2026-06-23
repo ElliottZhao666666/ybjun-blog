@@ -121,5 +121,6 @@ const { class: className, style } = Astro.props;
     /* In-viewport headings: multiple secondary hints */
     :global(.toc-floating-panel .toc-inner-content a.in-view:not(.visible) .text-50),
     :global(.toc-floating-panel .toc-inner-content a.in-view:not(.visible) .text-30)
-        color: color-mix(in oklch, var(--primary) 72%, currentColor)
+        color: var(--primary)
+        opacity: 0.72
 </style>
