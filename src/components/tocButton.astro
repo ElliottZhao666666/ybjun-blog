@@ -112,9 +112,14 @@ const { class: className, style } = Astro.props;
             bottom: 5.5rem
             right: 0.5rem
     
-    /* Highlighting for TOC items */
+    /* Current reading section: single primary highlight */
     :global(.toc-floating-panel .toc-inner-content a.visible .text-50),
     :global(.toc-floating-panel .toc-inner-content a.visible .text-30)
         color: var(--primary)
         font-weight: 500
+
+    /* In-viewport headings: multiple secondary hints */
+    :global(.toc-floating-panel .toc-inner-content a.in-view:not(.visible) .text-50),
+    :global(.toc-floating-panel .toc-inner-content a.in-view:not(.visible) .text-30)
+        color: color-mix(in oklch, var(--primary) 72%, currentColor)
 </style>

@@ -4,15 +4,20 @@ import { widgetManager } from "@utils/widget";
 export class TableOfContents extends HTMLElement {
 	tocEl: HTMLElement | null = null;
 	visibleClass = "visible";
+	inViewClass = "in-view";
 	observer: IntersectionObserver;
 	anchorNavTarget: HTMLElement | null = null;
 	headingIdxMap = new Map<string, number>();
 	headings: HTMLElement[] = [];
 	tocEntries: HTMLAnchorElement[] = [];
 	active: boolean[] = [];
+	inView: boolean[] = [];
+	activeIdx = -1;
 	activeIndicator: HTMLElement | null = null;
 	_retryCount = 0;
 	_backToTopObserver: MutationObserver | null = null;
+	_scrollRaf = 0;
+	_hashSyncTimer: number | null = null;
 
 	_handleBtnClick = (e: Event) => {
 		e.stopPropagation();
@@ -39,23 +44,31 @@ export class TableOfContents extends HTMLElement {
 		this.observer = new IntersectionObserver(this.markVisibleSection);
 	}
 
+	getNavbarHeight() {
+		return Number.parseInt(
+			this.dataset.navbarHeight || NAVBAR_HEIGHT.toString(),
+		);
+	}
+
 	markActiveHeading = (idx: number) => {
 		this.active = new Array(this.headings.length).fill(false);
-		this.active[idx] = true;
+		if (idx >= 0 && idx < this.active.length) this.active[idx] = true;
+		this.activeIdx = idx;
 	};
 
 	isInRange(value: number, min: number, max: number) {
 		return min < value && value < max;
 	}
 
-	fallback = () => {
+	getCurrentHeadingIndex = () => {
 		if (!this.headings.length) return;
 
 		let activeIdx = -1;
+		const threshold = this.getNavbarHeight() + 24;
 		for (let i = 0; i < this.headings.length; i++) {
 			const heading = this.headings[i];
 			const rect = heading.getBoundingClientRect();
-			if (rect.top < 100) {
+			if (rect.top <= threshold) {
 				activeIdx = i;
 			} else {
 				break;
@@ -64,7 +77,46 @@ export class TableOfContents extends HTMLElement {
 		if (activeIdx === -1) {
 			activeIdx = 0;
 		}
+		return activeIdx;
+	};
+
+	fallback = () => {
+		const activeIdx = this.getCurrentHeadingIndex();
+		if (activeIdx === undefined) return;
 		this.markActiveHeading(activeIdx);
+	};
+
+	scheduleHashSync = () => {
+		if (!this.isPostPage() || this.activeIdx < 0) return;
+		if (this._hashSyncTimer !== null) {
+			window.clearTimeout(this._hashSyncTimer);
+		}
+
+		this._hashSyncTimer = window.setTimeout(() => {
+			const activeHeading = this.headings[this.activeIdx];
+			if (!activeHeading?.id) return;
+
+			const currentHash = decodeURIComponent(
+				window.location.hash.substring(1),
+			);
+			if (currentHash === activeHeading.id) return;
+
+			const nextUrl = `${window.location.pathname}${window.location.search}#${encodeURIComponent(activeHeading.id)}`;
+			history.replaceState(history.state, "", nextUrl);
+		}, 1000);
+	};
+
+	updateActiveHeading = (syncHash = true) => {
+		const activeIdx = this.getCurrentHeadingIndex();
+		if (activeIdx === undefined) return;
+
+		const changed = activeIdx !== this.activeIdx;
+		this.markActiveHeading(activeIdx);
+		this.update();
+
+		if (syncHash && changed) {
+			this.scheduleHashSync();
+		}
 	};
 
 	toggleActiveHeading = () => {
@@ -78,6 +130,12 @@ export class TableOfContents extends HTMLElement {
 				max = Math.max(max, i);
 			} else {
 				this.tocEntries[i].classList.remove(this.visibleClass);
+			}
+
+			if (this.inView[i]) {
+				this.tocEntries[i].classList.add(this.inViewClass);
+			} else {
+				this.tocEntries[i].classList.remove(this.inViewClass);
 			}
 		}
 
@@ -132,7 +190,7 @@ export class TableOfContents extends HTMLElement {
 		entries.forEach((entry) => {
 			const id = entry.target.getAttribute("id");
 			const idx = id ? this.headingIdxMap.get(id) : undefined;
-			if (idx != undefined) this.active[idx] = entry.isIntersecting;
+			if (idx != undefined) this.inView[idx] = entry.isIntersecting;
 
 			if (entry.isIntersecting && this.anchorNavTarget == entry.target)
 				this.anchorNavTarget = null;
@@ -140,6 +198,14 @@ export class TableOfContents extends HTMLElement {
 
 		if (!this.active.includes(true)) this.fallback();
 		this.update();
+	};
+
+	handleScroll = () => {
+		if (this._scrollRaf) return;
+		this._scrollRaf = window.requestAnimationFrame(() => {
+			this._scrollRaf = 0;
+			this.updateActiveHeading();
+		});
 	};
 
 	handleAnchorClick = (event: Event) => {
@@ -152,21 +218,25 @@ export class TableOfContents extends HTMLElement {
 			const id = decodeURIComponent(anchor.hash?.substring(1));
 			const targetElement = document.getElementById(id);
 			if (targetElement) {
-				const navbarHeight = Number.parseInt(
-					this.dataset.navbarHeight || NAVBAR_HEIGHT.toString(),
-				);
 				const targetTop =
 					targetElement.getBoundingClientRect().top +
 					window.scrollY -
-					navbarHeight;
+					this.getNavbarHeight();
 				window.scrollTo({
 					top: targetTop,
 					behavior: "smooth",
 				});
+				history.pushState(
+					history.state,
+					"",
+					`${window.location.pathname}${window.location.search}#${encodeURIComponent(id)}`,
+				);
 			}
 			const idx = this.headingIdxMap.get(id);
 			if (idx !== undefined) {
 				this.anchorNavTarget = this.headings[idx];
+				this.markActiveHeading(idx);
+				this.update();
 			} else {
 				this.anchorNavTarget = null;
 			}
@@ -307,10 +377,14 @@ export class TableOfContents extends HTMLElement {
 		this.headingIdxMap.clear();
 		this.headings = [];
 		this.active = [];
+		this.inView = [];
+		this.activeIdx = -1;
 
 		if (!this.regenerateTOC()) return;
 
-		this.tocEl = this.querySelector(".toc-scroll-container");
+		this.tocEl =
+			this.querySelector(".toc-scroll-container") ||
+			this.querySelector(".toc-floating-panel");
 		this.tocEl?.addEventListener("click", this.handleAnchorClick, {
 			capture: true,
 		});
@@ -364,12 +438,14 @@ export class TableOfContents extends HTMLElement {
 		this.headings = validHeadings;
 		this.tocEntries = validEntries;
 		this.active = new Array(this.tocEntries.length).fill(false);
+		this.inView = new Array(this.tocEntries.length).fill(false);
 
 		if (this.tocEntries.length === 0) return;
 
 		this.headings.forEach((heading) => this.observer.observe(heading));
-		this.fallback();
-		this.update();
+		window.removeEventListener("scroll", this.handleScroll);
+		window.addEventListener("scroll", this.handleScroll, { passive: true });
+		this.updateActiveHeading(false);
 	}
 
 	connectedCallback() {
@@ -438,6 +514,9 @@ export class TableOfContents extends HTMLElement {
 		this.observer.disconnect();
 		this._backToTopObserver?.disconnect();
 		this.tocEl?.removeEventListener("click", this.handleAnchorClick);
+		window.removeEventListener("scroll", this.handleScroll);
+		if (this._scrollRaf) window.cancelAnimationFrame(this._scrollRaf);
+		if (this._hashSyncTimer !== null) window.clearTimeout(this._hashSyncTimer);
 
 		const btn = this.querySelector(".toc-floating-btn");
 		btn?.removeEventListener("click", this._handleBtnClick);
