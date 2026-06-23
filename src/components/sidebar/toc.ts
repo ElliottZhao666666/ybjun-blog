@@ -50,6 +50,13 @@ export class TableOfContents extends HTMLElement {
 		);
 	}
 
+	isAtArticleTop = () => {
+		const firstHeading = this.headings[0];
+		if (!firstHeading) return window.scrollY <= this.getNavbarHeight();
+
+		return firstHeading.getBoundingClientRect().top > this.getNavbarHeight() + 24;
+	};
+
 	markActiveHeading = (idx: number) => {
 		this.active = new Array(this.headings.length).fill(false);
 		if (idx >= 0 && idx < this.active.length) this.active[idx] = true;
@@ -87,12 +94,24 @@ export class TableOfContents extends HTMLElement {
 	};
 
 	scheduleHashSync = () => {
-		if (!this.isPostPage() || this.activeIdx < 0) return;
+		if (!this.isPostPage()) return;
 		if (this._hashSyncTimer !== null) {
 			window.clearTimeout(this._hashSyncTimer);
 		}
 
 		this._hashSyncTimer = window.setTimeout(() => {
+			if (this.isAtArticleTop()) {
+				if (!window.location.hash) return;
+
+				history.replaceState(
+					history.state,
+					"",
+					`${window.location.pathname}${window.location.search}`,
+				);
+				return;
+			}
+
+			if (this.activeIdx < 0) return;
 			const activeHeading = this.headings[this.activeIdx];
 			if (!activeHeading?.id) return;
 
@@ -114,7 +133,7 @@ export class TableOfContents extends HTMLElement {
 		this.markActiveHeading(activeIdx);
 		this.update();
 
-		if (syncHash && changed) {
+		if (syncHash && (changed || (this.isAtArticleTop() && window.location.hash))) {
 			this.scheduleHashSync();
 		}
 	};
@@ -153,24 +172,27 @@ export class TableOfContents extends HTMLElement {
 	};
 
 	scrollToActiveHeading = () => {
-		if (this.anchorNavTarget || !this.tocEl) return;
-		const activeHeading = this.querySelectorAll<HTMLDivElement>(
-			`.${this.visibleClass}`,
-		);
-		if (!activeHeading.length) return;
+		if (this.anchorNavTarget || !this.tocEl || this.activeIdx < 0) return;
+		const activeEntry = this.tocEntries[this.activeIdx];
+		if (!activeEntry) return;
 
-		const topmost = activeHeading[0];
-		const bottommost = activeHeading[activeHeading.length - 1];
-		const tocHeight = this.tocEl.clientHeight;
+		const entryTop = activeEntry.offsetTop;
+		const entryBottom = entryTop + activeEntry.offsetHeight;
+		const visibleTop = this.tocEl.scrollTop;
+		const visibleBottom = visibleTop + this.tocEl.clientHeight;
+		const padding = 32;
 
-		let top;
 		if (
-			bottommost.getBoundingClientRect().bottom -
-				topmost.getBoundingClientRect().top <
-			0.9 * tocHeight
-		)
-			top = topmost.offsetTop - 32;
-		else top = bottommost.offsetTop - tocHeight * 0.8;
+			entryTop >= visibleTop + padding &&
+			entryBottom <= visibleBottom - padding
+		) {
+			return;
+		}
+
+		const top = Math.max(
+			0,
+			entryTop - this.tocEl.clientHeight * 0.45 + activeEntry.offsetHeight / 2,
+		);
 
 		this.tocEl.scrollTo({
 			top,
