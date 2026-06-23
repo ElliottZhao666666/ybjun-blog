@@ -176,7 +176,10 @@ export class TableOfContents extends HTMLElement {
 		const activeEntry = this.tocEntries[this.activeIdx];
 		if (!activeEntry) return;
 
-		const entryTop = activeEntry.offsetTop;
+		const containerRect = this.tocEl.getBoundingClientRect();
+		const entryRect = activeEntry.getBoundingClientRect();
+		const entryTop =
+			entryRect.top - containerRect.top + this.tocEl.scrollTop;
 		const entryBottom = entryTop + activeEntry.offsetHeight;
 		const visibleTop = this.tocEl.scrollTop;
 		const visibleBottom = visibleTop + this.tocEl.clientHeight;
@@ -406,6 +409,7 @@ export class TableOfContents extends HTMLElement {
 
 		this.tocEl =
 			this.querySelector(".toc-scroll-container") ||
+			this.closest(".toc-scroll-container") ||
 			this.querySelector(".toc-floating-panel");
 		this.tocEl?.addEventListener("click", this.handleAnchorClick, {
 			capture: true,
