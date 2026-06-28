@@ -68,35 +68,48 @@ draft: true
 
 ### 2.1 使用开源项目 xmir-patcher 打开 SSH
 
-对于
+如果在网上搜索“小米 AX3000T 开启 SSH”，我们肯定会看到一个非常经典的教程：利用路由器 Web 接口的命令注入漏洞，获取到后台的 `stok` 后，在 cmd 或终端中依次发送四条 POST 请求。
 
-项目地址：https://github.com/openwrt-xiaomi/xmir-patcher
+这四条命令的本质是修改 NVRAM 配置、绕过系统的启动校验并强行拉起 Dropbear (SSH) 服务：
 
-将其代码库完整下载到本地，直接从网页下载 ZIP 或是 `git clone`都行，看你心情。
+```bash
+# 1. 解除系统层面对 SSH 的封锁
+curl -X POST http://192.168.31.1/cgi-bin/luci/;stok=<你的stok>/api/misystem/arn_switch -d "open=1&model=1&level=%0Anvram%20set%20ssh_en%3D1%0A"
 
-接着Windows以管理员身份运行代码库中的`run.bat`，Linux运行run.sh。界面如下图：
+# 2. 固化 NVRAM 配置到闪存
+curl -X POST http://192.168.31.1/cgi-bin/luci/;stok=<你的stok>/api/misystem/arn_switch -d "open=1&model=1&level=%0Anvram%20commit%0A"
+
+# 3. 篡改脚本将系统伪装成“调试模式”以绕过安全限制
+curl -X POST http://192.168.31.1/cgi-bin/luci/;stok=<你的stok>/api/misystem/arn_switch -d "open=1&model=1&level=%0Ased%20-i%20's%2Fchannel%3D.*%2Fchannel%3D%22debug%22%2Fg'%20%2Fetc%2Finit.d%2Fdropbear%0A"
+
+# 4. 正式启动 SSH 进程
+curl -X POST http://192.168.31.1/cgi-bin/luci/;stok=<你的stok>/api/misystem/arn_switch -d "open=1&model=1&level=%0A%2Fetc%2Finit.d%2Fdropbear%20start%0A"
+```
+
+然后复制路由器 SN，去 [miwifi.dev](https://miwifi.dev/ssh) 算出 Root 密码就可以去连接 SSH 了。
+
+不过，此方法通常只适用于 `1.0.48` 及更早版本的固件。博主这台路由器到手时的固件版本已经是 `1.0.64`，经实测，即使依次执行这四条命令后系统都返回了 `{"code":0}`（表面上执行成功），但当尝试连接 SSH 时，依然会提示 `Connection refused`。显然，官方在后续的固件中对这个漏洞的执行链做了修补。
+
+为了不进一步增加折腾成本，我们就不用官方工具降级了，**博主决定采用稳定性更强、支持面更广，且操作方面的自动化开源方案：** `xmir-patcher`。
+
+::github{repo="openwrt-xiaomi/xmir-patcher"}
+
+将其代码库完整下载到本地，直接从网页下载 ZIP 或是 `git clone`都行，看你心情。接着 Windows 以管理员身份运行代码库中的`run.bat`，Linux 运行`run.sh`。界面如下图：
 
 ![image-20260627001101006](./image-20260627001101006.png)
 
-设置路由器IP：选择【1】，输入路由器的IP地址，小米路由器默认`192.168.31.1`，但我们这里就要改成`192.168.10.1`了。![image-20260627001329823](./image-20260627001329823.png)
+1. 设置路由器IP：选择【1】，输入路由器的IP地址，小米路由器默认 `192.168.31.1`，但我们这里就要改成 `192.168.10.1` 了。![image-20260627001329823](./image-20260627001329823.png)
+2. 解锁SSH，选择【2】，输入路由器后台管理密码，提交后会输出开启状态。![image-20260627001319521](./image-20260627001319521.png)
+3. 修改root密码，选择【8】，再选择【2】修改 Root 密码。不修改也可以，默认的密码就是`root`。![image-20260627001431303](./image-20260627001431303.png)
+4. 持久化 SSH 的运行。因为小米路由器采用**核心目录开机动态还原**的系统策略，每次重启都不会保存更改，就像 Windows PE 一样，所以无论是现在开启的SSH，还是后续要安装的所有软件，我们都需要在正常运行后进行一个固化操作，确保开机后可以自动运行。在界面中选择【6】固化SSH。![image-20260627001515313](./image-20260627001515313.png)
 
-解锁SSH，选择【2】，输入路由器后台管理密码，提交后会输出开启状态。![image-20260627001319521](./image-20260627001319521.png)
+这时候就可以使用SSH工具连接到路由器终端了，博主全程使用 MobaXterm ，也比较推荐大家使用，因为它可以记住密码，还能直接管理路由器的文件。[官网](https://mobaxterm.mobatek.net)
 
-修改root密码，选择【8】，再选择【2】修改root密码。不修改也可以，默认的密码就是`root`。
-
-![image-20260627001431303](./image-20260627001431303.png)
-
-持久化 SSH 的运行。因为小米路由器采用xx的系统策略，每次重启都不会保存更改，就像 Windows PE 一样，所以无论是现在开启的SSH，还是后续要安装的所有软件，我们都需要在正常运行后进行一个固化操作，确保开机后可以自动运行。
-
-在界面中选择【6】固化SSH。![image-20260627001515313](./image-20260627001515313.png)
-
-这时候就可以使用SSH工具连接到路由器终端了，博主全程使用MobaXterm，也比较推荐大家使用，因为它可以记住密码，还能直接管理路由器的文件。官网：https://mobaxterm.mobatek.net/
-
-新建会话，连接，输入root密码，出现Banner ARE U OK则成功。
+新建会话，连接，输入root密码，出现 Banner `ARE U OK` 则成功。
 
 ![image-20260627002901824](./image-20260627002901824.png)
 
-如下图，如果提示拒绝连接，可以重启一下路由器再连接。
+如果提示拒绝连接，如下图，可以重启一下路由器再连接。
 
 ![image-20260627004301246](./image-20260627004301246.png)
 
@@ -130,11 +143,11 @@ CPU variant     : 0x0
 CPU part        : 0xd03
 CPU revision    : 4
 ```
-（分析一下结果，最后说下载软件二进制文件，我们要选择 ARM64 或 aarch64 的。
+从上面的输出结果可以看到，AX3000T 搭载的处理器属于主流的 ARM Cortex-A53 架构，并且系统运行在 64 位模式下。这意味着，后续我们在为路由器下载任何第三方软件（如 ZeroTier、Mihomo 等）的二进制执行文件时，必须认准 `ARM64` 或 `aarch64` 这两个关键后缀，千万别错下成常规 PC 的 `x86` 或者是老旧路由器的 `MIPS` 版本。
 
 #### 2.2.2 存储空间检查
 
-```
+```shell
 root@XiaoQiang:~# df -h
 Filesystem                Size      Used Available Use% Mounted on
 /dev/root                18.3M     18.3M         0 100% /
@@ -152,9 +165,12 @@ ubi1:cfg                 24.3M    672.0K     22.4M   3% /etc/crontabs
 ubi1:cfg                 24.3M    672.0K     22.4M   3% /etc/mipctl
 tmpfs                   512.0K         0    512.0K   0% /dev
 ```
-这是最重要的一步。从上面检查结果中可以看出xxx。
 
-因为可供我们的持久存储空间只有22.4M，所以我们选择仅将Zerotier本地化，mihomo肯定是放不进去，采用热加载，把119M的缓存空间运用起来。
+这是**最重要的一步**，也直接决定了我们后续的魔改方案。
+
+从上面检查结果中可以看出，小米固件对存储空间的切分**非常抠门**。路由器的根目录 `/` 是一块被 100% 占满且只读的 ROM，而**留给用户唯一可写的物理持久化存储空间**，是挂载在 `/data`（或 `/userdisk`）的分区，**剩余容量仅有可怜的 22.4MB** ！
+
+这就确立了我们的折腾策略：对于体积经过压缩后的 ZeroTier 等较小软件的二进制文件，我们勉强能将其塞进 `/data` 实现本地持久化；但对于体积稍微大一点的软件，比如动辄二三十兆的 Mihomo，Flash 肯定是吃不消的。好在系统划分了一块 118.8MB 的 `/tmp` 内存盘 `tmpfs`，后续我们就得好好利用这块读写极快且不占闪存寿命的“风水宝地”，通过脚本热加载的形式让大软件在内存中跑。
 
 #### 2.2.3 TUN 检查
 
@@ -168,11 +184,9 @@ ip6_udp_tunnel         16384  1 l2tp_core
 tunnel4                16384  1 sit
 tunnel6                16384  1 ip6_tunnel
 udp_tunnel             16384  1 l2tp_core
-
-
 ```
 
-Zerotier 和 Mihomo的使用都依赖 TUN，之前没在 AC2350装成功有一重要原因就是没有TUN。（分析结果）没有想到小米竟然没把 TUN 阉割掉，这把真是“天胡开局”了！
+Zerotier 的使用强依赖 TUN，之前没在 AC2350装成功有一重要原因就是没有TUN。（分析结果）没有想到小米竟然没把 TUN 阉割掉，这把真是“天胡开局”了！
 
 
 
