@@ -170,13 +170,14 @@ tmpfs                   512.0K         0    512.0K   0% /dev
 
 从上面检查结果中可以看出，小米固件对存储空间的切分**非常抠门**。路由器的根目录 `/` 是一块被 100% 占满且只读的 ROM，而**留给用户唯一可写的物理持久化存储空间**，是挂载在 `/data`（或 `/userdisk`）的分区，**剩余容量仅有可怜的 22.4MB** ！
 
-这就确立了我们的折腾策略：对于体积经过压缩后的 ZeroTier 等较小软件的二进制文件，我们勉强能将其塞进 `/data` 实现本地持久化；但对于体积稍微大一点的软件，比如动辄二三十兆的 Mihomo，Flash 肯定是吃不消的。好在系统划分了一块 118.8MB 的 `/tmp` 内存盘 `tmpfs`，后续我们就得好好利用这块读写极快且不占闪存寿命的“风水宝地”，通过脚本热加载的形式让大软件在内存中跑。
+这就确立了我们的折腾策略：对于体积经过压缩后的 ZeroTier 等较小的、需要长期稳定运行的软件二进制文件，我们勉强能将其塞进 `/data` 实现本地持久化；但对于后续体积稍微大一点的软件，比如动辄二三十兆的 Mihomo，Flash 肯定是吃不消的。好在系统划分了一块 118.8MB 的 `/tmp` 内存盘 `tmpfs`，后续我们就得好好利用这块读写极快且不占闪存寿命的“风水宝地”，通过**脚本热加载**的形式让大软件在内存中跑。
 
 #### 2.2.3 TUN 检查
 
-```
+```shell
 root@XiaoQiang:~# ls -l /dev/net/tun
 crw-------    1 root     root       10, 200 Jan  1  1970 /dev/net/tun
+
 root@XiaoQiang:~# lsmod | grep tun
 ip_tunnel              24576  2 ip_gre,sit
 ip6_tunnel             36864  1 ip6_gre
@@ -186,51 +187,49 @@ tunnel6                16384  1 ip6_tunnel
 udp_tunnel             16384  1 l2tp_core
 ```
 
-Zerotier 的使用强依赖 TUN，之前没在 AC2350装成功有一重要原因就是没有TUN。（分析结果）没有想到小米竟然没把 TUN 阉割掉，这把真是“天胡开局”了！
+Zerotier 的运行**强依赖 Linux 内核的虚拟网络设备（TUN/TAP）模块** ，之前博主没在 AC2350 上装成功，有一个重要原因就是官方内核彻底阉割了 TUN 支持。但从上方的查询结果来看，设备节点 `/dev/net/tun` 完好无损地存在着，并且通过 `lsmod` 可以看到内核已经内置并加载了大量相关的 `tunnel` 隧道模块。
 
-
+**没有想到小米这次竟然这么大方，没对底层的 TUN 动刀子**，这把对于折腾玩家来说简直是“天胡开局”了！
 
 ## 3 Zerotier 的安装和配置
 
-本章我们的总体目标就是：下载zerotier-one，对其使用 UPX 压缩以节省捉襟见肘的 /data 空间，安装后加入虚拟局域网并配置为moon节点。
+本章我们的总体目标就是：下载 Zerotier-One，对其使用 UPX 压缩以节省捉襟见肘的 `/data` 空间，安装后加入虚拟局域网并配置为 Moon 节点。
 
 ### 3.1 打开 IPv6 支持
 
-Moon 的核心作用是**帮助没有公网 IP 的设备互相发现并打通直连**，**所以需要节点设备有公网IP**。目前家宽通常处于“大内网（多层 NAT）”，没有公网 IPv4 ，但是有公网IPv6，所以将它作为 Moon 需要打开IPv6并允许外部设备通过 IPv6 访问路由器。
+Moon 的核心作用是**帮助没有公网 IP 的设备互相发现并打通直连，所以需要节点设备有公网IP**。目前家宽通常处于“大内网（多层 NAT）”，没有公网 IPv4 ，但是有公网 IPv6，所以将它作为 Moon 需要打开 IPv6 并允许外部设备通过 IPv6 访问路由器。
 
-进入路由器管理-常用设置-上网设置，打开IPv6网络设置，上网方式为“自动配置”即可，关闭“IPv6防火墙”。
+进入**路由器管理-常用设置-上网设置**，打开 IPv6 网络设置，上网方式为“自动配置”即可，关闭“IPv6 防火墙”。
 
 ![image-20260627132835244](./image-20260627132835244.png)
 
-### 3.2 下载 zerotier-one 并使用 UPX 压缩
+### 3.2 下载 Zerotier-One 并使用 UPX 压缩
 
-由于我们计划在data分区直接放zerotier二进制文件，考虑到只剩22.4MB，所以要对zerotier二进制文件进行压缩。
+由于我们计划在 `data` 分区直接放 Zerotier 二进制文件，考虑到只剩 22.4MB，所以要对 Zerotier 二进制文件进行压缩。
 
-在Windows上下载并解压UPX：https://github.com/upx/upx/releases/download/v5.2.0/upx-5.2.0-win64.zip
+在 Windows 上下载并解压 UPX：[点击访问](https://github.com/upx/upx/releases/latest)
 
-下载zerotier-one，由于官方仓库只提供源码下载，没有可现成使用的aarch64的编译版本，所以我们去https://github.com/rafalb8/ZeroTierOne-Static/releases
-
-下载最新的aarch64静态编译版本tar.gz。
-
+下载 Zerotier-One，由于官方仓库只提供源码下载，没有可现成使用的 `aarch64` 的编译版本，所以我们去[rafalb8 的仓库](https://github.com/rafalb8/ZeroTierOne-Static/releases)，下载最新的`aarch64` 静态编译版本`tar.gz`。
 ![image-20260627134927027](./image-20260627134927027.png)
 
-下载后打开，将压缩包bin文件夹下的zerotier-one文件解压到upx目录
+下载后打开，将压缩包 `bin` 文件夹下的 `zerotier-one` 文件解压到 `upx` 目录
 
 ![image-20260627135230423](./image-20260627135230423.png)
 
-在upx目录空白处右击打开终端，运行命令：
+在 `upx`目录空白处右击打开终端，运行命令：
 
-`upx --best zerotier-one`
-
+```shell
+upx --best zerotier-one`
+```
 ![image-20260627135336455](./image-20260627135336455.png)
 
-最终压缩后的zerotier-one只有923KB
+最终压缩后的 `zerotier-one` 二进制文件只有 **923KB**。
 
 ![image-20260627135358725](./image-20260627135358725.png)
 
-### 3.3 导入并安装 zerotier-one
+### 3.3 导入并安装 Zerotier-One
 
-在mobaxterm的ssh浏览窗口，进入路由器data目录，导入刚刚准备好的zerotier-one文件
+在 MobaXterm 的 SSH 的文件浏览窗口，进入路由器 `/data` 目录，导入刚刚准备好的`zerotier-one`文件。
 
 ![image-20260627135632204](./image-20260627135632204.png)
 
@@ -253,54 +252,56 @@ ln -s /data/zerotier-one /data/zerotier-idtool
 /data/zerotier-one -d /data/zerotier
 ```
 
-看到类似下图的输出，就说明zerotier已经成功跑起来了。
+看到类似下图的输出，就说明 Zerotier 已经成功跑起来了。
 
 ![image-20260627140404007](./image-20260627140404007.png)
 
 ### 3.4 加入自己的虚拟局域网
 
-因为 SSH画面会一直卡在上图，所以推荐大家重新进一下 SSH 会话。
+因为 SSH 画面会一直卡在上图，所以推荐大家重新进一下 SSH 会话，千万别 `Ctrl + C` 哦！
 
-接着去zerotier网页，复制你的局域网ID，输入以下命令，加入你的局域网：
+接着去 [Zerotier 网页](https://my.zerotier.com/)，登录你的账号，复制你的局域网ID，在 SSH 中输入以下命令，加入你的局域网：
 
-```
+```shell
 # 加入网络。注意：必须带上 -D 参数告诉 CLI 工具去哪里找鉴权 Token，6**************d替换为你的16位网络 ID
 /data/zerotier-cli -D/data/zerotier join 6**************d
 ```
 
-看到下图的`200`信息，回到zerotier网页，授权一下，给一个固定ip，这样就成功加入啦！
-
+看到下图的 `200` 信息，回到 Zerotier 网页，授权一下，给一个固定 IP，这样就成功加入啦！
 ![image-20260627140934513](./image-20260627140934513.png)
-
-
-
 ![image-20260627140953874](./image-20260627140953874.png)
 
 ### 3.5 Moon 节点的设置
 
 #### 3.5.1 创建 Moon 节点
 
-注意：这一步请在正式接入你的目标网络环境后再做，因为涉及到了公网 IP。
+:::warning
+这一步请在正式接入你的目标网络环境（如家中网络）后再做，因为涉及到了公网 IP。
+:::
 
-首先查找公网ipv6地址，进入路由器管理页面，在首页“路由状态”点击“互联网状态”，复制“WAN IPv6地址”备用。**注意，地址后面可能会有`/64 /128`这类后缀，复制时不要把后缀复制进去！ **
+首先查找公网 IPv6 地址。进入路由器管理页面，在首页“路由状态”点击“互联网状态”，复制“WAN IPv6地址”备用。
+
+:::warning
+地址后面可能会有`/64 /128`这类后缀，复制时不要把后缀复制进去！ 
+:::
 
 ![image-20260627142405165](./image-20260627142405165.png)
 
-然后回到ssh，输入命令，提取公钥并生成基础 moon.json 模板。
+然后回到 SSH，输入命令，提取公钥并生成基础 `moon.json` 模板。
 
-```
+```shell
 /data/zerotier-idtool initmoon /data/zerotier/identity.public >> /data/zerotier/moon.json
 ```
-然后在 MobaXterm 左侧的文件浏览器中，双击进入 /data/zerotier/ 目录。找到 moon.json 文件，直接双击它，MobaXterm 会调用内置的文本编辑器打开。向下滚动寻找 `"roots"` 数组。需要修改其中的 `"stableEndpoints"` 字段。本身是空的，需要先输入一对英文引号，在其中输入刚才复制的v6地址，后面加一个端口号“/9993”，如下图。
 
-然后保存。出现覆盖提示选择“是”。
+然后在 MobaXterm 左侧的文件浏览器中，进入 `/data/zerotier/` 目录。找到 `moon.json` 文件，直接双击它，MobaXterm 会调用内置的文本编辑器打开。向下滚动寻找 `roots` 数组。需要修改其中的 `stableEndpoints` 字段。本身是空的，需要先输入一对英文引号，在其中输入刚才复制的 IPv6 地址，后面加一个端口号 `/9993`，如下图。
 
 ![image-20260627142753421](./image-20260627142753421.png)
 
+然后保存。出现覆盖或写入提示选择“是”。
+
 签名并生效配置：回到 MobaXterm 的 SSH 终端中，依次执行以下命令，并重启服务：
 
-
-```
+```shell
 # 利用修改好的 json 编译生成签名文件 (000000xxxx.moon)
 /data/zerotier-idtool genmoon /data/zerotier/moon.json
 
@@ -313,21 +314,21 @@ killall zerotier-one
 /data/zerotier-one -d /data/zerotier
 ```
 
-至此，这台 AX3000T 就已经是一台合格的 IPv6 Moon 节点了。
+**至此，这台 AX3000T 就已经是一台合格的 IPv6 Moon 节点了。**
 
 #### 3.5.2 为其他设备添加 Moon 节点
 
-首先获取这台路由器的zerotier ID：在终端输入：
+首先获取这台路由器的Zerotier ID。在终端输入：
 
-```
+```shell
 /data/zerotier-cli -D/data/zerotier info
 ```
 
 执行后，终端会返回类似这样的一行信息：
 
-> ```
-> 200 info a1b2c3d4e5 1.14.2 ONLINE
-> ```
+```plaintext
+200 info a1b2c3d4e5 1.14.2 ONLINE
+```
 
 中间那串 **10 位由字母和数字组成的字符串**（例如示例中的 `a1b2c3d4e5`），就是这台路由器的 **ZeroTier ID**。
 
@@ -337,17 +338,34 @@ killall zerotier-one
 
 #### 3.6.1 持久化运行的原理
 
-这里详细讲一下我们借用了xmir-patcher的逻辑，使用UCI注入防火墙生命周期的方法实现持久化运行的内容。并说明，后续我们所有软件的持久化都需要这么做。
+这台 AX3000T 虽然底层是 OpenWrt，但小米对其进行了**严格的“防篡改”魔改**。它就像是网吧里装了“还原卡”的电脑，或者我们极客常玩的 Windows PE —— 每次开机时，系统都会从只读的底层模板中，将 `/etc/init.d/`、`/etc/rc.local` 甚至 `/etc/firewall.user` 等这些通常用来做开机自启的核心目录强制覆盖清空。这意味着，**传统的 OpenWrt 驻留自启教程在这里统统失效**。
+
+那么，我们刚开始使用的 `xmir-patcher` 是怎么做到让 SSH 服务永久存活的呢？
+
+博主顺藤摸瓜，扒开了 `xmir-patcher` 的源码，终于发现了它实现持久化的核心机密 —— **利用 OpenWrt 底层的 UCI (Unified Configuration Interface) 机制，进行“防火墙生命周期注入”。**
+
+简单来说，就是“借鸡生蛋”：
+
+1. 避开重置区。我们不碰那些开机会被还原的文件，而是将我们写好的启动脚本（比如 `start_zt.sh`）安全地存放在唯一不会被清空的物理分区 `/data` 下。
+
+2. 利用 UCI 规则。小米系统虽然会还原脚本文件，**但它会保留核心的 UCI 配置文件（写入 NVRAM 闪存）** 。我们通过 UCI 命令，在系统的防火墙配置中强行插入一条 `include` 指令。
+
+3. 当路由器开机、拨号成功、网络接口初始化完毕时，系统会自动重载防火墙。此时，**防火墙就会读取到我们通过 UCI 注入的规则**，顺着路径来到 `/data` 目录，把我们的脚本拉起来。
+
+这个逻辑非常精妙！它不仅完全不怕小米的官方 OTA 升级，而且 Timing 很合适——对于 ZeroTier 或代理软件来说，等底层网络和防火墙就绪后再启动，能最大程度避免断网或死锁报错。
+
+因此，这个做法就作为我们后续持久化自己安装的软件的**标准做法**了。后续无论是开启本节的 ZeroTier，还是后面我们要试验的任何软件（如缓存跑 Mihomo），我们都将严格遵循这个固化逻辑。
 
 #### 3.6.2 编写 ZeroTier 启动脚本
 
-为了不把配置写得太乱，我们在 `/data` 下单独建一个 ZeroTier 启动脚本。
+我们遵循上节的研究结果，在 `/data` 下单独建一个 ZeroTier 启动脚本。
 
 1. 在 MobaXterm 左侧进入 `/data` 目录。
 2. 右键点击空白处，选择 **"New empty file" (新建空文件)**，命名为 `start_zt.sh`。
 3. 双击打开 `start_zt.sh`，将以下代码粘贴进去：
 
-```
+```bash
+// start_zt.sh
 #!/bin/sh
 
 # 等待 10 秒，确保系统的底层网络（网卡、TUN模块）已经初始化完毕
@@ -365,19 +383,20 @@ else
 fi
 ```
 
-4. 重要的一步：如下图，编辑完后，一定要在上方的“格式”菜单中选择“Linux / Unix”，以免造成换行符冲突。![image-20260627173724786](./image-20260627173724786.png)
+4. 重要的一步：如下图，编辑完后，一定要在上方的“格式”菜单中选择 `Linux / Unix`，以免造成换行符冲突。之后所有用 MobaXterm 直接创建的脚本文件都需这样操作！
+![image-20260627173724786](./image-20260627173724786.png)
 
 保存并关闭文件。在终端中执行命令，赋予它可执行权限：
 
-```
+```shell
 chmod +x /data/start_zt.sh
 ```
 
-### ### 3.6.3 添加防火墙规则
+#### 3.6.3 添加防火墙规则
 
 在终端中运行下面几行代码：
 
-```
+```shell
 # 1. 新建一个名为 zerotier 的防火墙脚本包含规则
 uci set firewall.zerotier=include
 
@@ -395,22 +414,16 @@ uci commit firewall
 ```
 
 完成后执行`cat /etc/config/firewall`，如图，可见末尾增加了zerotier配置，添加成功。
-
 ![image-20260627150943737](./image-20260627150943737.png)
 
-### ### 3.6.4 重启验证
+#### 3.6.4 重启验证
 
-持久化配置完成后，最稳妥的验证方式就是直接拔电源或软重启。
-
-在终端输入：
-
-```
+持久化配置完成后，最稳妥的验证方式就是直接拔电源或软重启。可以在终端输入：
+```shell
 reboot
 ```
-
 等待路由器重启完成，再次用 MobaXterm 连接上 SSH，执行以下命令：
-
-```
+```shell
 # 检查进程是否自动拉起
 ps -w | grep zerotier
 
@@ -419,8 +432,7 @@ ps -w | grep zerotier
 ```
 
 如果进程存在，且节点列表正常输出，类似于下面，恭喜你！ZeroTier 成功部署！它现在已经像原厂服务一样扎根在这台 AX3000T 里了。
-
-```
+```shell
 root@XiaoQiang:~# ps -w | grep zerotier
  2185 root     30684 S    /data/zerotier-one -d /data/zerotier
 10406 root      1464 S    grep zerotier
@@ -431,14 +443,15 @@ root@XiaoQiang:~# /data/zerotier-cli -D/data/zerotier listpeers
 200 listpeers cafe04eba9 84.17.53.155/9993;2634;37366 183 - PLANET
 200 listpeers cafe80ed74 185.152.67.145/9993;7634;40215 194 - PLANET
 200 listpeers cafefd6717 79.127.159.187/9993;7634;67420 219 - PLANET
-s
 ```
 
+:::important
+在本章的所有操作中，你可能已经注意到，我们执行 ZeroTier 相关的 CLI 命令（如 join、listpeers、info 等）时，都带上了 `-D/data/zerotier` 参数。这至关重要！
 
+小米路由器的原厂系统默认会将程序配置写入内存盘 `/var/lib/zerotier-one`，这会导致一旦路由器重启，你辛苦配置好的网络节点和身份认证信息瞬间“灰飞烟灭”。通过显式添加 `-D/data/zerotier` 参数，我们是在强制告诉 ZeroTier 程序：**请去我的 `/data` 闪存分区读取和写入配置**。
 
-最后注意：所有对zerotier的操作命令都需要加配置目录“-D/data/zerotier”
-
-
+记住这个“护身符”，它就是确保你的 ZeroTier 异地组网能够跨越重启、跨越断电，永久“钉”在路由器里的核心参数。
+:::
 
 ## 4 Mihomo 的热安装
 
