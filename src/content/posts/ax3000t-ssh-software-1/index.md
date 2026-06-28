@@ -38,7 +38,7 @@ draft: true
 - 开启路由器的 SSH。
 - 考虑到近期内，博主家中的电信宽带也已经改成了“大内网”（多层 NAT），但具有公网IPv6，所以取消安装 DDNS-GO 的想法，而是**直接安装 Zerotier**，加入博主的虚拟局域网，并利用公网 IPv6 作为 Moon 节点。
 - 通过安装 Zerotier，总结自行安装软件到路由器并实现持久化的做法，为之后的折腾铺平道路。
-- 折腾过程中大概率会遇到和 AC2350 一样的存储瓶颈，所以试一下热加载并在缓存中运行软件的形式是否可行。
+- 尝试通过热加载并在缓存中运行的方式安装 Mihomo。 
 
 ### 1.2 准备
 
@@ -453,23 +453,46 @@ root@XiaoQiang:~# /data/zerotier-cli -D/data/zerotier listpeers
 记住这个“护身符”，它就是确保你的 ZeroTier 异地组网能够跨越重启、跨越断电，永久“钉”在路由器里的核心参数。
 :::
 
-## 4 Mihomo 的热安装
+## 4 Mihomo 热加载尝试
 
-### 4.1 热加载
+### 4.1 为什么要热加载？
 
-（本节要点）接下来安装 Mihomo，但由于 Mihomo 的原始二进制文件普遍在25 MB左右，即使UPX极限压缩，也只能做到 8MB左右，还是会浪费捉襟见肘的空间。所以我们尝试使用“热加载”的手段。
+#### 4.1.1 问题
 
-然后具体介绍我们的热加载的方案思路：固化 Mihomo 配置，使用脚本在路由器开机时直接从 Github 镜像站拉取指定的Mihomo 二进制文件和国内IP/站点数据库到 tmp分区开辟的空间中，运行也在这其中完成。等等，介绍一下。
+在搞定了 ZeroTier 之后，博主的极客 DNA 彻底按捺不住了。既然底层的 TUN 模块健在，我们要把**硬路由软化** ，那不跑个透明网关简直暴殄天物啊！但当我们把目光转向 Mihomo 时，现实泼了一盆冷水。
 
-至于Mihomo内核的管理，我们可以在局域网内部署一个MetacubeXD，连接路由器9090端口即可。
+Mihomo 作为一个功能极其强大的代理核心，它的官方原生 `ARM64` 二进制文件体积通常在 25MB 左右！即便我们像之前处理 ZeroTier 那样，用 UPX 进行极限压缩，最后的体积也只能勉强压到 `8MB` 上下。
 
+大家不要忘了，我们这台路由器的 `/data` 分区总共只有可怜的 22.4MB。如果直接把 8MB 的核心文件塞进去，不仅浪费了极其宝贵的存储空间，而且 Mihomo 在运行过程中还需要下载动辄十几兆的路由规则库（`GeoSite.dat`、`GeoIP.dat`），这会让 `/data` 分区瞬间爆满，甚至导致路由器死机。
+
+还有闪存寿命。Mihomo 运行时会频繁读写缓存数据（如 `cache.db`）和更新订阅节点。如果把它的工作目录设在物理闪存上，路由器的 Flash 颗粒可能在几个月内就会因为过度擦写而寿终正寝。
+
+#### 4.1.2 总体思路
+
+**对此，我们的思路就是：把118.8MB 的 `/tmp` 内存盘利用起来，让 Mihomo 实现开机热加载。** 具体来说：
+1. 在本地的 `/data` 分区中，我们只保留几 KB 大小的 `config.yaml` 配置文件。
+2. 编写一个自启脚本，在路由器开机并连上网络后，直接通过国内的加速镜像站，从 GitHub 拉取指定版本的 Mihomo 二进制压缩包（.gz格式）以及最新的国内 IP/站点数据库。
+3. 脚本在 `/tmp` 内存盘中开辟一块专属空间，自动解压下载好的核心文件，并将配置和数据库都放入其中。Mihomo 的启动和后续的所有高频读写，都将完全在这个内存沙盒中进行。
+
+这种方案不仅实现了对路由器物理闪存的 0 损耗，而且每次开机路由器都会自动获取最新的核心和规则库，**真正做到了“无盘热加载、热启动”**。
+
+#### 4.1.3 管理面板
+
+既然核心都在内存里跑了，为了节省空间，我们就不要把庞大的 管理面板 MetacubeXD 塞进路由器了。
+
+Mihomo 本身提供了一个强大的外部控制 API。我们只需要在配置文件中暴露出 `9090` 端口，然后在局域网内的任何一台电脑或者 NAS 上部署 MetacubeXD 面板，输入路由器的 IP 和 `9090` 端口，就能实现对 Mihomo 节点和规则的可视化管理了。
 
 
 ### 4.2 Mihomo 配置的构建
 
-mobaxterm添加clash目录，新建空白config.yaml，复制配置进去，编码选择UTF8默认，系统选择Linux，保存：
+在正式拉取核心程序之前，我们需要先给 Mihomo 准备好配置文件。在这个配置中，我们**不仅要配置好底层网络劫持，还要设置好动态订阅链接**，让它能在内存中自行更新节点。
 
-```
+在 MobaXterm 左侧的文件树中，进入 `/data` 目录。右键新建一个文件夹，命名为 `clash`。进入这个新建的 `clash` 目录，右键新建空白文件，将其命名为 `config.yaml`。
+
+双击打开这个空文件，还是如上面所说，先在上方的“格式”菜单中选择 `Linux / Unix`，以免造成换行符冲突。然后将下面的配置代码完整复制进去：
+
+```yaml
+// config.yaml
 # ================= 底层与面板配置 =================
 port: 7890
 socks-port: 7891
@@ -491,6 +514,7 @@ dns:
   fake-ip-range: 198.18.0.1/16
   nameserver:
     - 223.5.5.5
+		- 1.1.1.1
     - 114.114.114.114
 
 tun:
@@ -551,6 +575,154 @@ rules:
   - MATCH,🚀 手动切换
 ```
 
-### 4.2 编写 tmp 热加载脚本
+当然，你可以根据实际情况编写你自己的 Mihomo 配置，不过记得打开 `9090` 控制端口哦！
 
-在 `/data` 目录下新建 `start_clash.sh`，写入以下代码：
+### 4.2 编写 tmp 热加载脚本并作持久化
+
+#### 4.2.1 热加载脚本编写
+
+在 `/data` 目录下新建 `start_clash.sh`，把格式改为`Linux / Unix` ，写入以下代码：
+
+```bash
+// start_clash.sh
+#!/bin/sh
+
+# ================= 辅助监控函数 =================
+log_info() {
+    logger -t "Mihomo-Patcher" "$1"
+    echo ">>> [INFO] $1"
+}
+log_err() {
+    logger -t "Mihomo-Patcher" "$1"
+    echo "!!! [ERROR] $1"
+}
+# ================================================
+
+# 1. 防重入检测
+if pgrep -f "/tmp/clash/mihomo" > /dev/null; then
+    log_info "Mihomo is already running, skipping boot."
+    exit 0
+fi
+
+log_info "Starting Mihomo network boot sequence (v1.19.27) in BACKGROUND..."
+
+# =======================================================
+# 核心架构：将所有耗时操作放入子 Shell 并强制后台运行 (&)
+# =======================================================
+(
+    # 2. 构建内存沙盒
+    log_info "Creating tmpfs sandbox (/tmp/clash)..."
+    mkdir -p /tmp/clash
+
+    # 3. 核心逻辑：死等网络连通 (循环 ping 阿里 DNS)
+    log_info "Checking network connectivity..."
+    MAX_WAIT=30
+    WAIT_CNT=0
+    while ! ping -c 1 -W 1 223.5.5.5 > /dev/null 2>&1; do
+        WAIT_CNT=$((WAIT_CNT+1))
+        if [ "$WAIT_CNT" -ge "$MAX_WAIT" ]; then
+            log_err "Network timeout! Boot aborted."
+            exit 1
+        fi
+        sleep 2
+    done
+
+    log_info "Network is UP. Downloading payloads..."
+
+    # 4. 利用加速节点拉取官方压缩包与 Geo 数据库
+    CORE_URL="https://ghproxy.net/https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-linux-arm64-v1.19.27.gz"
+    GEOSITE_URL="https://ghproxy.net/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+    GEOIP_URL="https://ghproxy.net/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
+    
+    # 4.1 下载并解压核心程序
+    if curl -L -k -f -s -o /tmp/clash/mihomo.gz "$CORE_URL"; then
+        log_info "Core downloaded. Extracting gzip payload..."
+        gzip -d /tmp/clash/mihomo.gz
+        chmod +x /tmp/clash/mihomo
+    else
+        log_err "Core download failed!"
+        exit 1
+    fi
+
+    # 4.2 提前下载 Geo 规则，打破死锁
+    log_info "Downloading GeoSite and GeoIP databases..."
+    curl -L -k -s -o /tmp/clash/GeoSite.dat "$GEOSITE_URL"
+    curl -L -k -s -o /tmp/clash/GeoIP.dat "$GEOIP_URL"
+    log_info "Geo databases downloaded."
+
+    # 5. 复制本地固化的配置文件
+    log_info "Copying config.yaml to tmpfs..."
+    cp /data/clash/config.yaml /tmp/clash/config.yaml
+
+    # 6. 点火运行
+    log_info "Ignition! Starting Mihomo..."
+    /tmp/clash/mihomo -d /tmp/clash > /tmp/clash/mihomo.log 2>&1 &
+    
+    # 7. 防火墙开门（为面板控制 API 放行 9090 端口）
+    log_info "Opening firewall port 9090 for Dashboard..."
+    iptables -I INPUT -p tcp --dport 9090 -j ACCEPT
+    
+    log_info "Boot sequence finished gracefully."
+) &
+
+# 脚本主进程瞬间退出，交还防火墙控制权
+exit 0
+```
+这段脚本看似很长，但处处都是“心机”：
+* 全量后台异步化 `( ... ) &`：这是解决断网阻塞的核心。耗时的网络检测和下载全被塞进了一个子 Shell 中并在后台运行，脚本的主进程瞬间就能走到最后的 `exit 0` 并把控制权交还给系统防火墙，家里其他设备的网络不会卡顿。
+* 自带解压与打破死锁：利用国内的 GitHub 镜像源 `ghproxy.net` 不仅拉取了 `.gz` 核心文件，还直接通过系统自带的 `gzip -d` 命令原地解压，省去了电脑端转换的麻烦；同时，在启动核心前提前拉取了 Geo 数据库，规避了启动时的断网死锁。
+* 全链路日志探针：利用 `log_info` 函数将运行状态同时输出到终端和系统日志中，不仅方便排错，还将 Mihomo 自身的运行日志重定向到了 `/tmp/clash/mihomo.log`，随时可以 troubleshooting。
+* 动态放行：为了防止小米苛刻的自带防火墙拦截面板访问，脚本在启动核心后，利用 `iptables` 强行给 `9090` 控制端口开了一个绿灯。
+
+保存这段脚本后，可以直接在 SSH 中敲入 `/data/dtart_clash.sh` 先试运行看看效果，如果没什么问题，Mihomo 成功加载，那就 OK 啦！
+
+#### 4.2.2 UCI命令持久化
+
+脚本准备就绪后，我们又要回到熟悉的持久化环节了。这里的做法和我们在第三章中对 ZeroTier 所做的完全一致，依然是利用 OpenWrt 底层的 UCI 机制，把我们的热加载脚本作为一条“防火墙规则”注入到系统启动生命周期中。
+
+在终端依次粘贴并执行以下 5 条命令：
+
+```shell
+# 1. 新建名为 mihomo 的防火墙自定义规则
+uci set firewall.mihomo=include
+
+# 2. 声明规则类型为 shell 脚本
+uci set firewall.mihomo.type='script'
+
+# 3. 指定脚本的绝对路径
+uci set firewall.mihomo.path='/data/start_clash.sh'
+
+# 4. 启用该规则
+uci set firewall.mihomo.enabled='1'
+
+# 5. 提交保存到闪存（极其关键，确保重启后规则不丢失）
+uci commit firewall
+```
+
+大功告成！现在就可以重启路由器看效果了。
+
+### 4.3 阶段性总结
+
+折腾到这里，按照正常逻辑，我们应该已经能在面板里选择节点并看到流量图了。但作为一篇硬核折腾记录，博主必须坦诚地告诉大家：**这套 Mihomo 方案目前还不能 100% 稳定可用，依然存在几个亟待解决的遗留问题。**
+
+在博主的实际测试中，目前主要遇到了以下几个“坑”：
+
+* 拉取太慢与偶发加载失败。虽然我们在脚本中使用了` ( ... ) &` 强制异步以防止断网，并且替换了国内的 CDN 镜像站，但实际拉取下载速度还是比较慢，只有几十 KB/s，有时也会遇到其它问题，进而引发 Mihomo 启动失败或启动后报错。
+* 面板连接失败的报错。在某些情况下，即使通过 `ps` 命令看到 Mihomo 已经在内存盘里跑起来了，日志也显示启动成功，但浏览器连接 MetacubeXD 面板时依然会爆出 `ERR_CONNECTION_REFUSED`。明明 `iptables` 已经放行了 `9090` 端口，却还是会被不知名的底层机制拦截，或者遇到配置解析错误导致后台静默闪退。
+
+这部分内容，博主还在继续探索“折腾”，后续的进展和结果，博主也将及时更新文章和大家分享。但之所以博主选择把第四章放出来，那是因为**至少目前证明了，这套“热加载”的架构思路本身，是完全可行的**。不过如果是其它比较小的、简单的软件，博主还是建议尽量把二进制放在 `/data` 中加载。
+
+## 5 结语
+
+回顾这趟给小米 AX3000T “软化硬路由”的折腾之旅，我们虽然是在极其苛刻的条件下“带着镣铐跳舞”，但依然取得了丰硕的阶段性成果。
+
+在这篇文章中，我们不仅成功绕过了原厂固件的重置限制开启了固化 SSH，还彻底摸清了这台路由器的底层底牌（AArch64 架构、珍贵的 22MB 可写空间、庞大的 118MB 内存盘以及完整的 TUN 模块支持）。更重要的是，通过安装 ZeroTier 和探索 Mihomo，博主为大家总结出了一套在小米闭源魔改系统下，**通用且稳定的第三方软件部署与持久化流程**：
+
+1. 寻找并下载目标软件对应的 `aarch64` 架构（或 ARM64）的静态编译二进制文件。
+2. 如果软件体积较小且读写频率低（如 ZeroTier），建议使用 UPX 压缩后直接存放在 `/data` 物理分区，以求最稳；如果体积庞大且读写频繁（如 Mihomo），则利用自启脚本将其“热加载”到 `/tmp` 内存盘中运行，实现物理闪存的 0 损耗。
+3. 在 `/data` 目录下编写对应的启动脚本，并在脚本中处理好网络延时等待、指定配置文件路径或异步下载等核心逻辑。
+4. 利用 OpenWrt 底层的 UCI 机制（`uci set firewall.xxx=include...`），将启动脚本挂载到防火墙重载的生命周期中，从而无视系统本身的还原机制，实现持久化运行和开机自启。
+
+诚然，对于需要透明网关、内网穿透或者跑各种复杂服务的需求，**直接在主路由旁边挂一个几十块钱的晶晨机顶盒显然是门槛更低、性能也更强大的解法**。但是，“折腾”二字本身的魅力，恰恰就藏在这些与底层系统斗智斗勇、在十几兆的夹缝中抠出空间的极客操作之中。压榨有限硬件的极限，本身就是一件充满了乐趣与成就感的事情。
+
+这台 AX3000T 的潜力显然还未被完全挖掘。博主后续会继续研究 Mihomo 方案中的问题。敬请期待博主后续的研究与更新！咱们下期折腾再见！
