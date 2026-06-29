@@ -1,7 +1,6 @@
 ﻿<script lang="ts">
 import Icon from "@iconify/svelte";
-import { onMount, onDestroy } from "svelte";
-import { fade, fly } from "svelte/transition";
+import { onMount, onDestroy, tick } from "svelte";
 
 interface Photo {
 	id: string;
@@ -30,11 +29,9 @@ let album = null;
 let loading = true;
 let error = "";
 
-// 查看器状态
-let viewerOpen = false;
-let currentIndex = 0;
-let showControls = true;
-let controlsTimer: any;
+const fancyboxSelector = '[data-fancybox="album-detail"]';
+let Fancybox: any;
+let fancyboxReady = false;
 
 const API_BASE = "https://galleryblog.ybjun.com";
 
@@ -59,15 +56,13 @@ onMount(async () => {
 		loading = false;
 	}
 
-	window.addEventListener("keydown", handleKeydown);
-	return () => {
-		window.removeEventListener("keydown", handleKeydown);
-	};
+    if (album) {
+        await initAlbumFancybox();
+    }
 });
 
-// 新增：当组件被销毁（如按浏览器返回键离开）时，强制解除页面锁定
 onDestroy(() => {
-    document.body.style.overflow = "";
+    cleanupAlbumFancybox();
     document.body.classList.remove("lightbox-open");
 });
 
@@ -114,50 +109,98 @@ function formatISO(val?: string) {
 	return `ISO ${num}`;
 }
 
-// --- 查看器交互 ---
-function openViewer(index: number) {
-	currentIndex = index;
-	viewerOpen = true;
-	resetControlsTimer();
-	document.body.style.overflow = "hidden"; // 锁定滚动
-	document.body.classList.add("lightbox-open"); // 🟢 添加全局类，用于隐藏 Navbar
+function escapeHtml(value: string) {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }
 
-function closeViewer() {
-	viewerOpen = false;
-	document.body.style.overflow = "";
-	document.body.classList.remove("lightbox-open"); // 🟢 移除全局类
-}
-function nextPhoto(e?: Event) {
-	e?.stopPropagation();
-	if (album && currentIndex < album.photos.length - 1) currentIndex++;
-	else currentIndex = 0;
+function buildPhotoCaption(photo: Photo) {
+    const exifRows = [
+        photo.shot_time ? ["拍摄时间", formatDateTime(photo.shot_time)] : null,
+        photo.exif_camera ? ["相机", photo.exif_camera] : null,
+        photo.exif_lens ? ["镜头", photo.exif_lens] : null,
+        photo.exif_focal ? ["焦距", photo.exif_focal] : null,
+        photo.exif_aperture ? ["光圈", formatAperture(photo.exif_aperture)] : null,
+        photo.exif_shutter ? ["快门", formatShutter(photo.exif_shutter)] : null,
+        photo.exif_iso ? ["感光度", formatISO(photo.exif_iso)] : null,
+    ].filter(Boolean) as [string, string][];
+
+    if (exifRows.length === 0) return "";
+
+    return `<div class="album-fancybox-exif">${exifRows
+        .map(
+            ([label, value]) =>
+                `<span class="album-fancybox-exif-item"><span class="album-fancybox-exif-label">${escapeHtml(label)}</span>${escapeHtml(value)}</span>`,
+        )
+        .join("")}</div>`;
 }
 
-function prevPhoto(e?: Event) {
-	e?.stopPropagation();
-	if (currentIndex > 0) currentIndex--;
-	else if (album) currentIndex = album.photos.length - 1;
+async function initAlbumFancybox() {
+    if (typeof document === "undefined" || fancyboxReady) return;
+    await tick();
+
+    if (!document.querySelector(fancyboxSelector)) return;
+
+    if (!Fancybox) {
+        const mod = await import("@fancyapps/ui");
+        Fancybox = mod.Fancybox;
+        await import("@fancyapps/ui/dist/fancybox/fancybox.css");
+    }
+
+    Fancybox.bind(fancyboxSelector, {
+        Thumbs: {
+            autoStart: true,
+            showOnStart: "yes",
+        },
+        Toolbar: {
+            display: {
+                left: ["infobar"],
+                middle: [
+                    "zoomIn",
+                    "zoomOut",
+                    "toggle1to1",
+                    "rotateCCW",
+                    "rotateCW",
+                ],
+                right: ["slideshow", "thumbs", "close"],
+            },
+        },
+        animated: true,
+        dragToClose: true,
+        keyboard: {
+            Escape: "close",
+            Delete: "close",
+            Backspace: "close",
+            PageUp: "next",
+            PageDown: "prev",
+            ArrowUp: "next",
+            ArrowDown: "prev",
+            ArrowRight: "next",
+            ArrowLeft: "prev",
+        },
+        fitToView: true,
+        preload: 3,
+        infinite: true,
+        Panzoom: {
+            maxScale: 3,
+            minScale: 1,
+        },
+        on: {
+            init: () => document.body.classList.add("lightbox-open"),
+            destroy: () => document.body.classList.remove("lightbox-open"),
+        },
+    });
+    fancyboxReady = true;
 }
 
-function handleKeydown(e: KeyboardEvent) {
-	if (!viewerOpen) return;
-	if (e.key === "Escape") closeViewer();
-	if (e.key === "ArrowRight") nextPhoto();
-	if (e.key === "ArrowLeft") prevPhoto();
-	resetControlsTimer();
-}
-
-function resetControlsTimer() {
-	showControls = true;
-	if (controlsTimer) clearTimeout(controlsTimer);
-	controlsTimer = setTimeout(() => {
-		showControls = false;
-	}, 3000);
-}
-
-function handleMouseMove() {
-	if (viewerOpen) resetControlsTimer();
+function cleanupAlbumFancybox() {
+    if (!Fancybox || !fancyboxReady) return;
+    Fancybox.unbind(fancyboxSelector);
+    fancyboxReady = false;
 }
 </script>
 
@@ -212,106 +255,20 @@ function handleMouseMove() {
 
             <div class="columns-1 md:columns-2 gap-4 space-y-4">
                 {#each album.photos as photo, index}
-                    <div 
+                    <a 
+                        href={photo.url}
+                        data-fancybox="album-detail"
+                        data-caption={buildPhotoCaption(photo)}
                         class="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-zoom-in"
-                        on:click={() => openViewer(index)}
-                        role="button"
-                        tabindex="0"
                     >
                         <img 
                             src={photo.url} 
-                            alt={photo.caption}
+                            alt={photo.caption || `相册照片 ${index + 1}`}
                             class="w-full h-auto object-cover transition-opacity duration-300 hover:opacity-90"
                             loading="lazy"
                         />
-                    </div>
+                    </a>
                 {/each}
-            </div>
-        </div>
-    {/if}
-
-    {#if viewerOpen && album}
-        <div 
-            class="fixed inset-0 z-[100000] bg-black text-white flex items-center justify-center"
-            transition:fade={{ duration: 200 }}
-            on:mousemove={handleMouseMove}
-            on:click={handleMouseMove}
-        >
-            <div class="relative w-full h-full flex items-center justify-center p-0 md:p-4">
-                {#key currentIndex}
-                    <img 
-                        src={album.photos[currentIndex].url} 
-                        alt="" 
-                        class="max-w-full max-h-full object-contain shadow-2xl select-none"
-                        in:fly={{ x: 20, duration: 300, opacity: 0 }}
-                    />
-                {/key}
-            </div>
-
-            <div class="absolute inset-0 pointer-events-none flex items-center justify-between px-2 md:px-8 transition-opacity duration-300 {showControls ? 'opacity-100' : 'opacity-0'}">
-                <button class="p-4 rounded-full bg-black/20 hover:bg-black/50 text-white pointer-events-auto transition backdrop-blur-sm cursor-pointer" on:click={prevPhoto}>
-                    <Icon icon="material-symbols:chevron-left" class="text-4xl" />
-                </button>
-                <button class="p-4 rounded-full bg-black/20 hover:bg-black/50 text-white pointer-events-auto transition backdrop-blur-sm cursor-pointer" on:click={nextPhoto}>
-                    <Icon icon="material-symbols:chevron-right" class="text-4xl" />
-                </button>
-            </div>
-
-            <div class="absolute inset-0 pointer-events-none transition-opacity duration-500 {showControls ? 'opacity-100' : 'opacity-0'}">
-                
-                <button 
-                    class="absolute top-6 right-6 p-2 rounded-full bg-black/30 hover:bg-red-500/80 backdrop-blur-md text-white pointer-events-auto transition cursor-pointer z-50"
-                    on:click|stopPropagation={closeViewer}
-                >
-                    <Icon icon="material-symbols:close" class="text-3xl" />
-                </button>
-
-                <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-auto">
-                    <div class="max-w-[90vw] mx-auto relative flex items-end justify-between">
-                        
-                        <div class="text-xl font-bold text-white/90 font-mono tracking-widest">
-                            {currentIndex + 1} <span class="text-white/50 text-base">/ {album.photos.length}</span>
-                        </div>
-
-                        <div class="absolute left-1/2 -translate-x-1/2 bottom-0 flex flex-col items-center gap-2 pb-1 text-sm md:text-base text-white/90 whitespace-nowrap">
-                            
-                            <div class="flex items-center gap-6 opacity-90">
-                                {#if album.photos[currentIndex].shot_time}
-                                    <div class="flex items-center gap-2">
-                                        <Icon icon="material-symbols:schedule" class="text-lg opacity-80" />
-                                        <span class="font-mono">{formatDateTime(album.photos[currentIndex].shot_time)}</span>
-                                    </div>
-                                {/if}
-                                {#if album.photos[currentIndex].exif_camera}
-                                    <div class="flex items-center gap-2">
-                                        <Icon icon="material-symbols:photo-camera" class="text-lg opacity-80" />
-                                        <span>{album.photos[currentIndex].exif_camera}</span>
-                                    </div>
-                                {/if}
-                            </div>
-
-                            <div class="flex items-center gap-4 font-mono text-white/80 text-xs md:text-sm">
-                                {#if album.photos[currentIndex].exif_focal}
-                                    <span>{album.photos[currentIndex].exif_focal}</span>
-                                    <span class="opacity-30">|</span>
-                                {/if}
-                                {#if album.photos[currentIndex].exif_aperture}
-                                    <span>{formatAperture(album.photos[currentIndex].exif_aperture)}</span>
-                                    <span class="opacity-30">|</span>
-                                {/if}
-                                {#if album.photos[currentIndex].exif_shutter}
-                                    <span>{formatShutter(album.photos[currentIndex].exif_shutter)}</span>
-                                    <span class="opacity-30">|</span>
-                                {/if}
-                                {#if album.photos[currentIndex].exif_iso}
-                                    <span>{formatISO(album.photos[currentIndex].exif_iso)}</span>
-                                {/if}
-                            </div>
-                        </div>
-
-                        <div class="w-10"></div> 
-                    </div>
-                </div>
             </div>
         </div>
     {/if}
@@ -326,5 +283,29 @@ function handleMouseMove() {
         opacity: 0 !important;
         pointer-events: none !important;
         transition: opacity 0.3s ease-out;
+    }
+
+    :global(.album-fancybox-exif) {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.4rem 0.9rem;
+        max-width: min(88vw, 72rem);
+        margin: 0 auto;
+        font-size: 0.875rem;
+        line-height: 1.7;
+        color: rgba(255, 255, 255, 0.86);
+    }
+
+    :global(.album-fancybox-exif-item) {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        white-space: nowrap;
+    }
+
+    :global(.album-fancybox-exif-label) {
+        color: rgba(255, 255, 255, 0.52);
     }
 </style>

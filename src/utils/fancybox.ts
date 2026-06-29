@@ -43,8 +43,6 @@ export async function initFancybox() {
 					"toggle1to1",
 					"rotateCCW",
 					"rotateCW",
-					"flipX",
-					"flipY",
 				],
 				right: ["slideshow", "thumbs", "close"],
 			},
