@@ -1,20 +1,15 @@
-import { getImage } from "astro:assets";
 import type { RSSFeedItem } from "@astrojs/rss";
 import rss from "@astrojs/rss";
 import { getSortedPosts } from "@utils/content";
-import { getFileDirFromPath, getPostUrl } from "@utils/url";
-import type { APIContext, ImageMetadata } from "astro";
+import { rewriteFeedImageSrcToCdn } from "@utils/feed";
+import { getPostUrl } from "@utils/url";
+import type { APIContext } from "astro";
 import MarkdownIt from "markdown-it";
 import { parse as htmlParser } from "node-html-parser";
 import sanitizeHtml from "sanitize-html";
 import { siteConfig } from "@/config";
 
 const markdownParser = new MarkdownIt();
-
-// get dynamic import of images as a map collection
-const imagesGlob = import.meta.glob<{ default: ImageMetadata }>(
-	"/src/content/**/*.{jpeg,jpg,png,gif,webp}", // include posts and assets
-);
 
 export async function GET(context: APIContext) {
 	if (!context.site) {
@@ -36,45 +31,9 @@ export async function GET(context: APIContext) {
 		for (const img of images) {
 			const src = img.getAttribute("src");
 			if (!src) continue;
-			// Handle content-relative images and convert them to built _astro paths
-			if (
-				src.startsWith("./") ||
-				src.startsWith("../") ||
-				(!src.startsWith("http") && !src.startsWith("/"))
-			) {
-				let importPath: string | null = null;
-				// derive base directory from real file path to preserve casing
-				const contentDirRaw = post.filePath
-					? getFileDirFromPath(post.filePath)
-					: "src/content/posts";
-				const contentDir = contentDirRaw.startsWith("src/")
-					? contentDirRaw
-					: `src/${contentDirRaw}`;
-				if (src.startsWith("./")) {
-					// Path relative to the post file directory
-					const prefixRemoved = src.slice(2);
-					importPath = `/${contentDir}/${prefixRemoved}`;
-				} else if (src.startsWith("../")) {
-					// Path like ../assets/images/xxx -> relative to /src/content/
-					const cleaned = src.replace(/^\.\.\//, "");
-					importPath = `/src/content/${cleaned}`;
-				} else {
-					// direct filename (no ./ prefix) - assume it's in the same directory as the post
-					importPath = `/${contentDir}/${src}`;
-				}
-				// import the image module dynamically
-				const imageMod = await imagesGlob[importPath]?.()?.then(
-					(res) => res.default,
-				);
-				if (imageMod) {
-					const optimizedImg = await getImage({ src: imageMod });
-					img.setAttribute("src", new URL(optimizedImg.src, context.site).href);
-				} else {
-					// log the failed import path
-					console.log(
-						`Failed to load image: ${importPath} for post: ${post.id}`,
-					);
-				}
+			const rewrittenSrc = rewriteFeedImageSrcToCdn(src, post);
+			if (rewrittenSrc !== src) {
+				img.setAttribute("src", rewrittenSrc);
 			} else if (src.startsWith("/")) {
 				// images starting with `/` are in public dir
 				img.setAttribute("src", new URL(src, context.site).href);
