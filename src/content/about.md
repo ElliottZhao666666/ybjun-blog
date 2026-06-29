@@ -6,8 +6,7 @@
 
 这个博客，是除公众号外，我的另一个**赛博小家**。在这里，你可以看到详实的技术“折腾”备忘、学习笔记和软件项目，也能读到我毫无保留的经验和资源分享。除此之外，这里还有我的摄影作品、日常的奇思妙想、偶尔的有感而发，以及原汁原味的生活日记。
 
-> 本站 RSS 订阅：[点击查看](https://www.ybjun.com/rss)
-> 本站 Atom 订阅：[点击查看](https://www.ybjun.com/atom)
+> 本站 RSS 订阅：[点击查看](https://www.ybjun.com/rss)  本站 Atom 订阅：[点击查看](https://www.ybjun.com/atom)
 
 * Site framework based on Astro & Twilight.
 * Personal Avatar designed by CityDog.

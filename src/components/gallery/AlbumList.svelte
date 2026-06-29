@@ -2,6 +2,7 @@
 import Icon from "@iconify/svelte";
 import { onMount } from "svelte";
 import { fade } from "svelte/transition";
+import { loadAlbumFancybox } from "../../utils/album-fancybox";
 
 interface Album {
 	id: string;
@@ -27,6 +28,8 @@ let timelineGroups: TimelineGroup[] = [];
 const API_BASE = "https://galleryblog.ybjun.com";
 
 onMount(async () => {
+    loadAlbumFancybox();
+
 	try {
 		// 1. 先获取所有相册的基本信息
 		const res = await fetch(`${API_BASE}/albums`);

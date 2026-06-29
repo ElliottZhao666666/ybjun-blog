@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
 import Icon from "@iconify/svelte";
 import { onMount, onDestroy, tick } from "svelte";
+import { getAlbumFancybox, loadAlbumFancybox } from "../../utils/album-fancybox";
 
 interface Photo {
 	id: string;
@@ -30,15 +31,13 @@ let loading = true;
 let error = "";
 
 const fancyboxSelector = '[data-fancybox="album-detail"]';
-let Fancybox: any;
 let fancyboxReady = false;
-let fancyboxLoading: Promise<void> | null = null;
 const imageRetryCounts = new WeakMap<HTMLImageElement, number>();
 
 const API_BASE = "https://galleryblog.ybjun.com";
 
 onMount(async () => {
-    preloadFancybox();
+	loadAlbumFancybox();
 
 	const urlParams = new URLSearchParams(window.location.search);
 	const albumId = urlParams.get("id");
@@ -60,12 +59,12 @@ onMount(async () => {
 		loading = false;
 	}
 
-    if (album) await initAlbumFancybox();
+	if (album) await initAlbumFancybox();
 });
 
 onDestroy(() => {
-    cleanupAlbumFancybox();
-    document.body.classList.remove("lightbox-open");
+	cleanupAlbumFancybox();
+	document.body.classList.remove("lightbox-open");
 });
 
 // --- 格式化函数 ---
@@ -141,28 +140,14 @@ function buildPhotoCaption(photo: Photo) {
         .join("")}</div>`;
 }
 
-async function preloadFancybox() {
-    if (typeof document === "undefined") return;
-    if (fancyboxLoading) return fancyboxLoading;
-
-    fancyboxLoading = (async () => {
-        if (!Fancybox) {
-            const mod = await import("@fancyapps/ui");
-            Fancybox = mod.Fancybox;
-            await import("@fancyapps/ui/dist/fancybox/fancybox.css");
-        }
-    })();
-
-    return fancyboxLoading;
-}
-
 async function initAlbumFancybox() {
     if (typeof document === "undefined" || fancyboxReady) return;
     await tick();
 
     if (!document.querySelector(fancyboxSelector)) return;
 
-    await preloadFancybox();
+    const Fancybox = await loadAlbumFancybox();
+    if (!Fancybox) return;
 
     Fancybox.bind(fancyboxSelector, {
         Thumbs: {
@@ -210,13 +195,71 @@ async function initAlbumFancybox() {
     fancyboxReady = true;
 }
 
-async function handlePhotoClick(event: MouseEvent) {
-    if (fancyboxReady) return;
+async function openPhoto(index: number, triggerEl?: HTMLElement | null) {
+    if (!album) return;
 
+    const Fancybox = await loadAlbumFancybox();
+    if (!Fancybox) return;
+
+    document.body.classList.add("lightbox-open");
+    Fancybox.show(
+        album.photos.map((photo) => ({
+            src: photo.url,
+            caption: buildPhotoCaption(photo),
+            thumbSrc: photo.url,
+            triggerEl,
+        })),
+        {
+            startIndex: index,
+            Thumbs: {
+                autoStart: true,
+                showOnStart: "yes",
+            },
+            Toolbar: {
+                display: {
+                    left: ["infobar"],
+                    middle: [
+                        "zoomIn",
+                        "zoomOut",
+                        "toggle1to1",
+                        "rotateCCW",
+                        "rotateCW",
+                    ],
+                    right: ["slideshow", "thumbs", "close"],
+                },
+            },
+            animated: true,
+            dragToClose: true,
+            keyboard: {
+                Escape: "close",
+                Delete: "close",
+                Backspace: "close",
+                PageUp: "next",
+                PageDown: "prev",
+                ArrowUp: "next",
+                ArrowDown: "prev",
+                ArrowRight: "next",
+                ArrowLeft: "prev",
+            },
+            fitToView: true,
+            preload: 3,
+            infinite: true,
+            Panzoom: {
+                maxScale: 3,
+                minScale: 1,
+            },
+            on: {
+                init: () => document.body.classList.add("lightbox-open"),
+                destroy: () => document.body.classList.remove("lightbox-open"),
+            },
+        },
+    );
+}
+
+async function handlePhotoClick(event: MouseEvent, index: number) {
     event.preventDefault();
     event.stopPropagation();
-    await initAlbumFancybox();
-    (event.currentTarget as HTMLElement | null)?.click();
+    await openPhoto(index, event.currentTarget as HTMLElement | null);
 }
 
 function handleImageError(event: Event) {
@@ -233,9 +276,10 @@ function handleImageError(event: Event) {
 }
 
 function cleanupAlbumFancybox() {
-    if (!Fancybox || !fancyboxReady) return;
-    Fancybox.unbind(fancyboxSelector);
-    fancyboxReady = false;
+	const Fancybox = getAlbumFancybox();
+	if (!Fancybox || !fancyboxReady) return;
+	Fancybox.unbind(fancyboxSelector);
+	fancyboxReady = false;
 }
 </script>
 
@@ -295,7 +339,7 @@ function cleanupAlbumFancybox() {
                         data-fancybox="album-detail"
                         data-caption={buildPhotoCaption(photo)}
                         class="album-detail-photo-card break-inside-avoid relative group block w-full rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-zoom-in"
-                        on:click={handlePhotoClick}
+                        on:click={(event) => handlePhotoClick(event, index)}
                     >
                         <img 
                             src={photo.url} 
