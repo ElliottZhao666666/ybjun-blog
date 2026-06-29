@@ -25,17 +25,21 @@ interface AlbumInfo {
 	photos: Photo[];
 }
 
-let album = null;
+let album: AlbumInfo | null = null;
 let loading = true;
 let error = "";
 
 const fancyboxSelector = '[data-fancybox="album-detail"]';
 let Fancybox: any;
 let fancyboxReady = false;
+let fancyboxLoading: Promise<void> | null = null;
+const imageRetryCounts = new WeakMap<HTMLImageElement, number>();
 
 const API_BASE = "https://galleryblog.ybjun.com";
 
 onMount(async () => {
+    preloadFancybox();
+
 	const urlParams = new URLSearchParams(window.location.search);
 	const albumId = urlParams.get("id");
 
@@ -56,9 +60,7 @@ onMount(async () => {
 		loading = false;
 	}
 
-    if (album) {
-        await initAlbumFancybox();
-    }
+    if (album) await initAlbumFancybox();
 });
 
 onDestroy(() => {
@@ -139,17 +141,28 @@ function buildPhotoCaption(photo: Photo) {
         .join("")}</div>`;
 }
 
+async function preloadFancybox() {
+    if (typeof document === "undefined") return;
+    if (fancyboxLoading) return fancyboxLoading;
+
+    fancyboxLoading = (async () => {
+        if (!Fancybox) {
+            const mod = await import("@fancyapps/ui");
+            Fancybox = mod.Fancybox;
+            await import("@fancyapps/ui/dist/fancybox/fancybox.css");
+        }
+    })();
+
+    return fancyboxLoading;
+}
+
 async function initAlbumFancybox() {
     if (typeof document === "undefined" || fancyboxReady) return;
     await tick();
 
     if (!document.querySelector(fancyboxSelector)) return;
 
-    if (!Fancybox) {
-        const mod = await import("@fancyapps/ui");
-        Fancybox = mod.Fancybox;
-        await import("@fancyapps/ui/dist/fancybox/fancybox.css");
-    }
+    await preloadFancybox();
 
     Fancybox.bind(fancyboxSelector, {
         Thumbs: {
@@ -195,6 +208,28 @@ async function initAlbumFancybox() {
         },
     });
     fancyboxReady = true;
+}
+
+async function handlePhotoClick(event: MouseEvent) {
+    if (fancyboxReady) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    await initAlbumFancybox();
+    (event.currentTarget as HTMLElement | null)?.click();
+}
+
+function handleImageError(event: Event) {
+    const image = event.currentTarget as HTMLImageElement | null;
+    if (!image) return;
+
+    const retryCount = imageRetryCounts.get(image) ?? 0;
+    if (retryCount >= 2) return;
+
+    imageRetryCounts.set(image, retryCount + 1);
+    const url = new URL(image.currentSrc || image.src);
+    url.searchParams.set("retry", String(Date.now()));
+    image.src = url.toString();
 }
 
 function cleanupAlbumFancybox() {
@@ -253,19 +288,25 @@ function cleanupAlbumFancybox() {
 
             <div class="border-b border-dashed border-[var(--line-divider)] mb-8"></div>
 
-            <div class="columns-1 md:columns-2 gap-4 space-y-4">
+            <div class="album-detail-masonry columns-1 md:columns-2 gap-4">
                 {#each album.photos as photo, index}
                     <a 
                         href={photo.url}
                         data-fancybox="album-detail"
                         data-caption={buildPhotoCaption(photo)}
-                        class="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-zoom-in"
+                        class="album-detail-photo-card break-inside-avoid relative group block w-full rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-zoom-in"
+                        on:click={handlePhotoClick}
                     >
                         <img 
                             src={photo.url} 
                             alt={photo.caption || `相册照片 ${index + 1}`}
+                            width={photo.width}
+                            height={photo.height}
                             class="w-full h-auto object-cover transition-opacity duration-300 hover:opacity-90"
-                            loading="lazy"
+                            loading={index < 4 ? "eager" : "lazy"}
+                            fetchpriority={index < 2 ? "high" : "auto"}
+                            decoding="async"
+                            on:error={handleImageError}
                         />
                     </a>
                 {/each}
@@ -285,15 +326,33 @@ function cleanupAlbumFancybox() {
         transition: opacity 0.3s ease-out;
     }
 
+    .album-detail-masonry {
+        column-gap: 1rem;
+    }
+
+    .album-detail-photo-card {
+        margin-bottom: 1rem;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        transform: translateZ(0);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .album-detail-photo-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    }
+
     :global(.album-fancybox-exif) {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 0.4rem 0.9rem;
-        max-width: min(88vw, 72rem);
+        gap: 0.35rem 0.8rem;
+        max-width: min(92vw, 72rem);
         margin: 0 auto;
-        font-size: 0.875rem;
-        line-height: 1.7;
+        padding: 0 0.75rem;
+        font-size: clamp(0.75rem, 2.4vw, 0.875rem);
+        line-height: 1.6;
         color: rgba(255, 255, 255, 0.86);
     }
 
@@ -307,5 +366,37 @@ function cleanupAlbumFancybox() {
 
     :global(.album-fancybox-exif-label) {
         color: rgba(255, 255, 255, 0.52);
+    }
+
+    @media (max-width: 640px) {
+        .album-detail-masonry {
+            column-gap: 0;
+        }
+
+        .album-detail-photo-card {
+            margin-bottom: 0.875rem;
+        }
+
+        :global(.album-fancybox-exif) {
+            justify-content: flex-start;
+            gap: 0.3rem 0.65rem;
+            max-width: 96vw;
+            max-height: 22vh;
+            overflow-y: auto;
+            padding: 0 0.5rem;
+            text-align: left;
+        }
+
+        :global(.album-fancybox-exif-item) {
+            flex: 1 1 calc(50% - 0.65rem);
+            min-width: 8.5rem;
+            white-space: normal;
+        }
+    }
+
+    @media (max-width: 380px) {
+        :global(.album-fancybox-exif-item) {
+            flex-basis: 100%;
+        }
     }
 </style>
