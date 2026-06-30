@@ -1,6 +1,7 @@
 ﻿<script lang="ts">
 import Icon from "@iconify/svelte";
 import { onMount, onDestroy, tick } from "svelte";
+import { getFancybox, loadFancybox } from "../../utils/fancybox-loader";
 
 interface Photo {
 	id: string;
@@ -30,9 +31,7 @@ let loading = true;
 let error = "";
 
 const fancyboxSelector = '[data-fancybox="album-detail"]';
-let Fancybox: any;
 let fancyboxReady = false;
-let fancyboxLoading: Promise<void> | null = null;
 const imageRetryCounts = new WeakMap<HTMLImageElement, number>();
 
 const API_BASE = "https://galleryblog.ybjun.com";
@@ -142,18 +141,7 @@ function buildPhotoCaption(photo: Photo) {
 }
 
 async function preloadFancybox() {
-    if (typeof document === "undefined") return;
-    if (fancyboxLoading) return fancyboxLoading;
-
-    fancyboxLoading = (async () => {
-        if (!Fancybox) {
-            const mod = await import("@fancyapps/ui");
-            Fancybox = mod.Fancybox;
-            await import("@fancyapps/ui/dist/fancybox/fancybox.css");
-        }
-    })();
-
-    return fancyboxLoading;
+    return loadFancybox();
 }
 
 async function initAlbumFancybox() {
@@ -162,7 +150,8 @@ async function initAlbumFancybox() {
 
     if (!document.querySelector(fancyboxSelector)) return;
 
-    await preloadFancybox();
+    const Fancybox = await preloadFancybox();
+    if (!Fancybox) return;
 
     Fancybox.bind(fancyboxSelector, {
         Thumbs: {
@@ -216,7 +205,14 @@ async function handlePhotoClick(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
     await initAlbumFancybox();
-    (event.currentTarget as HTMLElement | null)?.click();
+    const trigger = event.currentTarget as HTMLElement | null;
+    const Fancybox = getFancybox();
+
+    if (trigger && typeof Fancybox?.fromTriggerEl === "function") {
+        Fancybox.fromTriggerEl(trigger);
+    } else {
+        trigger?.click();
+    }
 }
 
 function handleImageError(event: Event) {
@@ -233,6 +229,7 @@ function handleImageError(event: Event) {
 }
 
 function cleanupAlbumFancybox() {
+    const Fancybox = getFancybox();
     if (!Fancybox || !fancyboxReady) return;
     Fancybox.unbind(fancyboxSelector);
     fancyboxReady = false;

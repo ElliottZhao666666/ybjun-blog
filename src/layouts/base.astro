@@ -367,6 +367,7 @@ import { initTheme } from "@utils/theme";
 import { initHue } from "@utils/hue";
 import { initMarkdownActions } from "@/utils/markdown";
 import { initFancybox, cleanupFancybox } from "@utils/fancybox";
+import { loadFancybox } from "@utils/fancybox-loader";
 import { loadAndInitTranslate } from "@utils/language";
 import { setupParticleEffects } from "@/utils/particle";
 
@@ -567,10 +568,29 @@ setupParticleEffects();
 // Do not wait for window.load, otherwise slow non-critical resources may keep the page covered.
 if (typeof window !== 'undefined') {
     let loadingOverlayHidden = false;
+    let fancyboxPreloadStarted = false;
+
+    const preloadFancyboxWhenIdle = () => {
+        if (fancyboxPreloadStarted) return;
+        fancyboxPreloadStarted = true;
+
+        const preload = () => {
+            loadFancybox().catch((error) => {
+                console.warn('Fancybox preload failed:', error);
+            });
+        };
+
+        if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(preload, { timeout: 3000 });
+        } else {
+            setTimeout(preload, 0);
+        }
+    };
 
     const finishInitialAnimation = (enableBanner: boolean) => {
         document.documentElement.classList.remove('is-loading');
         document.documentElement.classList.add('show-initial-animation');
+        preloadFancyboxWhenIdle();
         setTimeout(() => {
             document.documentElement.classList.remove('show-initial-animation');
             if (enableBanner) {
