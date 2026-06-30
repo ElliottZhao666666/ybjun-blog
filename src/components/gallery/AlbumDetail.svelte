@@ -1,7 +1,6 @@
 ﻿<script lang="ts">
 import Icon from "@iconify/svelte";
 import { onMount, onDestroy, tick } from "svelte";
-import { getAlbumFancybox, loadAlbumFancybox } from "../../utils/album-fancybox";
 
 interface Photo {
 	id: string;
@@ -31,13 +30,15 @@ let loading = true;
 let error = "";
 
 const fancyboxSelector = '[data-fancybox="album-detail"]';
+let Fancybox: any;
 let fancyboxReady = false;
+let fancyboxLoading: Promise<void> | null = null;
 const imageRetryCounts = new WeakMap<HTMLImageElement, number>();
 
 const API_BASE = "https://galleryblog.ybjun.com";
 
 onMount(async () => {
-	loadAlbumFancybox();
+    preloadFancybox();
 
 	const urlParams = new URLSearchParams(window.location.search);
 	const albumId = urlParams.get("id");
@@ -59,12 +60,12 @@ onMount(async () => {
 		loading = false;
 	}
 
-	if (album) await initAlbumFancybox();
+    if (album) await initAlbumFancybox();
 });
 
 onDestroy(() => {
-	cleanupAlbumFancybox();
-	document.body.classList.remove("lightbox-open");
+    cleanupAlbumFancybox();
+    document.body.classList.remove("lightbox-open");
 });
 
 // --- 格式化函数 ---
@@ -140,14 +141,28 @@ function buildPhotoCaption(photo: Photo) {
         .join("")}</div>`;
 }
 
+async function preloadFancybox() {
+    if (typeof document === "undefined") return;
+    if (fancyboxLoading) return fancyboxLoading;
+
+    fancyboxLoading = (async () => {
+        if (!Fancybox) {
+            const mod = await import("@fancyapps/ui");
+            Fancybox = mod.Fancybox;
+            await import("@fancyapps/ui/dist/fancybox/fancybox.css");
+        }
+    })();
+
+    return fancyboxLoading;
+}
+
 async function initAlbumFancybox() {
     if (typeof document === "undefined" || fancyboxReady) return;
     await tick();
 
     if (!document.querySelector(fancyboxSelector)) return;
 
-    const Fancybox = await loadAlbumFancybox();
-    if (!Fancybox) return;
+    await preloadFancybox();
 
     Fancybox.bind(fancyboxSelector, {
         Thumbs: {
@@ -196,26 +211,12 @@ async function initAlbumFancybox() {
 }
 
 async function handlePhotoClick(event: MouseEvent) {
-	if (fancyboxReady) return;
+    if (fancyboxReady) return;
 
-	const triggerEl = event.currentTarget as HTMLElement | null;
-	if (!triggerEl) return;
-
-	event.preventDefault();
-	event.stopPropagation();
-
-	try {
-		await initAlbumFancybox();
-		const Fancybox = getAlbumFancybox();
-		if (Fancybox && fancyboxReady) {
-			Fancybox.fromTriggerEl(triggerEl);
-			return;
-		}
-	} catch (error) {
-		console.warn("Album Fancybox open failed:", error);
-	}
-
-	window.location.href = triggerEl.getAttribute("href") || "#";
+    event.preventDefault();
+    event.stopPropagation();
+    await initAlbumFancybox();
+    (event.currentTarget as HTMLElement | null)?.click();
 }
 
 function handleImageError(event: Event) {
@@ -232,10 +233,9 @@ function handleImageError(event: Event) {
 }
 
 function cleanupAlbumFancybox() {
-	const Fancybox = getAlbumFancybox();
-	if (!Fancybox || !fancyboxReady) return;
-	Fancybox.unbind(fancyboxSelector);
-	fancyboxReady = false;
+    if (!Fancybox || !fancyboxReady) return;
+    Fancybox.unbind(fancyboxSelector);
+    fancyboxReady = false;
 }
 </script>
 

@@ -367,7 +367,6 @@ import { initTheme } from "@utils/theme";
 import { initHue } from "@utils/hue";
 import { initMarkdownActions } from "@/utils/markdown";
 import { initFancybox, cleanupFancybox } from "@utils/fancybox";
-import { loadAlbumFancybox } from "@utils/album-fancybox";
 import { loadAndInitTranslate } from "@utils/language";
 import { setupParticleEffects } from "@/utils/particle";
 
@@ -564,36 +563,14 @@ loadAndInitTranslate();
 // Initialize particle effects
 setupParticleEffects();
 
-const preloadFancyboxWhenIdle = () => {
-    const preload = () => {
-        loadAlbumFancybox().catch((error: unknown) => {
-            console.warn("Fancybox preload failed:", error);
-        });
-    };
-
-    if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(preload, { timeout: 3000 });
-    } else {
-        setTimeout(preload, 0);
-    }
-};
-
 // Remove is-loading class and trigger initial-animation after DOM is ready.
 // Do not wait for window.load, otherwise slow non-critical resources may keep the page covered.
 if (typeof window !== 'undefined') {
     let loadingOverlayHidden = false;
-    let fancyboxPreloadStarted = false;
-
-    const startFancyboxPreloadOnce = () => {
-        if (fancyboxPreloadStarted) return;
-        fancyboxPreloadStarted = true;
-        preloadFancyboxWhenIdle();
-    };
 
     const finishInitialAnimation = (enableBanner: boolean) => {
         document.documentElement.classList.remove('is-loading');
         document.documentElement.classList.add('show-initial-animation');
-        startFancyboxPreloadOnce();
         setTimeout(() => {
             document.documentElement.classList.remove('show-initial-animation');
             if (enableBanner) {
