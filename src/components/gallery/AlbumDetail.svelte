@@ -195,71 +195,27 @@ async function initAlbumFancybox() {
     fancyboxReady = true;
 }
 
-async function openPhoto(index: number, triggerEl?: HTMLElement | null) {
-    if (!album) return;
+async function handlePhotoClick(event: MouseEvent) {
+	if (fancyboxReady) return;
 
-    const Fancybox = await loadAlbumFancybox();
-    if (!Fancybox) return;
+	const triggerEl = event.currentTarget as HTMLElement | null;
+	if (!triggerEl) return;
 
-    document.body.classList.add("lightbox-open");
-    Fancybox.show(
-        album.photos.map((photo) => ({
-            src: photo.url,
-            caption: buildPhotoCaption(photo),
-            thumbSrc: photo.url,
-            triggerEl,
-        })),
-        {
-            startIndex: index,
-            Thumbs: {
-                autoStart: true,
-                showOnStart: "yes",
-            },
-            Toolbar: {
-                display: {
-                    left: ["infobar"],
-                    middle: [
-                        "zoomIn",
-                        "zoomOut",
-                        "toggle1to1",
-                        "rotateCCW",
-                        "rotateCW",
-                    ],
-                    right: ["slideshow", "thumbs", "close"],
-                },
-            },
-            animated: true,
-            dragToClose: true,
-            keyboard: {
-                Escape: "close",
-                Delete: "close",
-                Backspace: "close",
-                PageUp: "next",
-                PageDown: "prev",
-                ArrowUp: "next",
-                ArrowDown: "prev",
-                ArrowRight: "next",
-                ArrowLeft: "prev",
-            },
-            fitToView: true,
-            preload: 3,
-            infinite: true,
-            Panzoom: {
-                maxScale: 3,
-                minScale: 1,
-            },
-            on: {
-                init: () => document.body.classList.add("lightbox-open"),
-                destroy: () => document.body.classList.remove("lightbox-open"),
-            },
-        },
-    );
-}
+	event.preventDefault();
+	event.stopPropagation();
 
-async function handlePhotoClick(event: MouseEvent, index: number) {
-    event.preventDefault();
-    event.stopPropagation();
-    await openPhoto(index, event.currentTarget as HTMLElement | null);
+	try {
+		await initAlbumFancybox();
+		const Fancybox = getAlbumFancybox();
+		if (Fancybox && fancyboxReady) {
+			Fancybox.fromTriggerEl(triggerEl);
+			return;
+		}
+	} catch (error) {
+		console.warn("Album Fancybox open failed:", error);
+	}
+
+	window.location.href = triggerEl.getAttribute("href") || "#";
 }
 
 function handleImageError(event: Event) {
@@ -339,7 +295,7 @@ function cleanupAlbumFancybox() {
                         data-fancybox="album-detail"
                         data-caption={buildPhotoCaption(photo)}
                         class="album-detail-photo-card break-inside-avoid relative group block w-full rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-zoom-in"
-                        on:click={(event) => handlePhotoClick(event, index)}
+                        on:click={handlePhotoClick}
                     >
                         <img 
                             src={photo.url} 

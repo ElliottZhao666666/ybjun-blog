@@ -1,5 +1,5 @@
 let fancyboxSelectors: string[] = [];
-let Fancybox: any;
+import { getAlbumFancybox, loadAlbumFancybox } from "./album-fancybox";
 
 // 图片灯箱按需加载
 export async function initFancybox() {
@@ -19,12 +19,8 @@ export async function initFancybox() {
 		document.querySelector(albumLinksSelector) ||
 		document.querySelector(singleFancyboxSelector);
 	if (!hasImages) return;
-	// 检查是否已初始化 Fancybox
-	if (!Fancybox) {
-		const mod = await import("@fancyapps/ui");
-		Fancybox = mod.Fancybox;
-		await import("@fancyapps/ui/dist/fancybox/fancybox.css");
-	}
+	const Fancybox = await loadAlbumFancybox();
+	if (!Fancybox) return;
 	if (fancyboxSelectors.length > 0) {
 		return; // 已经初始化，直接返回
 	}
@@ -94,6 +90,7 @@ export async function initFancybox() {
 
 // 清理 Fancybox 实例
 export function cleanupFancybox() {
+	const Fancybox = getAlbumFancybox();
 	if (!Fancybox) return; // 如果从未加载过，无需清理
 	fancyboxSelectors.forEach((selector) => {
 		Fancybox.unbind(selector);
