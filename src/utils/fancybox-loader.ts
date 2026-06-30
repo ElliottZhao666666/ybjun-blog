@@ -8,7 +8,6 @@ export async function loadFancybox() {
 	if (!fancyboxLoading) {
 		fancyboxLoading = (async () => {
 			const mod = await import("@fancyapps/ui");
-			await import("@fancyapps/ui/dist/fancybox/fancybox.css");
 			Fancybox = mod.Fancybox;
 			return Fancybox;
 		})();
