@@ -143,6 +143,7 @@ export async function initFancybox() {
 
 // 清理 Fancybox 实例
 export function cleanupFancybox() {
+	const Fancybox = getFancybox();
 	if (!Fancybox) return; // 如果从未加载过，无需清理
 	fancyboxSelectors.forEach((selector) => {
 		Fancybox.unbind(selector);
