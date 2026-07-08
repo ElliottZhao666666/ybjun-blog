@@ -206,8 +206,7 @@ profile:
       url: 'mailto:main@ybjun.com '
 announcement:
   title: 留言板正式开启
-  content: >-
-    自6月22日起，本站正式开通留言板，欢迎大家分享想法和建议！打开“关于”页面就可以看到啦！
+  content: 自6月22日起，本站正式开通留言板，欢迎大家分享想法和建议！打开“关于”页面就可以看到啦！
   closable: true
   link:
     enable: true
