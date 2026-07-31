@@ -1,6 +1,6 @@
 ---
 title: Google 帐号改地区最全面做法，解决家庭组无法加入问题
-published: '2026-05-31'
+published: '2026-05-31T12:28:16'
 description: 分享谷歌账号服务地区与 Play 商店地区的修改方法，以解决家庭组加不进去的问题，并结合实测流程说明了支付方式和支付资料的关系。
 author: ''
 cover: ./cover.png

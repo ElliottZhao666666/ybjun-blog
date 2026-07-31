@@ -1,6 +1,6 @@
 ---
 title: 基于群晖 NAS 的 DaVinci Resolve 协同剪辑工作流构建记录
-published: '2026-06-20'
+published: '2026-06-20T19:59:53'
 description: >-
   本文完整记录了博主利用群晖NAS搭建 DaVinci
   Resolve（达芬奇）多人协同剪辑工作流的实操。针对大型视频项目本地硬盘告急、协作困难的痛点，文章详细讲解了如何构建规范化的网络素材库，并利用

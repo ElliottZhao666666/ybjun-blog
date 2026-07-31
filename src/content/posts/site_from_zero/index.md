@@ -1,6 +1,6 @@
 ---
 title: 无服务器，CF全托管，从零开始的建站全流程
-published: 2026-02-12
+published: '2026-02-12T17:09:03'
 description: "本文档详细记录了“胖哥必应美图库”网站从需求分析、架构设计到最终部署上线的全过程。本项目采用完全的Serverless架构，利用 Cloudflare 全家桶实现了低成本、高可用、免运维的现代化网站构建。"
 pinned: false
 tags: ["网络","建站","计算机","Cloudflare"]

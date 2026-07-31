@@ -1,7 +1,7 @@
 ---
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
-import { formatDateToYYYYMMDD } from "@utils/date";
+import { formatDateToYYYYMMDD, formatDateToYYYYMMDDHHMM } from "@utils/date";
 import { getCategoryUrl, getTagUrl, url } from "@utils/url";
 import { Icon } from "astro-icon/components";
 import { umamiConfig } from "@/config";
@@ -46,7 +46,7 @@ const umamiBaseUrl = umamiConfig.baseUrl || "";
         <div class="text-xl">
             <Icon name="material-symbols:calendar-today-outline" />
         </div>
-        <span class="text-sm font-medium">{published && formatDateToYYYYMMDD(published)}</span>
+        <span class="text-sm font-medium">{published && formatDateToYYYYMMDDHHMM(published)}</span>
     </div>
 
     <div class="flex items-center gap-1">

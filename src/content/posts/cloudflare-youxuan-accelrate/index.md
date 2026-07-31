@@ -1,6 +1,6 @@
 ---
 title: Cloudflare 全家桶网站国内IP优选提速！拒绝复杂方法，不用SaaS！
-published: '2026-05-11'
+published: '2026-05-11T16:32:44'
 description: >-
   月半菌的个人博客采用了Cloudflare 全栈 Serverless 架构。然而，CF免费版 Anycast
   泛播网络在国内路由条件很差，导致首屏加载动辄长达一分钟。本文拒绝繁琐且易卡 Bug 的 SaaS 跨域接管方案，分享一套纯原生、单域名的全流程

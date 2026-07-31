@@ -1,6 +1,6 @@
 ---
 title: 养龙虾！在群晖NAS上使用Docker部署OpenClaw全流程
-published: '2026-03-25'
+published: '2026-03-25T17:09:03'
 description: >-
   本文全景复盘了在群晖 NAS 上利用 Docker 部署 OpenClaw，并接入微信ClawBot的全流程。文章深度拆解了底层网络代理、容器权限对齐以及
   Cloudflare 隧道穿透的配置细节，并针对 UDP 假死降级 TCP、WebSocket

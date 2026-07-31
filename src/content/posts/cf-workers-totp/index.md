@@ -1,6 +1,6 @@
 ---
 title: 基于CF Workers从零构建TOTP认证系统
-published: '2026-02-17'
+published: '2026-02-17T19:11:17'
 description: 本文详细介绍如何利用 Cloudflare Workers 作为后端，手写 TOTP 核心算法，实现两步认证（2FA）的流程。
 author: ''
 cover: ''

@@ -1,6 +1,6 @@
 ---
 title: 利用CF连接器实现通过域名访问国内未备案云服务器
-published: '2026-02-25'
+published: '2026-02-25T16:20:20'
 description: 本文介绍了通过构建Cloudflared隧道，实现通过域名访问未备案的国内云服务器的目标，还能使用CF的CDN加速等诸多功能。
 author: ''
 cover: ''
