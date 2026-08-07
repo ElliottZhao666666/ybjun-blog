@@ -107,7 +107,7 @@ function renderComponent(component: any, index: number) {
     {/* 适用设备: 仅电脑 (lg 以上)                */}
     {/* ========================================= */}
     {side === "right" && (
-        <div class="flex flex-col w-full gap-4 h-full">
+        <div class="flex flex-col w-full gap-4">
              {/* 右栏通常没有 Top 组件，但为了兼容性保留渲染逻辑 */}
             {topComponents.map((component, index) => {
                 const renderData = renderComponent(component, index);
