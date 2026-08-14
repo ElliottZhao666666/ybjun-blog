@@ -116,7 +116,7 @@ function renderComponent(component: any, index: number) {
                 return <Component {...props} side={side} />;
             })}
             {/* Sticky 区域：包含 TOC、统计、访客 */}
-            <div class="sticky top-4 flex flex-col w-full gap-4">
+            <div id="sidebar-sticky" class="sticky top-4 flex flex-col w-full gap-4">
                 {/* 1. 先渲染 TOC (文章目录) */}
                 {stickyComponents.map((component, index) => {
                     const renderData = renderComponent(component, index);
