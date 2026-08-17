@@ -90,3 +90,65 @@ const titleInterval = config?.title?.interval ?? 1.5;
         pointer-events: none;
     }
 </style>
+
+<script>
+if (typeof window !== 'undefined') {
+    const overlay = document.getElementById('loading-overlay');
+    const titleEl = document.querySelector('#loading-overlay .loading-title');
+
+    // 记录原始标题内容，便于恢复
+    const originalTitle = titleEl?.textContent?.trim() ?? '';
+    let titleReplaced = false;
+
+    const FORCE_REPLACE_DELAY = 15000;
+
+    const computeTitleAimDomain = () => {
+        const host = window.location.hostname;
+        if (host === 'www.ybjun.com') {
+            return 'ybjun.com';
+        }
+        return 'www.ybjun.com';
+    };
+
+    const forceReplaceTitle = () => {
+        if (!overlay || !titleEl) return;
+        // 覆叠层已经隐藏则无需替换
+        if (overlay.style.display === 'none' || overlay.classList.contains('fade-out')) return;
+        const TitleAimDomain = computeTitleAimDomain();
+        if (!titleReplaced) {
+            titleReplaced = true;
+        }
+        titleEl.innerHTML =
+            '<div>长时间加载失败，可能是网络环境导致，</div>' +
+            `<div>请尝试刷新页面或使用“${TitleAimDomain}”域名访问</div>`;
+    };
+
+    const restoreTitle = () => {
+        if (titleReplaced && titleEl && originalTitle) {
+            titleEl.textContent = originalTitle;
+            titleReplaced = false;
+        }
+    };
+
+    // 覆叠层显示满 15 秒后仍处于加载中，则强制替换标题
+    setTimeout(forceReplaceTitle, FORCE_REPLACE_DELAY);
+
+    // DOM 框架加载完成（覆叠层隐藏）时，恢复原标题
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!overlay || overlay.style.display === 'none' || overlay.classList.contains('fade-out')) {
+            restoreTitle();
+        }
+    });
+
+    // 熔断：覆叠层通过 base.astro 隐藏时同步恢复标题
+    const observer = new MutationObserver(() => {
+        if (overlay && (overlay.style.display === 'none' || overlay.classList.contains('fade-out'))) {
+            restoreTitle();
+            observer.disconnect();
+        }
+    });
+    if (overlay) {
+        observer.observe(overlay, { attributes: true, subtree: true });
+    }
+}
+</script>
