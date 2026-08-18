@@ -1,6 +1,6 @@
 ---
 title: 使用开源项目 Cloudflare-BestIP 自建 CF 优选的踩坑与注意事项
-published: '2026-08-18T11:52:06'
+published: '2026-08-18T11:52:57'
 description: >-
   记录使用 Cloudflare-BestIP 在本地自建 CF 优选节点的踩坑点，重点解析 config.json
   配置细节。建议有需要的读者将本文与原项目的README结合阅读。
@@ -81,4 +81,6 @@ draft: true
 ### 2.4 `debug` 必须开
 
 不仅仅是为了能在 Docker 日志中看到详细具体的信息，而且截至发文前的最新版本，如果不开 Debug 模式，就经常会遇到各种报错。所以还是打开它吧，反正也没啥影响。
+
+需要注意的是，默认的配置文件中， `debug` 配置可能在文件末尾，如果找不到就往后看看。
 
