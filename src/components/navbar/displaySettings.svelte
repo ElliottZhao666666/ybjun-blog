@@ -3,16 +3,48 @@ import { BREAKPOINT_LG } from "@constants/breakpoints";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import Icon from "@iconify/svelte";
-import { getDefaultHue, getHue, setHue } from "@utils/hue";
+import { getDefaultHue, getHue, isAutoColorAvailable, isAutoColorEnabled, refreshAutoHue, setAutoColor, setHue } from "@utils/hue";
 import { onClickOutside } from "@utils/widget";
 import { onMount } from "svelte";
 
 let hue = $state(getDefaultHue());
 const defaultHue = getDefaultHue();
+let autoColor = $state(false);
 let isOpen = $state(false);
 
-function resetHue() {
-	hue = getDefaultHue();
+async function resetHue() {
+    if (autoColor) {
+        const refreshedHue = await refreshAutoHue();
+        autoColor = isAutoColorEnabled();
+        hue = refreshedHue ?? getHue();
+        return;
+    }
+    hue = getDefaultHue();
+    setHue(hue);
+}
+
+function handleHueInput() {
+    if (autoColor) {
+        autoColor = false;
+        setAutoColor(false);
+    }
+    setHue(hue);
+}
+
+async function toggleAutoColor() {
+    autoColor = !autoColor;
+    setAutoColor(autoColor);
+    if (autoColor) {
+        const cachedHue = getHue();
+        hue = cachedHue;
+        const refreshedHue = await refreshAutoHue();
+        autoColor = isAutoColorEnabled();
+        hue = refreshedHue ?? getHue();
+    } else {
+        const storedHue = localStorage.getItem("hue");
+        hue = storedHue ? Number.parseInt(storedHue) : getDefaultHue();
+        setHue(hue);
+    }
 }
 
 function togglePanel() {
@@ -37,17 +69,13 @@ function handleClickOutside(event: MouseEvent) {
 
 onMount(() => {
 	hue = getHue();
+    autoColor = isAutoColorEnabled();
 	document.addEventListener("click", handleClickOutside);
 	return () => {
 		document.removeEventListener("click", handleClickOutside);
 	};
 });
 
-$effect(() => {
-	if (hue || hue === 0) {
-		setHue(hue);
-	}
-});
 </script>
 
 <div class="relative z-50" onmouseleave={closePanel}>
@@ -82,8 +110,14 @@ $effect(() => {
             </div>
             <div class="w-full h-6 px-1 bg-[oklch(0.80_0.10_0)] dark:bg-[oklch(0.70_0.10_0)] rounded-sm select-none">
                 <input aria-label={i18n(I18nKey.themeColor)} type="range" min="0" max="360" bind:value={hue}
-                    class="slider" id="colorSlider" step="5" style="width: 100%">
+                    oninput={handleHueInput} class="slider" id="colorSlider" step="5" style="width: 100%">
             </div>
+            {#if isAutoColorAvailable()}
+            <label class="mt-4 flex items-center justify-between text-sm">
+                <span>{i18n(I18nKey.themeColor)} (Auto)</span>
+                <input type="checkbox" checked={autoColor} onchange={toggleAutoColor} aria-label="Follow wallpaper color" />
+            </label>
+            {/if}
         </div>
     </div>
 </div>

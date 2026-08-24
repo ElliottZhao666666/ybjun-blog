@@ -120,6 +120,8 @@ export type SiteConfig = {
 	themeColor: {
 		// 主题色的默认色相 (0-360)
 		hue: number;
+		// 是否自动跟随壁纸主题色
+		auto: boolean;
 	};
 	// 默认主题
 	defaultTheme: "system" | "light" | "dark";

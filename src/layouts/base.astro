@@ -252,7 +252,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
             />
         ))}
         <!-- Set the theme before the page is rendered to avoid a flash -->
-        <script is:inline define:vars={{LIGHT_MODE, DARK_MODE, SYSTEM_MODE, BANNER_HEIGHT_EXTEND, PAGE_WIDTH, NAVBAR_HEIGHT, configHue, defaultTheme: siteConfig.defaultTheme}}>
+        <script is:inline define:vars={{LIGHT_MODE, DARK_MODE, SYSTEM_MODE, BANNER_HEIGHT_EXTEND, PAGE_WIDTH, NAVBAR_HEIGHT, configHue, configAuto: siteConfig.themeColor.auto === true && siteConfig.wallpaper.isdailywall === true, defaultTheme: siteConfig.defaultTheme}}>
             // Load the theme from local storage
             const theme = localStorage.getItem('theme') || defaultTheme;
             // Apply the theme to the document
@@ -277,10 +277,25 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
             }
             const expressiveTheme = isDark ? "github-dark" : "github-light";
             document.documentElement.setAttribute("data-theme", expressiveTheme);
-            // Load the hue from local storage
-            const hue = localStorage.getItem('hue') || configHue;
-            // Apply the hue to the document
-            document.documentElement.style.setProperty('--hue', hue);
+            // Initialize the auto-color switch before selecting the initial hue.
+            const autoColorStored = localStorage.getItem('autoColor');
+            const autoColor = configAuto && (autoColorStored === null ? true : autoColorStored === 'true');
+            if (!configAuto || autoColorStored === null) localStorage.setItem('autoColor', String(autoColor));
+            const today = new Date();
+            const todayKey = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            let autoCache = null;
+            try { autoCache = JSON.parse(localStorage.getItem('autoHueCache') || 'null'); } catch {}
+            const cachedHue = autoCache && autoCache.date === todayKey && Number(autoCache.hue) >= 0 && Number(autoCache.hue) <= 360 ? Number(autoCache.hue) : null;
+            const fallbackHue = autoCache && Number(autoCache.hue) >= 0 && Number(autoCache.hue) <= 360 ? Number(autoCache.hue) : configHue;
+            const hue = autoColor ? (cachedHue ?? fallbackHue) : (localStorage.getItem('hue') || configHue);
+            document.documentElement.style.setProperty('--hue', String(hue));
+            if (autoColor && cachedHue === null) {
+                fetch('https://dailywall.ybjun.com/image/latest/color/hsl/b', { cache: 'no-store' })
+                    .then(response => response.ok ? response.text() : Promise.reject())
+                    .then(raw => { let value; try { value = JSON.parse(raw); } catch { value = raw.trim(); } value = Number(value); if (!Number.isFinite(value) || value < 0 || value > 360) throw new Error(); return Math.round(value); })
+                    .then(value => { localStorage.setItem('autoHueCache', JSON.stringify({ date: todayKey, hue: value })); document.documentElement.style.setProperty('--hue', String(value)); })
+                    .catch(() => { localStorage.setItem('autoColor', 'false'); document.documentElement.style.setProperty('--hue', localStorage.getItem('hue') || String(configHue)); });
+            }
             // calculate the --banner-height-extend, which needs to be a multiple of 4 to avoid blurry text
             let offset = Math.floor(window.innerHeight * (BANNER_HEIGHT_EXTEND / 100));
             offset = offset - offset % 4;

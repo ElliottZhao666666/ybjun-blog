@@ -46,6 +46,7 @@ site:
       family: LXGW WenKai Screen
   themeColor:
     hue: '145'
+    auto: true
   defaultTheme: system
   wallpaper:
     mode: banner
