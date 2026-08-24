@@ -290,7 +290,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
             const hue = autoColor ? (cachedHue ?? fallbackHue) : (localStorage.getItem('hue') || configHue);
             document.documentElement.style.setProperty('--hue', String(hue));
             if (autoColor && cachedHue === null) {
-                fetch('https://dailywall.ybjun.com/image/latest/color/hsl/b', { cache: 'no-store' })
+                fetch('https://api.bingpics.ybjun.com/image/latest/color/hsl/b', { cache: 'no-store' })
                     .then(response => response.ok ? response.text() : Promise.reject())
                     .then(raw => { let value; try { value = JSON.parse(raw); } catch { value = raw.trim(); } value = Number(value); if (!Number.isFinite(value) || value < 0 || value > 360) throw new Error(); return Math.round(value); })
                     .then(value => { localStorage.setItem('autoHueCache', JSON.stringify({ date: todayKey, hue: value })); document.documentElement.style.setProperty('--hue', String(value)); })

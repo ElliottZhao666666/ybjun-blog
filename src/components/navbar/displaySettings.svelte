@@ -31,10 +31,10 @@ function handleHueInput() {
     setHue(hue);
 }
 
-async function toggleAutoColor() {
-    autoColor = !autoColor;
-    setAutoColor(autoColor);
-    if (autoColor) {
+async function toggleAutoColor(enabled: boolean) {
+    autoColor = enabled;
+    setAutoColor(enabled);
+    if (enabled) {
         const cachedHue = getHue();
         hue = cachedHue;
         const refreshedHue = await refreshAutoHue();
@@ -113,9 +113,19 @@ onMount(() => {
                     oninput={handleHueInput} class="slider" id="colorSlider" step="5" style="width: 100%">
             </div>
             {#if isAutoColorAvailable()}
-            <label class="mt-4 flex items-center justify-between text-sm">
+            <label class="mt-4 flex items-center justify-between gap-3 text-sm cursor-pointer select-none">
                 <span>{i18n(I18nKey.themeColor)} (Auto)</span>
-                <input type="checkbox" checked={autoColor} onchange={toggleAutoColor} aria-label="Follow wallpaper color" />
+                <span class="relative inline-flex shrink-0 items-center">
+                    <input
+                        type="checkbox"
+                        class="peer sr-only"
+                        checked={autoColor}
+                        onchange={(event) => toggleAutoColor((event.currentTarget as HTMLInputElement).checked)}
+                        aria-label="Follow wallpaper color"
+                    />
+                    <span class="h-6 w-11 rounded-full bg-(--btn-regular-bg) transition-colors peer-checked:bg-(--primary) peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--primary)"></span>
+                    <span class="pointer-events-none absolute left-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5 dark:bg-neutral-200"></span>
+                </span>
             </label>
             {/if}
         </div>
