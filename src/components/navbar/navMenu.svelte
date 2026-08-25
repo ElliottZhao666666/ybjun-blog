@@ -71,8 +71,9 @@ onMount(() => {
 <div class="relative md:hidden">
   <button
     aria-label="Menu"
+    name="Nav Menu"
     id="nav-menu-switch"
-    class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90 flex items-center justify-center"
+    class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90"
     on:click={togglePanel}
   >
     <Icon icon="material-symbols:menu-rounded" class="text-[1.25rem]" />
@@ -80,20 +81,20 @@ onMount(() => {
 
   <div
       id="nav-menu-panel"
-      class="float-panel fixed transition-all duration-300 right-4 top-16 px-4 py-4 max-h-[80vh] overflow-y-auto min-w-[260px] flex flex-col gap-2 shadow-2xl z-50 rounded-2xl bg-[var(--card-bg)] border border-[var(--line-divider)]
-    {isOpen ? 'opacity-100 visible translate-y-0 pointer-events-auto' : 'opacity-0 invisible translate-y-4 pointer-events-none'}"
+      class="float-panel fixed transition-all right-4 px-2 py-2 max-h-[80vh] overflow-y-auto"
+      class:float-panel-closed={!isOpen}
   >
     {#each links as link}
     {#if link.children && link.children.length > 0}
     <div class={getContainerClass(link.name)}>
       <button
-        class="group flex justify-between items-center w-full py-3 px-4 rounded-xl hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition"
+        class="group flex justify-between items-center w-full py-2 pl-3 pr-1 rounded-lg hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition"
         on:click={() =>
         toggleSubMenu(link.name)}
         >
         <div class="flex items-center font-bold transition text-black/75 dark:text-white/75 group-hover:text-[var(--primary)]">
           {#if link.icon}
-          <Icon icon={"link.icon"} class="text-[1.1rem] mr-3" />
+          <Icon icon={link.icon} class="text-[1.1rem] mr-2" />
           {/if}
           {link.name}
         </div>
@@ -112,7 +113,7 @@ onMount(() => {
           class="flex items-center py-2 px-3 rounded-lg hover:bg-[var(--btn-plain-bg-hover)] transition active:scale-95"
                 >
           {#if child.icon}
-          <Icon icon={"child.icon"} class="text-[1.25rem] mr-3 text-[var(--primary)] shrink-0" />
+          <Icon icon={child.icon} class="text-[1.25rem] mr-3 text-[var(--primary)] shrink-0" />
           {/if}
           <span class="text-sm font-medium text-black/70 dark:text-white/70">{child.name}</span>
         </a>
@@ -125,11 +126,11 @@ onMount(() => {
     <a
       href={getHref(link)}
       target={getTarget(link)}
-      class="group flex justify-between items-center py-3 px-4 rounded-xl gap-4 hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition"
+      class="group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8 hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition"
         >
       <div class="flex items-center transition text-black/75 dark:text-white/75 font-bold group-hover:text-[var(--primary)]">
         {#if link.icon}
-        <Icon icon={"link.icon"} class="text-[1.1rem] mr-3" />
+        <Icon icon={link.icon} class="text-[1.1rem] mr-2" />
         {/if}
         {link.name}
       </div>
@@ -143,13 +144,3 @@ onMount(() => {
     {/each}
   </div>
 </div>
-
-<style>
-  .float-panel {
-  transform-origin: top right;
-  }
-  .float-panel-closed {
-  transform: scale(0.95);
-  pointer-events: none;
-  }
-</style>
