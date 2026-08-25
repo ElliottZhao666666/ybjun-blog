@@ -114,7 +114,7 @@ onMount(() => {
             </div>
             {#if isAutoColorAvailable()}
             <label class="mt-4 flex items-center justify-between gap-3 text-sm cursor-pointer select-none">
-                <span class="text-neutral-700">随背景图自动调整</span>
+                <span class="text-neutral-900 dark:text-neutral-100 transition relative">随背景图自动调整</span>
                 <span class="relative inline-flex shrink-0 items-center">
                     <input
                         type="checkbox"
