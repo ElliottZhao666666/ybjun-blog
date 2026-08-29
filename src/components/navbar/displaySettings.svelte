@@ -3,7 +3,7 @@ import { BREAKPOINT_LG } from "@constants/breakpoints";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import Icon from "@iconify/svelte";
-import { getDefaultHue, getHue, isAutoColorAvailable, isAutoColorEnabled, refreshAutoHue, setAutoColor, setHue } from "@utils/hue";
+import { getDefaultHue, getHue, HUE_CHANGE_EVENT, isAutoColorAvailable, isAutoColorEnabled, refreshAutoHue, setAutoColor, setHue } from "@utils/hue";
 import { onClickOutside } from "@utils/widget";
 import { onMount } from "svelte";
 
@@ -67,12 +67,21 @@ function handleClickOutside(event: MouseEvent) {
 	});
 }
 
+function handleHueChange(event: Event) {
+    const nextHue = (event as CustomEvent<{ hue: number }>).detail?.hue;
+    if (!Number.isFinite(nextHue)) return;
+    hue = nextHue;
+    autoColor = isAutoColorEnabled();
+}
+
 onMount(() => {
 	hue = getHue();
     autoColor = isAutoColorEnabled();
 	document.addEventListener("click", handleClickOutside);
+    document.addEventListener(HUE_CHANGE_EVENT, handleHueChange);
 	return () => {
 		document.removeEventListener("click", handleClickOutside);
+        document.removeEventListener(HUE_CHANGE_EVENT, handleHueChange);
 	};
 });
 

@@ -3,6 +3,7 @@ import { siteConfig } from "@/config";
 const AUTO_COLOR_KEY = "autoColor";
 const AUTO_HUE_CACHE_KEY = "autoHueCache";
 const AUTO_HUE_URL = "https://api.bingpics.ybjun.com/image/latest/color/hsl/b";
+export const HUE_CHANGE_EVENT = "theme-hue-change";
 
 type AutoHueCache = { date: string; hue: number };
 
@@ -68,6 +69,7 @@ export function setAutoColor(enabled: boolean): void {
 function applyHue(hue: number): void {
 	if (typeof document === "undefined") return;
 	document.documentElement.style.setProperty("--hue", String(hue));
+	document.dispatchEvent(new CustomEvent(HUE_CHANGE_EVENT, { detail: { hue } }));
 }
 
 // Function to set hue
