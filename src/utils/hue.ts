@@ -116,7 +116,6 @@ export function initHue(): void {
 
 export async function refreshAutoHue(): Promise<number | null> {
 	if (!isAutoColorAvailable() || !isAutoColorEnabled()) {
-		setAutoColor(false);
 		return null;
 	}
 	try {
@@ -124,13 +123,12 @@ export async function refreshAutoHue(): Promise<number | null> {
 		if (!response.ok) throw new Error(`Hue request failed: ${response.status}`);
 		const hue = parseHue(await response.text());
 		if (hue === null) throw new Error("Invalid hue response");
+		if (!isAutoColorEnabled()) return null;
 		writeAutoHueCache(hue);
 		applyHue(hue);
 		return hue;
 	} catch {
-		setAutoColor(false);
-		const hue = getHue();
-		applyHue(hue);
+		if (isAutoColorEnabled()) applyHue(getHue());
 		return null;
 	}
 }

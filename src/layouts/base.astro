@@ -293,8 +293,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
                 fetch('https://api.bingpics.ybjun.com/image/latest/color/hsl/b', { cache: 'no-store' })
                     .then(response => response.ok ? response.text() : Promise.reject())
                     .then(raw => { let value; try { value = JSON.parse(raw); } catch { value = raw.trim(); } value = Number(value); if (!Number.isFinite(value) || value < 0 || value > 360) throw new Error(); return Math.round(value); })
-                    .then(value => { localStorage.setItem('autoHueCache', JSON.stringify({ date: todayKey, hue: value })); document.documentElement.style.setProperty('--hue', String(value)); document.dispatchEvent(new CustomEvent('theme-hue-change', { detail: { hue: value } })); })
-                    .catch(() => { localStorage.setItem('autoColor', 'false'); const fallbackHue = Number(localStorage.getItem('hue') || configHue); document.documentElement.style.setProperty('--hue', String(fallbackHue)); document.dispatchEvent(new CustomEvent('theme-hue-change', { detail: { hue: fallbackHue } })); });
+                    .then(value => { if (localStorage.getItem('autoColor') !== 'true') return; localStorage.setItem('autoHueCache', JSON.stringify({ date: todayKey, hue: value })); document.documentElement.style.setProperty('--hue', String(value)); document.dispatchEvent(new CustomEvent('theme-hue-change', { detail: { hue: value } })); })
+                    .catch(() => { if (localStorage.getItem('autoColor') === 'true') { const fallbackHue = Number(localStorage.getItem('hue') || configHue); document.documentElement.style.setProperty('--hue', String(fallbackHue)); document.dispatchEvent(new CustomEvent('theme-hue-change', { detail: { hue: fallbackHue } })); } });
             }
             // calculate the --banner-height-extend, which needs to be a multiple of 4 to avoid blurry text
             let offset = Math.floor(window.innerHeight * (BANNER_HEIGHT_EXTEND / 100));

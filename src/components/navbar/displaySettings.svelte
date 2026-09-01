@@ -38,7 +38,12 @@ async function toggleAutoColor(enabled: boolean) {
         const cachedHue = getHue();
         hue = cachedHue;
         const refreshedHue = await refreshAutoHue();
-        autoColor = isAutoColorEnabled();
+        if (!isAutoColorEnabled()) {
+            autoColor = false;
+            hue = getHue();
+            return;
+        }
+        autoColor = true;
         hue = refreshedHue ?? getHue();
     } else {
         const storedHue = localStorage.getItem("hue");
