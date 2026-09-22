@@ -1,5 +1,7 @@
 Contact: mailto:main@ybjun.com
-Expires: 2028-06-30T00:00:00.000Z
+Contact: mailto:yuebanjun666@outlook.com
+Expires: 2027-06-30T03:59:04Z
 Encryption: https://ybjun.com/.well-known/publickey.asc
 Canonical: https://ybjun.com/.well-known/security.txt
 Canonical: https://www.ybjun.com/.well-known/security.txt
+Preferred-Languages: zh, en
