@@ -139,6 +139,16 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 >
     <head>
         <meta charset="UTF-8" />
+        <!--[if IE]>
+        <script type="text/javascript">
+            (function () {
+                var path = window.location.pathname;
+                if (path !== '/browser_too_old.html' && path !== '/browser_too_old') {
+                    window.location.replace('/browser_too_old.html');
+                }
+            }());
+        </script>
+        <![endif]-->
         <script is:inline>
             (function() {
                 if (typeof window === 'undefined') return;
