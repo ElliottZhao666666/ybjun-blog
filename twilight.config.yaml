@@ -153,6 +153,9 @@ navbar:
           url: >-
             https://mp.weixin.qq.com/mp/homepage?__biz=Mzg4NDYyOTA2NA==&hid=1&sn=86e8a70e45fc81e022c0d9d02dc83b35&scene=18
           icon: mdi:microsoft-windows
+        - name: 公众号资源
+          url: /posts/gzh-res/
+          icon: material-symbols:package-2-outline
         - name: 更多
           url: >-
             https://mp.weixin.qq.com/mp/appmsgalbum?__biz=Mzg4NDYyOTA2NA==&action=getalbum&album_id=1954109779866337283#wechat_redirect
