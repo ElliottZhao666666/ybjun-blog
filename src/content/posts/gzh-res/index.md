@@ -1,6 +1,6 @@
 ---
 title: 【持续更新】月半菌公众号推文资源合集
-published: '2026-10-04T23:40:31'
+published: '2026-10-05T00:59:01'
 description: 公众号文章的所有资源，现已都汇集到这里。
 author: ''
 cover: ''
@@ -8,7 +8,7 @@ pinned: false
 tags: []
 category: ''
 encrypted: false
-draft: true
+draft: false
 ---
 
 :::important[公告]
@@ -54,6 +54,14 @@ draft: true
 * **资源下载：** [太原铁路枢纽简图V1.3.pdf](https://wres.ybjun.com/%E5%A4%AA%E5%8E%9F%E9%93%81%E8%B7%AF%E6%9E%A2%E7%BA%BD%E7%AE%80%E5%9B%BEV1.3.pdf) `(大小: 293 KB)`
 * **文件校验：** MD5: `FD1091EA39CE3B64005901E1A36C578B`
 * **说明文档：** [点击打开](https://docs.qq.com/doc/DZkpQd1hrV2l5ak56)
+
+
+## 【240921】月半菌自封装超纯净Ghost系统
+
+* **来源文章：** [Ghost系统安装指南，方便又省事！](https://mp.weixin.qq.com/s/zJSwKyHkj0XOFWfSJ-SU5w)
+* **资源下载：** [百度网盘链接](https://pan.baidu.com/s/1BgeaUzsArQ2IG_2j53yDSw) 
+* **提取密码：** `4qc4`
+* **附加说明：** WHS 2011 的安装方法详见：[这篇文章](https://mp.weixin.qq.com/s/nmml5TfIESsSFnZ-8esx2A)
 
 
 ## 【240911】神级实用工具软件推荐
@@ -104,3 +112,22 @@ draft: true
 * **来源文章：** [胖哥PE2022——周年之作，维护利器，全能工具盘！](https://mp.weixin.qq.com/s/LmiTDXWlNf_6-AebhokJSw)
 * **资源下载：** [胖哥PE2022.exe](https://wres.ybjun.com/%E8%83%96%E5%93%A5PE2022.exe) `(大小: 0.98 GB)`
 * **文件校验：** MD5: `CF4F196426204D5B2F3847570ECFC261`  SHA-256: `0D878FB1283B18B9550841353A30BEDD044A00D2B98BEE71E8720FF5EE204F8F`
+
+
+## 【220414】胖哥LRC制作器
+
+* **来源文章：** [原来音乐app里滚动的歌词，原理这么简单！而且我们都能做！](https://mp.weixin.qq.com/s?__biz=Mzg4NDYyOTA2NA%3D%3D&mid=2247484186&idx=1&sn=d28a9da0f65e634fb98b5feb2d2be805&chksm=cfb4083df8c3812b88f91b4e80557bf6fb35d453b177905902be2fd1c659b92905a464e300c4&token=1873232395&lang=zh_CN&opennew=1#rd)
+* **资源下载：** [LRCLRC.zip](https://wres.ybjun.com/LRCLRC.zip) `(大小: 766 KB)`
+* **文件校验：** MD5: `FFEB29D1CE3EBB8BE8E03B5CF9171516`
+* **附加说明：** 小编和使用 web 技术重构的专业级 LRC 歌词制作编辑在线工具“歌词大师”现已在测试中，其保留了原胖哥LRC制作器的精髓，但更加专业灵活。建议有需求的朋友优先使用“歌词大师”！打开网址，即刻使用：[lrc.ybjun.com](https://lrc.ybjun.com)。
+
+
+---
+
+## 下载使用说明
+
+1. 点击资源下载链接时，若页面弹出 Cloudflare 托管质询（Turnstile 验证码或人机校验），属于源站防盗链与防抓取的常规安全策略。只要你用的是正常浏览器和网络环境，完成验证后即可自动拉起正常下载，无需重复验证。
+2. 在本次整理过程中，博主清理了部分公众号早期分享的软件。由于第三方接口关闭、协议更迭等各种原因，这部分软件的实际功能已经彻底失效，且已无继续维护与修复的价值。为避免给大家带来不必要的困扰与无效折腾，本页面已删除这部分资源，并作永久下架处理，敬请各位读者朋友谅解。
+3. 资源下载完成后，强烈建议使用哈希工具校验本地文件的 MD5 / SHA256 值，确保传输过程无损坏或劫持。此外，由于合盘附件中涉及较多 PE 系统维护组件、自动化脚本（PECMD、批处理等）及底层注入工具，部分杀毒软件（特别是 Windows Defender）可能会出现启发式误报，使用前请自行评估并加入白名单。
+4. 本页资源将随公众号推文长期动态更新。若发现任何下载使用问题、校验码不匹配或资源包损坏，欢迎在公众号后台发送消息或在本页下方评论区留言反馈，也可直接发邮件到`main@ybjun.com`，博主收到并核实后会尽快处理修复。
+5. 本站所提供的所有系统维护工具、镜像组件及相关附件等仅供个人学习、技术交流与应急维护测试使用，请勿用于任何商业用途。
