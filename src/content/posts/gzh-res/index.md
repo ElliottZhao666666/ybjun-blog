@@ -41,6 +41,21 @@ draft: true
 * **附加说明：** 胖哥每日壁纸现已升级到V1.0.7.2511。新版解决了旧版本无法正常访问必应获取壁纸信息的问题，微调了界面结构，并作了一定的细节优化。欢迎下载！
 
 
+## 【250304】胖哥WinPE 3.0
+
+* **来源文章：** [全能好用的电脑维护系统！胖哥WinPE3.0，正式发布！](https://mp.weixin.qq.com/s/Q9vly7PDLP1bGOc1NDwLJg)
+* **资源下载：** [胖哥WinPE3.0.exe](https://wres.ybjun.com/%E8%83%96%E5%93%A5WinPE3.0.exe) `(大小: 997 MB)`
+* **文件校验：** MD5: `AB3F41C9770EA1853BBFC6C6808937FA`  SHA-256: `283894F006544066BD3D34A03734F6F1CC4C9A39B2A8507FA7840B7172177E17`
+
+
+## 【250110】太原铁路枢纽简图 V1.3
+
+* **来源文章：** [我竟然把铁路做成了地铁图！！](https://mp.weixin.qq.com/s/W2QPdCGBH2ATQO3KoSEKKg)
+* **资源下载：** [太原铁路枢纽简图V1.3.pdf](https://wres.ybjun.com/%E5%A4%AA%E5%8E%9F%E9%93%81%E8%B7%AF%E6%9E%A2%E7%BA%BD%E7%AE%80%E5%9B%BEV1.3.pdf) `(大小: 293 KB)`
+* **文件校验：** MD5: `FD1091EA39CE3B64005901E1A36C578B`
+* **说明文档：** [点击打开](https://docs.qq.com/doc/DZkpQd1hrV2l5ak56)
+
+
 ## 【240911】神级实用工具软件推荐
 
 * **来源文章：** [收藏不亏！10款Windows神级工具，让用电脑成为一种享受！](https://mp.weixin.qq.com/s/zDdtJIA5NHYivaw8eiEYyQ)
@@ -70,8 +85,22 @@ draft: true
 * **文件校验：** MD5: `A5BD8628A1CB29E8E84E15694899CF25`
 
 
+## 【230708】胖哥字幕提取神器
+
+* **来源文章：** [一键提取必剪和剪映字幕？方法来了！用它准没错！](https://mp.weixin.qq.com/s/Q3ASQWK6-qxyrEMkciOjhw)
+* **资源下载：** [胖哥字幕提取神器2.1.3.exe](https://wres.ybjun.com/%E8%83%96%E5%93%A5%E5%AD%97%E5%B9%95%E6%8F%90%E5%8F%96%E7%A5%9E%E5%99%A82.1.3.exe) `(大小: 1.58 MB)`
+* **文件校验：** MD5: `64236E478ABBCD8C6CD5359CAAF1DDE3`
+
+
 ## 【230207】蓝屏代码查询器
 
 * **来源文章：** [电脑蓝屏不要怕，这些招数要记下！](https://mp.weixin.qq.com/s/91TM3rLNq4Gm4XC4Il4ilg)
 * **资源下载：** [蓝屏代码查询器.zip](https://wres.ybjun.com/%E8%93%9D%E5%B1%8F%E4%BB%A3%E7%A0%81%E6%9F%A5%E8%AF%A2%E5%99%A8.zip) `(大小: 1.07 MB)`
 * **文件校验：** MD5: `0EB2C5A7F213174C3EAD6464387F81CE`
+
+
+## 【220521】胖哥Win10PE 2022
+
+* **来源文章：** [胖哥PE2022——周年之作，维护利器，全能工具盘！](https://mp.weixin.qq.com/s/LmiTDXWlNf_6-AebhokJSw)
+* **资源下载：** [胖哥PE2022.exe](https://wres.ybjun.com/%E8%83%96%E5%93%A5PE2022.exe) `(大小: 0.98 GB)`
+* **文件校验：** MD5: `CF4F196426204D5B2F3847570ECFC261`  SHA-256: `0D878FB1283B18B9550841353A30BEDD044A00D2B98BEE71E8720FF5EE204F8F`
