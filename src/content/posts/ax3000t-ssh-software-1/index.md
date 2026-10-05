@@ -8,8 +8,8 @@ pinned: false
 tags: []
 category: ''
 encrypted: false
-draft: true
-updated: '2026-10-05T23:11:34'
+draft: false
+updated: '2026-10-05T23:11:40'
 ---
 
 前段时间，博主淘到了一台小米 AX3000T 路由器，原本想着直接替换家里那台服役五年多 AC2350，但极客DNA动了，寻思想先在手边“浅浅”折腾一下。
