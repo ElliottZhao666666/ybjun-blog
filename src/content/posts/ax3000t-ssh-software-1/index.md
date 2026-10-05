@@ -9,7 +9,7 @@ tags: []
 category: ''
 encrypted: false
 draft: true
-updated: '2026-10-05T23:11:03'
+updated: '2026-10-05T23:11:34'
 ---
 
 前段时间，博主淘到了一台小米 AX3000T 路由器，原本想着直接替换家里那台服役五年多 AC2350，但极客DNA动了，寻思想先在手边“浅浅”折腾一下。
@@ -284,7 +284,7 @@ ln -s /data/zerotier-one /data/zerotier-idtool
 ![img_1791212203182.png](blob:https://blog.ybjun.com/47a45187-2710-40db-bc9f-8089294541ea)
 
 点击 **Submit** 时，如果你是免费用户，可能会遇到一个戏剧性的名场面 —— 控制台上方原本显示的是 `Managed Routes 1/1`（预设的虚拟子网路由占用了 1 个名额），提交后直接变成了 `Managed Routes 2/1`，并弹出一片刺眼的黄字和红字报错：`Max number of routes reached. Want more custom routes? Upgrade to Essential...`
-
+![img_1791213081602.png](./img_1791213081602.png)
 
 这是因为 ZeroTier 的商业化策略一直在收紧，现在已经将免费版的自定义托管路由限制到了极致（UI 上提示上限为 1 条）。但有趣的是，**页面前端校验机制可能有 Bug** 。虽然网页报警提示超出配额，但在报错弹出的那一瞬间，后端接口其实已经成功将这条路由写入了网络配置，列表中不仅完整渲染出了 `192.168.88.0/24 via 172.22.172.72`，还带上了删除图标！
 
