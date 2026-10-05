@@ -1,20 +1,15 @@
 ---
 title: 软化硬路由：小米 AX3000T 原厂固件免刷机开 SSH 与软件持久化部署实践
 published: '2026-06-28T19:11:17'
-description: >-
-  为兼顾信号稳定与米家生态，给新淘的小米AX3000T来一场“不刷机”的极客改造。本文记录了原厂固件下免拆开启SSH、突破空间限制完美固化部署ZeroTier异地组网的全过程，并探讨了tmpfs内存热加载架构。一起巧妙“软化硬路由”，榨干它的每一滴潜能！
+description: ''
 author: ''
-cover: ./cover.webp
+cover: ''
 pinned: false
-tags:
-  - 网络
-  - 路由器
-  - Linux
-  - 软路由
-category: 技术备忘
+tags: []
+category: ''
 encrypted: false
-draft: false
-updated: '2026-09-23T10:49:47'
+draft: true
+updated: '2026-10-05T23:11:03'
 ---
 
 前段时间，博主淘到了一台小米 AX3000T 路由器，原本想着直接替换家里那台服役五年多 AC2350，但极客DNA动了，寻思想先在手边“浅浅”折腾一下。
@@ -276,6 +271,27 @@ ln -s /data/zerotier-one /data/zerotier-idtool
 ![image-20260627140934513](./image-20260627140934513.png)
 ![image-20260627140953874](./image-20260627140953874.png)
 
+到这一步，路由器本体确实进网了，也可以从虚拟局域网的任何设备直接访问路由器的管理页面。**但如果我们想把 AX3000T 作为全屋虚拟网关** ，让家里那些完全没装 ZeroTier 的老设备（甚至打印机、电视盒）无感访问虚拟网，或者在外面直接连回家里内网，事情就没那么简单了，需要解决其双向互通的问题。
+
+在默认情况下：
+**家里局域网内设备往外走时**：局域网设备请求远端 ZeroTier 节点，报文送到路由器网关会被直接拦截，Windows ping 甚至会直接收到来自网关 `192.168.10.1` 的 `ICMP Port Unreachable`（无法连到端口）报错。这是因为小米原厂防火墙默认把未知虚拟接口的跨网段转发设为了拒绝，并且缺少 NAT 伪装。
+**外部设备往家里设备发起连接时**：外部节点本地根本不知道你家里的物理子网（`192.168.10.0/24`）应该走哪台设备，数据包发不回来。
+
+我们先来解决**外部设备往家里设备发起连接**的问题，最关键的一步就是在 ZeroTier 控制台的 **Advanced -> Managed Routes** 中添加一条回程路由：
+- **Destination**：填入你家里的局域网网段，如 `192.168.10.0/24`
+- **Via**：填入刚才分配给小米路由器的 ZeroTier IP，如 `172.22.10.3`
+
+![img_1791212203182.png](blob:https://blog.ybjun.com/47a45187-2710-40db-bc9f-8089294541ea)
+
+点击 **Submit** 时，如果你是免费用户，可能会遇到一个戏剧性的名场面 —— 控制台上方原本显示的是 `Managed Routes 1/1`（预设的虚拟子网路由占用了 1 个名额），提交后直接变成了 `Managed Routes 2/1`，并弹出一片刺眼的黄字和红字报错：`Max number of routes reached. Want more custom routes? Upgrade to Essential...`
+
+
+这是因为 ZeroTier 的商业化策略一直在收紧，现在已经将免费版的自定义托管路由限制到了极致（UI 上提示上限为 1 条）。但有趣的是，**页面前端校验机制可能有 Bug** 。虽然网页报警提示超出配额，但在报错弹出的那一瞬间，后端接口其实已经成功将这条路由写入了网络配置，列表中不仅完整渲染出了 `192.168.88.0/24 via 172.22.172.72`，还带上了删除图标！
+
+经博主实测，**这两条路由规则在所有客户端上全部正常下发并生效了** 。我们在免费版配额下成功“白嫖”打通了整网路由！不过要注意，千万别手滑点击垃圾桶把它删了，一旦删掉，由于配额报警锁死，可能就再也加不回去了。
+
+对于**家里局域网内设备往外走**的问题，需要在路由器端使用命令放行，这块我们就在 3.6.2 节编写启动脚本的讲解中一块说了。
+
 ### 3.5 Moon 节点的设置
 
 #### 3.5.1 创建 Moon 节点
@@ -365,6 +381,21 @@ killall zerotier-one
 
 我们遵循上节的研究结果，在 `/data` 下单独建一个 ZeroTier 启动脚本。
 
+但是这个脚本只拉起后台守护进程还不够，我们还需解决3.4节提到的**家里局域网内设备往外走**的问题。为了让家里内网设备免客户端访问虚拟局域网，并放行外部回程流量，我们必须在每次开机时完成三项核心网络配置：
+
+1. **开启内核 IPv4 转发**：`net.ipv4.ip_forward=1`。
+2. **打通局域网与虚拟网卡的双向转发**：放行 `br-lan` 与 ZeroTier 虚拟网卡之间的通行。
+3. **出向 NAT 伪装（MASQUERADE）**：让局域网内未安装 Zerotier 的设备发往 ZeroTier 的流量源 IP 统一伪装为路由器的虚拟 IP，免去为远端各个节点单独配置局域网静态路由的麻烦。
+
+接下来创建脚本时，我们就会把这三项配置加进去，确保路由器每次开机时都能加载。
+
+:::tip[小米防火墙扩展模块缺失的坑]
+通常在 Linux 中配置转发回程时，我们习惯使用 `-m state --state RELATED,ESTABLISHED` 规则。但在小米原厂固件中，官方精简移除了 `xt_state` 内核/用户态匹配模块，强行执行会直接报错 `iptables v1.6.2: Couldn't load match 'state'`！
+好在 ZeroTier 本质上属于完全由你掌控的可信虚拟私网，因此我们直接采用**无状态的双向无条件放行**即可，兼容性最好且绝不报错。
+:::
+
+解决上述问题后，就可以建立脚本了：
+
 1. 在 MobaXterm 左侧进入 `/data` 目录。
 2. 右键点击空白处，选择 **"New empty file" (新建空文件)**，命名为 `start_zt.sh`。
 3. 双击打开 `start_zt.sh`，将以下代码粘贴进去：
@@ -373,19 +404,34 @@ killall zerotier-one
 // start_zt.sh
 #!/bin/sh
 
-# 等待 10 秒，确保系统的底层网络（网卡、TUN模块）已经初始化完毕
+# 1. 等待 10 秒，确保系统的底层网络、WAN 拨号及 TUN 驱动已经初始化完毕
 sleep 10
 
-# 检查进程是否存在，避免防火墙重载时重复启动产生僵尸进程
+# 2. 检查主进程是否存在，避免防火墙重载时重复启动产生僵尸进程
 if ! pgrep -f "/data/zerotier-one" > /dev/null; then
-    # 强制后台运行，并指定配置文件目录
     /data/zerotier-one -d /data/zerotier
-    
-    # 顺手往系统日志里写一条记录，方便以后排错
     logger -t "ZeroTier-Patcher" "ZeroTier initialized from /data"
 else
     logger -t "ZeroTier-Patcher" "ZeroTier is already running"
 fi
+
+# 3. 延时 5 秒，等待 ZeroTier 虚拟网卡 (zt+) 握手并完全建立
+sleep 5
+
+# 4. 开启内核转发支持
+sysctl -w net.ipv4.ip_forward=1
+
+# 5. 规则幂等处理：先尝试删除旧规则，防止脚本被多次触发导致 iptables 堆叠
+iptables -D FORWARD -i br-lan -o zt+ -j ACCEPT 2>/dev/null
+iptables -D FORWARD -i zt+ -o br-lan -j ACCEPT 2>/dev/null
+iptables -t nat -D POSTROUTING -o zt+ -j MASQUERADE 2>/dev/null
+
+# 6. 注入无状态双向转发放行规则及 NAT 伪装
+iptables -I FORWARD -i br-lan -o zt+ -j ACCEPT
+iptables -I FORWARD -i zt+ -o br-lan -j ACCEPT
+iptables -t nat -I POSTROUTING -o zt+ -j MASQUERADE
+
+logger -t "ZeroTier-Patcher" "ZeroTier NAT & routing rules applied successfully"
 ```
 
 4. 重要的一步：如下图，编辑完后，一定要在上方的“格式”菜单中选择 `Linux / Unix`，以免造成换行符冲突。之后所有用 MobaXterm 直接创建的脚本文件都需这样操作！
