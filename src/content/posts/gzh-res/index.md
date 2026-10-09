@@ -9,6 +9,7 @@ tags: []
 category: ''
 encrypted: false
 draft: false
+updated: '2026-10-09T23:20:44'
 ---
 
 :::important[公告]
@@ -19,11 +20,14 @@ draft: false
 **请注意：** 公众号后台原有的“关键词自动回复”获取资源方式已正式停用。您可以通过点击本页右下角浮动按钮打开本页目录，或使用浏览器快捷键 Ctrl + F 搜索等方式快速检索所需资源。建议将本页加入浏览器收藏夹，以便随时获取最新资源。下载过程中如遇验证质询，属于正常安全防护，通过后即可直连下载；如有任何下载异常或链接失效，欢迎随时在公众号或本页面下方评论区留言反馈！
 :::
 
-## 【261004】03PE合盘附件
+## 【261009】03PE合盘附件
 
 * **来源文章：** [让现代启动盘通吃古董机！为胖哥WinPE3.0启动盘添加Win2003PE](https://mp.weixin.qq.com/s/XiRuAN5uBCrL2GXbaGPo1g)
-* **资源下载：** [03PE合盘附件.zip](https://wres.ybjun.com/03PE%E5%90%88%E7%9B%98%E9%99%84%E4%BB%B6.zip) `(大小: 836 KB)`
-* **文件校验：** MD5: `70BFA16F9FEFFBA3AAA241C10D6B3F48`
+* **资源下载1：** [03PE合盘附件.zip](https://wres.ybjun.com/03PE%E5%90%88%E7%9B%98%E9%99%84%E4%BB%B6.zip) `(大小: 836 KB)`
+* **文件校验1：** MD5: `70BFA16F9FEFFBA3AAA241C10D6B3F48`
+* **资源下载2：** [Bingo03PE.iso](https://wres.ybjun.com/Bingo03PE.iso) `(大小: 100 MB)`
+* **文件校验2：** MD5: `75EC14DB7902FAD1D3E9EBCE14603D13`  SHA-256: `5267CEF34756BD32E23E88F313BB78663FCD443F8FCD99DE7EA2B3FF83225D13`
+* **附加说明：** 应大家的要求，原文提到的博主自制 Bingo03PE 镜像现已正式加入本文附件！该镜像已打好 Firadisk 驱动补丁，完美支持内存盘仿真，大家可以直接用于复现本文的合盘方案或用于老机型维护测试。再次感谢大家的支持！
 
 
 ## 【251215】重装系统第六期：Win11无损降级Win10
