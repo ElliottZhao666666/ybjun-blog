@@ -148,7 +148,10 @@ navbar:
           icon: material-symbols:imagesmode
         - name: 歌词大师
           url: https://lrc.ybjun.com/
-          icon: material-symbols:music-note
+          icon: material-symbols:lyrics-rounded
+        - name: AMDL
+          url: https://amdl.ybjun.com/
+          icon: material-symbols:music-video-rounded
         - name: 胖哥WinPE
           url: >-
             https://mp.weixin.qq.com/mp/homepage?__biz=Mzg4NDYyOTA2NA==&hid=1&sn=86e8a70e45fc81e022c0d9d02dc83b35&scene=18
