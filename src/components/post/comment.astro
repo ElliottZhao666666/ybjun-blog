@@ -35,7 +35,11 @@ const commentText = isGuestbook ? "留言" : "评论";
                     取消回复
                 </button>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+                <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-black/60 dark:text-white/60 hover:text-[var(--primary)] transition">
+                    <input type="checkbox" id="c-subs" class="h-4 w-4 shrink-0 cursor-pointer accent-[var(--primary)]" />
+                    <span>邮件通知审核结果和新回复</span>
+                </label>
                 <button id="submit-btn" class="btn-regular rounded-lg px-6 py-2 bg-[var(--primary)] text-white hover:brightness-110 transition flex items-center gap-2">
                     <Icon name="material-symbols:send" />
                     发送{commentText}
@@ -65,6 +69,7 @@ const commentText = isGuestbook ? "留言" : "评论";
         mail: document.getElementById('c-mail'),
         link: document.getElementById('c-link'),
         content: document.getElementById('c-content'),
+        subs: document.getElementById('c-subs'),
         submitBtn: document.getElementById('submit-btn'),
         list: document.getElementById('comment-list'),
         msg: document.getElementById('msg-box'),
@@ -203,6 +208,11 @@ const commentText = isGuestbook ? "留言" : "评论";
                 showMessage(`请填写邮箱和${commentText}内容！`, 'error');
                 return;
             }
+            if (dom.subs.checked && !dom.mail.checkValidity()) {
+                showMessage('订阅通知需要有效的邮箱地址', 'error');
+                dom.mail.focus();
+                return;
+            }
 
             dom.submitBtn.disabled = true;
             dom.submitBtn.innerText = "发送中...";
@@ -215,7 +225,10 @@ const commentText = isGuestbook ? "留言" : "评论";
                         slug: slug,
                         nick, mail, link, comment: content,
                         pid: replyToId,
-                        ua: navigator.userAgent
+                        ua: navigator.userAgent,
+                        is_subs: dom.subs.checked ? 1 : 0,
+                        page_title: document.title.replace(/\s*[|｜]\s*月半菌.*$/, ''),
+                        page_url: window.location.origin + window.location.pathname
                     })
                 });
 
@@ -225,6 +238,7 @@ const commentText = isGuestbook ? "留言" : "评论";
                     const successMessage = isGuestbook && result.message ? result.message.replaceAll('评论', '留言') : result.message;
                     showMessage(successMessage || `${commentText}成功！`, 'success');
                     dom.content.value = '';
+                    dom.subs.checked = false;
                     if (dom.cancelBtn) dom.cancelBtn.click();
                     loadComments(); 
                 } else {
