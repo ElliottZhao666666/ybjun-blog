@@ -9,7 +9,7 @@ tags: []
 category: ''
 encrypted: false
 draft: false
-updated: '2026-10-09T23:20:44'
+updated: '2026-10-17T22:52:05'
 ---
 
 :::important[公告]
@@ -19,6 +19,13 @@ updated: '2026-10-09T23:20:44'
 
 **请注意：** 公众号后台原有的“关键词自动回复”获取资源方式已正式停用。您可以通过点击本页右下角浮动按钮打开本页目录，或使用浏览器快捷键 Ctrl + F 搜索等方式快速检索所需资源。建议将本页加入浏览器收藏夹，以便随时获取最新资源。下载过程中如遇验证质询，属于正常安全防护，通过后即可直连下载；如有任何下载异常或链接失效，欢迎随时在公众号或本页面下方评论区留言反馈！
 :::
+
+## 【261016】Apple Music 桌面歌词
+
+* **来源文章：** [我竟然给 Apple Music 适配了桌面歌词！](https://mp.weixin.qq.com/s/Kw65O9K5uO511GOTT_Jk3Q)
+* **资源下载：** [Apple.Music.Desktop.Lyrics_1.0.1_x64-setup.exe](https://github.com/ElliottZhao666666/AM-Desktop-Lyrics/releases/download/v1.0.1/Apple.Music.Desktop.Lyrics_1.0.1_x64-setup.exe) `(大小: 5.19 MB，5,187,139 字节)`
+* **文件校验：** SHA-256: `397E3126F949E05BAE98AE8B3C2BF8E007961636947CC23C26F48C31A9A5DA40`
+* **软件官网：** [amdl.ybjun.com](https://amdl.ybjun.com)
 
 ## 【261009】03PE合盘附件
 
