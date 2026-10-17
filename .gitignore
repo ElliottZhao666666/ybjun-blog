@@ -19,3 +19,7 @@ pnpm-debug.log*
 
 # private config
 .env
+
+# Private Worker sources and local credentials
+/cloudflare/
+.dev.vars*
