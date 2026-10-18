@@ -1,6 +1,5 @@
 ---
 import ImageWrapper from "@components/common/imageWrapper.astro";
-import TypewriterText from "@components/common/typewriterText.astro";
 import { BANNER_HEIGHT_EXTEND } from "@constants/constants";
 import type { SiteConfig } from "@/types/config";
 
@@ -374,88 +373,117 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
     }
 </script>
 
-<script is:inline>
-    (function() {
-        const apiUrl = 'https://v1.hitokoto.cn/?c=d&c=i&c=k';
-        
-        // 核心修复 1: 定义全局变量名，用于跨页面清除定时器
-        const TIMER_KEY = 'bannerTimer';
+<script>
+    import { pathsEqual, url } from "@utils/url";
 
-        // 打字机效果
-        function typeWriter(text, element, speed = 150) {
-            let i = 0;
-            element.textContent = "";
-            
-            function type() {
-                // 核心修复 2: 安全检查
-                // 如果页面切走了，元素不在文档里了，立刻停止打字，防止报错或内存泄漏
-                if (!document.body.contains(element)) return;
+    const apiUrl = "https://v1.hitokoto.cn/?c=d&c=i&c=k";
+    const fallbackText = "生活明朗，万物可爱。";
+    const banner = document.getElementById("banner-wrapper");
+    const overlay = banner?.querySelector(".banner-text-overlay");
+    const textEl = document.getElementById("hitokoto-text");
+    const cursor = document.getElementById("cursor");
 
-                if (i < text.length) {
-                    element.textContent += text.charAt(i);
-                    i++;
-                    const randomSpeed = speed + (Math.random() * 50 - 25);
-                    
-                    // 核心修复 3: 将定时器 ID 存入全局 window 对象
-                    window[TIMER_KEY] = setTimeout(type, randomSpeed);
-                } else {
-                    const cursor = document.getElementById('cursor');
-                    if(cursor) {
-                        setTimeout(() => cursor.style.opacity = '0', 3000);
-                    }
-                }
+    // Banner 在站内跳转时保留，名言和请求状态也随此模块保留。
+    let currentText = "";
+    let requestedForPage = false;
+    let loading = false;
+    let navigating = false;
+    let typingTimer: ReturnType<typeof setTimeout> | undefined;
+    let cursorTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function titlesAreVisible() {
+        return !navigating
+            && pathsEqual(window.location.pathname, url("/"))
+            && document.body.classList.contains("is-home")
+            && document.documentElement.dataset.wallpaperMode === "banner"
+            && banner && !banner.classList.contains("hidden")
+            && overlay && !overlay.classList.contains("hidden")
+            && banner.querySelector(".banner-title")?.textContent?.trim()
+            && textEl;
+    }
+
+    function stopTyping() {
+        clearTimeout(typingTimer);
+        clearTimeout(cursorTimer);
+        if (textEl && currentText) textEl.textContent = currentText;
+        if (cursor) cursor.style.opacity = "0";
+    }
+
+    function typeWriter() {
+        stopTyping();
+        if (!titlesAreVisible() || !textEl) return;
+
+        const characters = Array.from(currentText);
+        let index = 0;
+        textEl.textContent = "";
+        if (cursor) cursor.style.opacity = "1";
+
+        function type() {
+            if (!titlesAreVisible() || !textEl) {
+                stopTyping();
+                return;
             }
-            type();
-        }
-
-        // 获取数据
-        function fetchHitokoto() {
-            const textEl = document.getElementById('hitokoto-text');
-            const cursor = document.getElementById('cursor');
-            
-            // 如果找不到元素（比如当前不是首页），直接退出
-            if (!textEl) return;
-
-            // 核心修复 4: 启动新任务前，先杀掉旧的定时器
-            // 无论上一次是正在打字还是在等待，统统清除，确保只有一个打字机在运行
-            if (window[TIMER_KEY]) {
-                clearTimeout(window[TIMER_KEY]);
-                window[TIMER_KEY] = null;
+            if (index < characters.length) {
+                textEl.textContent += characters[index++];
+                typingTimer = setTimeout(type, 150 + (Math.random() * 50 - 25));
+            } else if (cursor) {
+                cursorTimer = setTimeout(() => { cursor.style.opacity = "0"; }, 3000);
             }
-
-            // 重置光标显示
-            if(cursor) cursor.style.opacity = '1';
-            
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    // 防止网络请求期间页面切走，再次清理
-                    if (window[TIMER_KEY]) clearTimeout(window[TIMER_KEY]);
-
-                    window[TIMER_KEY] = setTimeout(() => {
-                        // 拼接逻辑
-                        let fullText = data.hitokoto;
-                        const author = data.from_who || data.from; 
-                        
-                        if (author) {
-                            fullText += ` —${author}`;
-                        }
-                        
-                        typeWriter(fullText, textEl);
-                    }, 300);
-                })
-                .catch(err => {
-                    console.error('一言获取失败:', err);
-                    if (window[TIMER_KEY]) clearTimeout(window[TIMER_KEY]);
-                    textEl.textContent = "生活明朗，万物可爱。";
-                });
         }
+        typingTimer = setTimeout(type, 300);
+    }
 
-        // 初始化
-        // 核心修复 5: 直接调用，移除 addEventListener
-        // 因为这段脚本是 inline 的，每次首页组件加载时它都会自动运行一次
-        // 加了监听器反而会导致多次切换页面后监听器堆叠，触发多次
-        fetchHitokoto();
-    })();
-</script>
+    async function fetchHitokoto() {
+        loading = true;
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error(`一言 HTTP ${response.status}`);
+            const data = await response.json();
+            if (typeof data.hitokoto !== "string" || !data.hitokoto.trim()) {
+                throw new Error("一言返回了无效内容");
+            }
+            const author = data.from_who || data.from;
+            currentText = data.hitokoto.trim() + (author ? ` —${author}` : "");
+            typeWriter();
+        } catch (err) {
+            console.error("一言获取失败:", err);
+            // 已有名言时继续保留；首次请求失败才使用默认句子。
+            if (!currentText) currentText = fallbackText;
+            stopTyping();
+        } finally {
+            loading = false;
+        }
+    }
+
+    function updateHitokoto() {
+        if (!titlesAreVisible()) {
+            stopTyping();
+            return;
+        }
+        // 同一次首页加载只请求一次，模式切换及正在进行的请求均复用。
+        if (requestedForPage) return;
+        requestedForPage = true;
+        if (!loading) void fetchHitokoto();
+    }
+
+    // 使用 Astro 生命周期兼容 Swup；模块只执行一次，不重复绑定监听。
+    document.addEventListener("astro:before-swap", () => {
+        navigating = true;
+        requestedForPage = false;
+        stopTyping();
+    });
+    document.addEventListener("astro:page-load", () => {
+        navigating = false;
+        updateHitokoto();
+    });
+
+    // 等待壁纸模式实际应用及标题显示，避免按初始配置误请求。
+    const observer = new MutationObserver(updateHitokoto);
+    observer.observe(document.documentElement, {
+        attributes: true, attributeFilter: ["data-wallpaper-mode"],
+    });
+    for (const element of [banner, overlay, document.body]) {
+        if (element) observer.observe(element, { attributes: true, attributeFilter: ["class"] });
+    }
+    updateHitokoto();
 </script>
