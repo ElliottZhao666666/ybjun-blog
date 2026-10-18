@@ -28,6 +28,12 @@ const postsCollection = defineCollection({
 		author: z.string().optional().default(""),
 		sourceLink: z.string().optional().default(""),
 		comment: z.boolean().optional().default(true),
+		copyProtection: z.object({
+			blockSelection: z.boolean().optional().default(false),
+			blockClipboard: z.boolean().optional().default(false),
+			blockContextMenu: z.boolean().optional().default(false),
+			blockDevTools: z.boolean().optional().default(false),
+		}).optional(),
 		licenseName: z.string().optional().default(""),
 		licenseUrl: z.string().optional().default(""),
 

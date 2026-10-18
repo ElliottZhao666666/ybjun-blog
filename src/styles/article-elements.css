@@ -1,0 +1,13 @@
+/* Music card styles adapted from Twilight. */
+
+.custom-md { min-width: 0; }
+.custom-md video { display: block; max-width: 100%; height: auto; border-radius: var(--radius-large, 12px); margin: 1rem auto; }
+.custom-md iframe { max-width: 100%; border: 0; }
+.custom-md .video-embed { position: relative; width: 100%; aspect-ratio: 16 / 9; margin: 1rem 0; }
+.custom-md .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+.custom-md[data-block-selection="true"], .custom-md[data-block-selection="true"] * { -webkit-user-select: none !important; user-select: none !important; }
+.custom-md[data-block-selection="true"] :is(input,textarea,[contenteditable="true"]) { -webkit-user-select: text !important; user-select: text !important; }
+.custom-md spoiler { cursor: pointer; border-radius: 4px; padding: 0 3px; transition: background-color .15s, color .15s; }
+.custom-md spoiler:not(:hover):not(:focus-visible):not([data-revealed="true"]) { background: var(--primary); color: var(--primary); }
+.custom-md spoiler:not(:hover):not(:focus-visible):not([data-revealed="true"]) * { color: var(--primary); }
+.custom-md spoiler:is(:focus-visible,[data-revealed="true"]), .custom-md spoiler:is(:focus-visible,[data-revealed="true"]) * { background-color: transparent !important; color: inherit !important; }

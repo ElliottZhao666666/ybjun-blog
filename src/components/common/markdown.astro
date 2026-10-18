@@ -1,15 +1,24 @@
 ---
 // 只加载基础的等宽字体，减少加载时间
 import "@fontsource-variable/jetbrains-mono";
+import "@/styles/article-elements.css";
 
 interface Props {
 	class: string;
+	copyProtection?: Record<string, boolean>;
 }
 const className = Astro.props.class;
 ---
 
-<div data-pagefind-body class={`prose dark:prose-invert prose-base max-w-none! custom-md ${className}`}>
+<div data-pagefind-body data-copy-protection={Astro.props.copyProtection ? JSON.stringify(Astro.props.copyProtection) : undefined}
+    data-block-selection={Astro.props.copyProtection?.blockSelection || undefined}
+    class={`prose dark:prose-invert prose-base max-w-none! custom-md ${className}`}>
     <!--<div class="prose dark:prose-invert max-w-none custom-md">-->
     <!--<div class="max-w-none custom-md">-->
     <slot/>
 </div>
+
+<script>
+    import { setupArticleEnhancements } from "@/utils/article-enhancements.js";
+    setupArticleEnhancements();
+</script>

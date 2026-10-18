@@ -263,7 +263,7 @@ const jsonLd = {
                 isEncrypted={isEncrypted}
                 password={entry.data.password}
             >
-                <Markdown class="mb-6 markdown-content onload-animation-up">
+                <Markdown class="mb-6 markdown-content onload-animation-up" copyProtection={entry.data.copyProtection}>
                     <Content />
                 </Markdown>
                 {
