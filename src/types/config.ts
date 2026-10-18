@@ -210,11 +210,6 @@ export type SiteConfig = {
 	loadingOverlay?: LoadingOverlayConfig;
 	// Favicon 配置
 	favicon: Favicon[];
-	// bangumi 配置
-	bangumi?: {
-		// 用户 ID
-		userId?: string;
-	};
 	// OpenGraph 配置
 	generateOgImages: boolean;
 };
@@ -241,11 +236,7 @@ export enum LinkPreset {
 	Home = 0,
 	Archive = 1,
 	Projects = 2,
-	Skills = 3,
-	Timeline = 4,
 	Diary = 5,
-	Albums = 6,
-	Anime = 7,
 	About = 8,
 	Friends = 9,
 }

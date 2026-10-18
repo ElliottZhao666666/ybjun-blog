@@ -123,8 +123,6 @@ site:
       enable: true
       interval: 1.5
   favicon: []
-  bangumi:
-    userId: your-bangumi-id
   generateOgImages: true
 umami:
   enabled: false

@@ -42,11 +42,7 @@ const linkPresetNameMap: Record<string, LinkPreset> = {
 	Home: LinkPreset.Home,
 	Archive: LinkPreset.Archive,
 	Projects: LinkPreset.Projects,
-	Skills: LinkPreset.Skills,
-	Timeline: LinkPreset.Timeline,
 	Diary: LinkPreset.Diary,
-	Albums: LinkPreset.Albums,
-	Anime: LinkPreset.Anime,
 	About: LinkPreset.About,
 	Friends: LinkPreset.Friends,
 };

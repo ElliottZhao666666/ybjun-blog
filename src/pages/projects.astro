@@ -105,6 +105,11 @@ const getCategoryText = (category: string) => {
                 </div>
             )}
             <!-- 按分类展示项目 -->
+            {projectsData.length === 0 && (
+                <div class="rounded-xl border border-dashed border-[var(--line-divider)] px-6 py-12 text-center text-black/60 dark:text-white/60">
+                    这里什么都没有……
+                </div>
+            )}
             <div class="space-y-8">
                 {categories.map((category) => {
                     const categoryProjects = projectsByCategory[category];

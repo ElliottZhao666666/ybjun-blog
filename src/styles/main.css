@@ -1,9 +1,7 @@
 @import 'tailwindcss';
 
 /* 导入相册样式 */
-@import './albums.css' layer(base);
 /* 导入追番页面样式 */
-@import './anime.css' layer(base);
 /* 导入动过渡样式 */
 @import './transition.css' layer(base);
 
