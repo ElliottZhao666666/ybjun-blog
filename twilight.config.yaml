@@ -125,7 +125,7 @@ site:
   favicon: []
   bangumi:
     userId: your-bangumi-id
-  generateOgImages: false
+  generateOgImages: true
 umami:
   enabled: false
   baseUrl: https://api.umami.is

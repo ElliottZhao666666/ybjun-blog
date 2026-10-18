@@ -131,6 +131,7 @@ const jsonLd = {
     lang={entry.data.lang}
     setOGTypeArticle={true}
     postSlug={entry.id}
+    ogImageVersion={(entry.data.updated || entry.data.published).toISOString()}
     headings={headings}
 >
     <script

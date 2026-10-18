@@ -31,6 +31,7 @@ interface Props {
 	lang?: string;
 	setOGTypeArticle?: boolean;
 	postSlug?: string;
+	ogImageVersion?: string;
 	headings?: MarkdownHeading[];
 }
 
@@ -42,6 +43,7 @@ const {
 	lang,
 	setOGTypeArticle,
 	postSlug,
+	ogImageVersion,
 	headings = [],
 } = Astro.props;
 const hasBannerCredit =
@@ -98,6 +100,7 @@ const {
     lang={lang}
     setOGTypeArticle={setOGTypeArticle}
     postSlug={postSlug}
+    ogImageVersion={ogImageVersion}
 >
     <!-- 全局图标加载器 -->
     <IconifyLoader />

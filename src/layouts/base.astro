@@ -39,9 +39,10 @@ interface Props {
 	lang?: string;
 	setOGTypeArticle?: boolean;
 	postSlug?: string;
+	ogImageVersion?: string;
 }
 
-let { title, title2, banner, description, lang, setOGTypeArticle, postSlug } =
+let { title, title2, banner, description, lang, setOGTypeArticle, postSlug, ogImageVersion } =
 	Astro.props;
 
 // apply a class to the body element to decide the height of the banner, only used for initial page load
@@ -106,8 +107,10 @@ if (title) {
 }
 
 let ogImageUrl: string | undefined;
-if (siteConfig.generateOgImages && postSlug) {
-	ogImageUrl = new URL(`/og/${postSlug}.png`, Astro.site).toString();
+if (siteConfig.generateOgImages) {
+	const image = new URL(`/og/${postSlug || '_site'}.png`, Astro.site);
+	if (ogImageVersion) image.searchParams.set('v', ogImageVersion);
+	ogImageUrl = image.toString();
 }
 
 const favicons: Favicon[] =
@@ -236,7 +239,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
         <meta property="og:url" content={canonicalURL}>
         <meta property="og:title" content={pageTitle}>
         <meta property="og:description" content={description || pageTitle}>
-        {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+        {ogImageUrl && <>
+            <meta property="og:image" content={ogImageUrl} />
+            <meta property="og:image:type" content="image/png" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content={title || siteConfig.title} />
+        </>}
         {
             setOGTypeArticle ? (
                 <meta property="og:type" content="article" />
@@ -249,6 +258,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
         <meta property="twitter:url" content={canonicalURL}>
         <meta name="twitter:title" content={pageTitle}>
         <meta name="twitter:description" content={description || pageTitle}>
+        {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
         <!-- viewport -->
         <meta name="viewport" content="width=device-width" />
         <!-- generator -->
