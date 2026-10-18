@@ -27,6 +27,7 @@ const postsCollection = defineCollection({
 		pinned: z.boolean().optional().default(false),
 		author: z.string().optional().default(""),
 		sourceLink: z.string().optional().default(""),
+		comment: z.boolean().optional().default(true),
 		licenseName: z.string().optional().default(""),
 		licenseUrl: z.string().optional().default(""),
 
