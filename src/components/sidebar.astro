@@ -4,7 +4,7 @@ import Categories from "@components/sidebar/categories.astro";
 import Profile from "@components/sidebar/profile.astro";
 import Tags from "@components/sidebar/tags.astro";
 import TOC from "@components/sidebar/toc.astro";
-import { widgetManager } from "@utils/widget";
+import { widgetManager, getComponentConfig } from "@utils/widget";
 import type { MarkdownHeading } from "astro";
 
 // 引入你的自定义组件
@@ -23,11 +23,11 @@ const { id, class: className, headings, side } = Astro.props;
 // 1. 获取配置中的组件，但过滤掉 statistics 和 visitorinfo
 // (因为我们要手动控制它们的位置，避免配置和硬编重复)
 const topComponents = widgetManager
-    .getComponentsBySideAndPosition(side, "top")
+    .getComponentsBySideAndPosition(side, "top", Astro.url.pathname)
     .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo");
     
 const stickyComponents = widgetManager
-    .getComponentsBySideAndPosition(side, "sticky")
+    .getComponentsBySideAndPosition(side, "sticky", Astro.url.pathname)
     .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo");
 
 const componentMap = {
@@ -38,6 +38,9 @@ const componentMap = {
     toc: TOC,
     // statistics 和 visitorinfo 在这里不需要映射，因为我们下面手动渲染
 };
+
+const showStatistics = !getComponentConfig('statistics') || widgetManager.shouldShowComponent(getComponentConfig('statistics')!, Astro.url.pathname);
+const showVisitorInfo = !getComponentConfig('visitorinfo') || widgetManager.shouldShowComponent(getComponentConfig('visitorinfo')!, Astro.url.pathname);
 
 function renderComponent(component: any, index: number) {
     const ComponentToRender =
@@ -58,6 +61,7 @@ function renderComponent(component: any, index: number) {
             style: componentStyle,
             headings: component.type === "toc" ? headings : undefined,
             ...component.customProps,
+            ...(component.type === 'categories' && component.depth !== undefined ? { depth: component.depth } : {}),
         },
     };
 }
@@ -94,8 +98,8 @@ function renderComponent(component: any, index: number) {
                    但当屏幕 >= LG 时，右侧栏会出现，所以我们要用 lg:hidden 隐藏左边的这份，防止重复。
                 */}
                 <div class="flex flex-col gap-4 lg:hidden">
-                    <Statistics class="onload-animation" style="animation-delay: 0ms" />
-                    <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
+                    {showStatistics && <Statistics class="onload-animation" style="animation-delay: 0ms" />}
+                    {showVisitorInfo && <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />}
                 </div>
             </div>
         </div>
@@ -126,10 +130,10 @@ function renderComponent(component: any, index: number) {
                 })}
 
                 {/* 2. 站点统计 (始终显示) */}
-                <Statistics class="onload-animation" style="animation-delay: 0ms" />
+                {showStatistics && <Statistics class="onload-animation" style="animation-delay: 0ms" />}
                 
                 {/* 3. 访客信息 (始终显示) */}
-                <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
+                {showVisitorInfo && <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />}
             </div>
         </div>
     )}
@@ -153,8 +157,8 @@ function renderComponent(component: any, index: number) {
                 手机端没有 Sticky 概念，所有内容都是从上到下流式排列。
                 我们直接把统计和访客加在最后即可。
             */}
-            <Statistics class="onload-animation" style="animation-delay: 0ms" />
-            <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />
+            {showStatistics && <Statistics class="onload-animation" style="animation-delay: 0ms" />}
+            {showVisitorInfo && <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />}
          </div>
     )}
 </div>

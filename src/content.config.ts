@@ -1,6 +1,8 @@
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
+import { getCategoryPathLabel } from './utils/category';
+import { parseTags } from './utils/tag';
 
 // Helper for handling dates that might be empty strings from JSON
 const dateSchema = z.preprocess((arg) => {
@@ -21,8 +23,8 @@ const postsCollection = defineCollection({
 		draft: z.boolean().optional().default(false),
 		description: z.string().optional().default(""),
 		cover: z.string().optional().default(""),
-		tags: z.array(z.string()).optional().default([]),
-		category: z.string().optional().nullable().default(""),
+		tags: z.union([z.array(z.string()), z.string()]).optional().default([]).transform(parseTags),
+		category: z.union([z.string(), z.array(z.string())]).optional().nullable().default("").transform(value => getCategoryPathLabel(value) || ''),
 		lang: z.string().optional().default(""),
 		pinned: z.boolean().optional().default(false),
 		author: z.string().optional().default(""),

@@ -2,6 +2,7 @@
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getPostUrl } from "@utils/url";
+import { categoryMatches } from '@utils/category';
 import { onMount } from "svelte";
 
 interface Post {
@@ -67,7 +68,7 @@ let groups = $derived.by(() => {
 
 	if (categories.length > 0) {
 		filteredPosts = filteredPosts.filter(
-			(post) => post.data.category && categories.includes(post.data.category),
+			(post) => categories.some(category => categoryMatches(post.data.category, category, i18n(I18nKey.uncategorized))),
 		);
 	}
 

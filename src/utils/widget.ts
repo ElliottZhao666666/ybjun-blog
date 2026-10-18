@@ -1,4 +1,5 @@
 import { sidebarConfig } from "@/config";
+import { matchesWidgetVisibility } from './widget-visibility';
 import type {
 	SidebarConfig,
 	WidgetComponentConfig,
@@ -15,6 +16,7 @@ export const WIDGET_COMPONENT_MAP = {
 	tags: "@components/sidebar/tags.astro",
 	toc: "@components/sidebar/toc.astro",
 	statistics: "@components/sidebar/statistics.astro",
+	visitorinfo: "@components/sidebar/VisitorInfo.svelte",
 	custom: null, // 自定义组件需要在配置中指定路径
 } as const;
 
@@ -40,17 +42,25 @@ export class WidgetManager {
 	 * 获取指定侧边栏上的组件列表
 	 * @param side 侧边栏位置：'left' | 'right'
 	 */
-	getComponentsBySide(side: "left" | "right"): WidgetComponentConfig[] {
-		return this.config.components[side] || [];
+	shouldShowComponent(component: WidgetComponentConfig, currentPath?: string): boolean {
+		return component.enable !== false && matchesWidgetVisibility(component.visibility, currentPath);
+	}
+
+	isVisible(component: WidgetComponentConfig, currentPath?: string, deviceType?: 'mobile' | 'tablet' | 'desktop'): boolean {
+		return (!deviceType || !component.responsive?.hidden?.includes(deviceType)) && this.shouldShowComponent(component, currentPath);
+	}
+
+	getComponentsBySide(side: "left" | "right", currentPath?: string): WidgetComponentConfig[] {
+		return (this.config.components[side] || []).filter(component => this.shouldShowComponent(component, currentPath));
 	}
 
 	/**
 	 * 根据位置获取组件列表
 	 * @param position 组件位置：'top' | 'sticky'
 	 */
-	getComponentsByPosition(position: "top" | "sticky"): WidgetComponentConfig[] {
-		const left = this.getComponentsBySideAndPosition("left", position);
-		const right = this.getComponentsBySideAndPosition("right", position);
+	getComponentsByPosition(position: "top" | "sticky", currentPath?: string): WidgetComponentConfig[] {
+		const left = this.getComponentsBySideAndPosition("left", position, currentPath);
+		const right = this.getComponentsBySideAndPosition("right", position, currentPath);
 		// Note: This might return duplicates if left/right logic overlaps, but used for enabled types check
 		return [...left, ...right];
 	}
@@ -63,12 +73,13 @@ export class WidgetManager {
 	getComponentsBySideAndPosition(
 		side: "left" | "right" | "middle",
 		position: "top" | "sticky",
+		currentPath?: string,
 	): WidgetComponentConfig[] {
 		const leftComponents = (this.config.components.left || []).filter(
-			(c) => c.position === position,
+			(c) => c.position === position && this.shouldShowComponent(c, currentPath),
 		);
 		const rightComponents = (this.config.components.right || []).filter(
-			(c) => c.position === position,
+			(c) => c.position === position && this.shouldShowComponent(c, currentPath),
 		);
 
 		if (side === "left") {
@@ -177,8 +188,8 @@ export class WidgetManager {
 	 * @param side 侧边栏位置：'left' | 'right'
 	 * @param headings 页面标题列表，用于判断特殊组件是否显示
 	 */
-	hasContentOnSide(side: "left" | "right", headings: any[] = []): boolean {
-		const components = this.getComponentsBySide(side);
+	hasContentOnSide(side: "left" | "right", headings: any[] = [], currentPath?: string): boolean {
+		const components = this.getComponentsBySide(side, currentPath);
 		if (components.length === 0) return false;
 
 		// 只要有一个组件能显示内容，侧边栏就不是空的
@@ -281,9 +292,9 @@ export class WidgetManager {
 	 * 获取网格布局相关的类名
 	 * @param headings 页面标题列表
 	 */
-	getGridLayout(headings: any[] = []) {
-		const hasLeftComponents = this.hasContentOnSide("left", headings);
-		const hasRightComponents = this.hasContentOnSide("right", headings);
+	getGridLayout(headings: any[] = [], currentPath?: string) {
+		const hasLeftComponents = this.hasContentOnSide("left", headings, currentPath);
+		const hasRightComponents = this.hasContentOnSide("right", headings, currentPath);
 		const hasAnyComponents = hasLeftComponents || hasRightComponents;
 
 		// Desktop: Left if hasLeft, Right if hasRight
@@ -415,7 +426,8 @@ export function isComponentEnabled(
 	componentType: WidgetComponentType,
 ): boolean {
 	// 默认所有配置中存在的组件都视为启用
-	return !!getComponentConfig(componentType);
+	const component = getComponentConfig(componentType);
+	return !!component && component.enable !== false;
 }
 
 /**

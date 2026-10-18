@@ -2,6 +2,9 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getCategoryUrl } from "@utils/url";
+import { buildCategoryTree, CATEGORY_SEPARATOR, type CategoryTreeItem } from "./category";
+import { parseTags } from "./tag";
+export type { CategoryTreeItem } from "./category";
 
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
@@ -63,7 +66,7 @@ export async function getTagList(): Promise<Tag[]> {
 
 	const countMap: { [key: string]: number } = {};
 	allBlogPosts.forEach((post: { data: { tags: string[] } }) => {
-		post.data.tags.forEach((tag: string) => {
+		[...new Set(parseTags(post.data.tags))].forEach((tag: string) => {
 			if (!countMap[tag]) countMap[tag] = 0;
 			countMap[tag]++;
 		});
@@ -83,37 +86,16 @@ export type Category = {
 	url: string;
 };
 
+export async function getCategoryTree(): Promise<CategoryTreeItem[]> {
+    const posts = await getCollection("posts", ({data}) => import.meta.env.PROD ? data.draft !== true : true);
+    return buildCategoryTree(posts.map(post => post.data.category), i18n(I18nKey.uncategorized), getCategoryUrl);
+}
+
 export async function getCategoryList(): Promise<Category[]> {
-	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
-	});
-	const count: { [key: string]: number } = {};
-	allBlogPosts.forEach((post: { data: { category: string | null } }) => {
-		if (!post.data.category) {
-			const ucKey = i18n(I18nKey.uncategorized);
-			count[ucKey] = count[ucKey] ? count[ucKey] + 1 : 1;
-			return;
-		}
-
-		const categoryName =
-			typeof post.data.category === "string"
-				? post.data.category.trim()
-				: String(post.data.category).trim();
-
-		count[categoryName] = count[categoryName] ? count[categoryName] + 1 : 1;
-	});
-
-	const lst = Object.keys(count).sort((a, b) => {
-		return a.toLowerCase().localeCompare(b.toLowerCase());
-	});
-
-	const ret: Category[] = [];
-	for (const c of lst) {
-		ret.push({
-			name: c,
-			count: count[c],
-			url: getCategoryUrl(c),
-		});
-	}
-	return ret;
+    const tree = await getCategoryTree();
+    const flatten = (nodes: CategoryTreeItem[]): Category[] => nodes.flatMap(node => [
+        { name: node.path.join(CATEGORY_SEPARATOR), count: node.count, url: node.url },
+        ...flatten(node.children),
+    ]);
+    return flatten(tree);
 }

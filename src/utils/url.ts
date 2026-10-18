@@ -1,5 +1,6 @@
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
+import { getCategoryPathParts } from './category';
 
 export function pathsEqual(path1: string, path2: string) {
 	const normalizedPath1 = path1.replace(/^\/|\/$/g, "").toLowerCase();
@@ -34,9 +35,10 @@ export function getTagUrl(tag: string) {
 	return url(`/archive/tag/${tag}/`);
 }
 
-export function getCategoryUrl(category: string) {
-	if (!category) return url("/archive/category/uncategorized");
-	return url(`/archive/category/${category}/`);
+export function getCategoryUrl(category?: string | string[] | null) {
+	const parts = getCategoryPathParts(category);
+	if (!parts) return url('/archive/category/uncategorized/');
+	return url(`/archive/category/${parts.map(encodeURIComponent).join('/')}/`);
 }
 
 export function getDir(path: string) {

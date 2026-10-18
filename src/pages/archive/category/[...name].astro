@@ -5,16 +5,23 @@ import { LinkPresets } from "@constants/link-presets";
 import GridLayout from "@layouts/grid.astro";
 import { getCategoryList, getSortedPostsList } from "@utils/content";
 import { LinkPreset } from "@/types/config";
+import { categoryMatches, getCategoryPathParts } from '@utils/category';
+import { i18n } from '@i18n/translation';
+import I18nKey from '@i18n/i18nKey';
 
 // 1. 生成路径：告诉 Astro 有哪些分类页面需要生成
 export async function getStaticPaths() {
     const categories = await getCategoryList();
-    return categories.map((category) => {
+    const paths = categories.map((category) => {
         return {
-            params: { name: category.name },
+            params: { name: (getCategoryPathParts(category.name) || [category.name]).join('/') },
             props: { categoryName: category.name }
         };
     });
+    if (!paths.some(path => path.params.name === 'uncategorized')) {
+        paths.push({ params: { name: 'uncategorized' }, props: { categoryName: i18n(I18nKey.uncategorized) } });
+    }
+    return paths;
 }
 
 const { categoryName } = Astro.props;
@@ -22,7 +29,7 @@ const { categoryName } = Astro.props;
 // 2. 数据获取：只拿当前分类的文章
 const allPosts = await getSortedPostsList();
 const sortedPostsList = allPosts.filter((post) => 
-    post.data.category === categoryName
+    categoryMatches(post.data.category, categoryName, i18n(I18nKey.uncategorized))
 );
 
 const pageTitle = LinkPresets[LinkPreset.Archive].name;

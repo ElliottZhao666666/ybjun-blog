@@ -87,7 +87,7 @@ const {
 	mainContentClass,
 	mobileFooterClass,
 	middleSidebarClass,
-} = widgetManager.getGridLayout(headings);
+} = widgetManager.getGridLayout(headings, Astro.url.pathname);
 ---
 
 <BaseLayout
