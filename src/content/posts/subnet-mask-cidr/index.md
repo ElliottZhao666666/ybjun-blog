@@ -7,9 +7,8 @@ author: ''
 cover: ''
 pinned: false
 tags:
-  - 计算机
-  - 网络
-category: 学习笔记
+  - 学习笔记
+category: 网络 / 组网与路由
 encrypted: false
 draft: false
 updated: '2026-05-08T19:36:01'

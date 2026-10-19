@@ -8,9 +8,11 @@ author: ''
 cover: ''
 pinned: false
 tags:
-  - 网络
+  - 经验分享
   - 域名
-category: 经验分享
+  - 建站
+  - Cloudflare
+category: 网络 / 域名
 encrypted: false
 draft: false
 ---
@@ -105,7 +107,6 @@ DigitalPlat 一共提供了四种后缀，`.dpdns.org`、`.us.kg`、`.qzz.io` �
 ![image](./ScreenShot_2026-02-20_104244_215.png)
 进入上图的域名管理页面后，点击左栏**DNS-记录**，点击**添加记录**。我们先来添加一条**AAAA (IPv6)记录**，将根域指向我们NAS的IPv6地址。点击保存就添加完成啦！
 这时候如果你在浏览器地址栏输入`yueban.dpdns.org`，并加上NAS管理页面的端口号，应该就可以看到NAS的登录界面了！
-![img_1771574784817.png](blob:https://blog.ybjun.com/2eacb6f6-5ab6-4fec-a555-50d026a02f28)
 当然，上述操作并不完整，如果真的要实现NAS的完整域名托管，考虑到现在家宽基本已经没有了公网IPv4，我们必须要使用DDNS，后续还需要完成**A(IPv4)记录**配置和DDNS-GO的安装和配置。不过这些不是本文要介绍的内容了。
 
 总之，现在你已经有一个自己的免费域名了，可以开始折腾了！

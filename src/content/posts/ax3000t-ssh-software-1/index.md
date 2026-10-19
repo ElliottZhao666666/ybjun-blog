@@ -6,11 +6,11 @@ author: ''
 cover: './cover.webp'
 pinned: false
 tags:
-  - 网络
+  - 技术备忘
   - 路由器
   - Linux
   - 软路由
-category: 技术备忘
+category: 网络 / 组网与路由
 encrypted: false
 draft: false
 updated: '2026-10-05T23:18:26'
@@ -147,7 +147,7 @@ CPU variant     : 0x0
 CPU part        : 0xd03
 CPU revision    : 4
 ```
-从上面的输出结果可以看到，AX3000T 搭载的处理器属于主流的 ARM Cortex-A53 架构，并且系统运行在 64 位模式下。这意味着，后续我们在为路由器下载任何第三方软件（如 ZeroTier、Mihomo 等）的二进制执行文件时，必须认准 `ARM64` 或 `aarch64` 这两个关键后缀，千万别错下成常规 PC 的 `x86` 或者是老旧路由器的 `MIPS` 版本。
+从上面的输出结果可以看到，AX3000T 搭载的处理器属于主流的 ARM Cortex-A53 架构，并且系统运行在 64 位模式下。这意味着，后续我们在为路由器下载任何第三方软件 :spoiler[（如 ZeroTier、Mihomo 等）] 的二进制执行文件时，必须认准 `ARM64` 或 `aarch64` 这两个关键后缀，千万别错下成常规 PC 的 `x86` 或者是老旧路由器的 `MIPS` 版本。
 
 #### 2.2.2 存储空间检查
 
@@ -285,7 +285,6 @@ ln -s /data/zerotier-one /data/zerotier-idtool
 - **Destination**：填入你家里的局域网网段，如 `192.168.10.0/24`
 - **Via**：填入刚才分配给小米路由器的 ZeroTier IP，如 `172.22.10.3`
 
-![img_1791212203182.png](blob:https://blog.ybjun.com/47a45187-2710-40db-bc9f-8089294541ea)
 
 点击 **Submit** 时，如果你是免费用户，可能会遇到一个戏剧性的名场面 —— 控制台上方原本显示的是 `Managed Routes 1/1`（预设的虚拟子网路由占用了 1 个名额），提交后直接变成了 `Managed Routes 2/1`，并弹出一片刺眼的黄字和红字报错：`Max number of routes reached. Want more custom routes? Upgrade to Essential...`
 ![img_1791213081602.png](./img_1791213081602.png)

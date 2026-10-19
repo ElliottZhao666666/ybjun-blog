@@ -8,9 +8,9 @@ author: ''
 cover: ''
 pinned: false
 tags:
-  - 网络
+  - 学习笔记
   - 域名
-category: 学习笔记
+category: 网络 / 域名
 encrypted: false
 draft: false
 ---

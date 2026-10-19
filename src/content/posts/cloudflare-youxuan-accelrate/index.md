@@ -9,10 +9,10 @@ author: ''
 cover: ./cover.png
 pinned: false
 tags:
+  - 技术备忘
   - Cloudflare
   - 建站
-  - 网络
-category: 技术备忘
+category: 网络 / Cloudflare
 encrypted: false
 draft: false
 ---

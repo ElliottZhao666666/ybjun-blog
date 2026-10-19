@@ -6,10 +6,12 @@ author: ''
 cover: ./cover.png
 pinned: false
 tags:
+  - 经验分享
+  - Google
   - Gemini
   - AI
   - 白嫖
-category: 经验分享
+category: 计算机 / 软件服务
 encrypted: false
 draft: true
 ---

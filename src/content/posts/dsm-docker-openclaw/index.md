@@ -9,13 +9,13 @@ author: ''
 cover: ./cover.png
 pinned: false
 tags:
-  - 计算机
+  - 技术备忘
+  - NAS
+  - Docker
   - AI
   - OpenClaw
-  - 网络
-  - Docker
   - Cloudflare
-category: 技术备忘
+category: 计算机 / 服务器与 NAS
 encrypted: false
 draft: false
 updated: '2026-03-27'
@@ -102,7 +102,7 @@ services:
 
 ## 2 安装OpenClaw
 
-OpenClaw 是一个极其轻量且强大的 AI 网关，它能够将各大模型 API 桥接到不同的通讯通道。相信不必过多介绍了。~~自从1000多块的代安装服务出现以来，总感觉整件事都变得抽象了起来。虽说有人说“一代人有一代人的气功”吧，但谁叫这玩意就是火呢，反正手头有NAS，那就试试呗。~~
+OpenClaw 是一个极其轻量且强大的 AI 网关，它能够将各大模型 API 桥接到不同的通讯通道。相信不必过多介绍了。:spoiler[自从1000多块的代安装服务出现以来，总感觉整件事都变得抽象了起来。虽说有人说“一代人有一代人的气功”吧，但谁叫这玩意就是火呢，反正手头有NAS，那就试试呗。]
 
 ### 2.1 获取代码库 (绕过 Git 限制)
 

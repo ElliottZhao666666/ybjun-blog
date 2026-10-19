@@ -6,10 +6,10 @@ author: ''
 cover: ./cover.png
 pinned: false
 tags:
-  - 计算机
+  - 经验分享
   - Windows
   - 硬盘
-category: 经验分享
+category: 计算机 / 系统与硬件
 encrypted: false
 draft: false
 ---

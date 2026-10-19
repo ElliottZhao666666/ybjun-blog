@@ -29,6 +29,10 @@ updated: '2026-02-17'
 <iframe width="100%" height="468" src="//player.bilibili.com/player.html?bvid=BV1bGpdeQEwP&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" &autoplay=0> </iframe>
 
 
+### 再放个音乐听听：
+
+::music{title="童话镇" artist="陈一发儿" cover="https://cdn.chatcyf.com/static/2020/05/1589707290-561c9ab24f7b7cc.jpg" audio="https://mediaslowblog.ybjun.com/%E9%99%88%E4%B8%80%E5%8F%91%E5%84%BF%20-%20%E7%AB%A5%E8%AF%9D%E9%95%87%20%5Bmqms6%5D.mp3" lrc="https://mediaslowblog.ybjun.com/%E9%99%88%E4%B8%80%E5%8F%91%E5%84%BF%20-%20%E7%AB%A5%E8%AF%9D%E9%95%87%20%5Bmqms6%5D.lrc"}
+
 
 
 ### 博客和公众号冲突吗？

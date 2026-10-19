@@ -7,10 +7,9 @@ author: ''
 cover: ./cover.png
 pinned: false
 tags:
-  - 计算机
+  - 学习笔记
   - Windows
-  - 随笔
-category: 小作品
+category: 计算机 / 系统与硬件
 encrypted: false
 draft: false
 updated: '2026-09-23T11:14:22'

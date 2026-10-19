@@ -6,9 +6,11 @@ author: ''
 cover: ''
 pinned: false
 tags:
-  - 网络
+  - 技术备忘
   - Cloudflare
-category: 技术备忘
+  - 建站
+  - 服务器
+category: 网络 / Cloudflare
 encrypted: false
 draft: false
 ---

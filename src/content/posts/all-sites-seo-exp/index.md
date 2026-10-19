@@ -8,11 +8,11 @@ author: ''
 cover: ''
 pinned: false
 tags:
-  - 网络
-  - 计算机
+  - 技术备忘
   - 建站
+  - Cloudflare
   - SEO
-category: 技术备忘
+category: 网络 / 建站
 encrypted: false
 draft: false
 ---

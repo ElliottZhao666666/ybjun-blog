@@ -10,10 +10,11 @@ author: ''
 cover: ./cover.png
 pinned: false
 tags:
+  - 技术备忘
   - NAS
-  - 网络
+  - Docker
   - 影视制作
-category: 技术备忘
+category: 计算机 / 服务器与 NAS
 encrypted: false
 draft: false
 ---

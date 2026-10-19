@@ -6,10 +6,10 @@ author: ''
 cover: ./cover.png
 pinned: false
 tags:
-  - AI
+  - 经验分享
   - Google
-  - 计算机
-category: 经验分享
+  - AI
+category: 计算机 / 软件服务
 encrypted: false
 draft: false
 ---

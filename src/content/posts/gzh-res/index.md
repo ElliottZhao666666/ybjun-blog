@@ -5,8 +5,8 @@ description: 公众号文章的所有资源，现已都汇集到这里。
 author: ''
 cover: ''
 pinned: false
-tags: []
-category: ''
+tags: ["公众号"]
+category: 资源
 encrypted: false
 draft: false
 updated: '2026-10-17T22:52:05'

@@ -9,9 +9,11 @@ author: ''
 cover: ''
 pinned: false
 tags:
+  - 技术备忘
   - 建站
-  - 网络
-category: 技术备忘
+  - Cloudflare
+  - SEO
+category: 网络 / 建站
 encrypted: false
 draft: false
 ---
