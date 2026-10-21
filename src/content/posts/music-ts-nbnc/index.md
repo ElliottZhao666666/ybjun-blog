@@ -34,7 +34,7 @@ encrypted: false
 
 下面的音源是博主从自己的《evermore》实体 CD 中 **直接抓轨得到的原始 WAV** 音频，下方表格则是博主在对照官方原版歌词后、为了彻底摆脱音乐平台“机翻味”，根据实际歌曲情景，逐句推敲打磨出的“说人话”版翻译。如果你还没听过这首歌，或者以前只听过旋律没细看词，强烈建议戴上耳机，边听边顺着歌词感受一下那种冷峻的叙事张力。
 
-::music{title="no body, no crime" artist="Taylor Swift (Feat. HAIM)" cover="./cover.webp" audio="https://mediaslowblog.ybjun.com/music/no-body-no-crime/06%20no%20body%2C%20no%20crime.wav" lrc=""}
+::music{title="no body, no crime" artist="Taylor Swift (Feat. HAIM)" cover="https://mediaslowblog.ybjun.com/music/no-body-no-crime/cover.webp" audio="https://mediaslowblog.ybjun.com/music/no-body-no-crime/06%20no%20body%2C%20no%20crime.wav" lrc=""}
 
 | 原版歌词 | 博主精翻 |
 | :--- | :--- |
