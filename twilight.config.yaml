@@ -42,7 +42,7 @@ site:
     - 火车
   font:
     LXGW WenKai Screen:
-      src: /assets/LXGWWenKai/result.css
+      src: /assets/LXGWWenKai/result.css?v=1.530
       family: LXGW WenKai Screen
   themeColor:
     hue: '145'
