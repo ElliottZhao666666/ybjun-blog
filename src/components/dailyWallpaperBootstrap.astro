@@ -1,0 +1,91 @@
+<!-- Only included for daily wallpaper mode. Independent of application modules. -->
+<script is:inline>
+(() => {
+    if (window.__dailyWallpaper) return;
+    const media = matchMedia('(orientation: landscape)');
+    const images = new Set();
+    const states = {};
+    const seed = Date.now().toString(36);
+    let active = media.matches ? 'desktop' : 'mobile';
+    const selected = () => media.matches ? 'desktop' : 'mobile';
+    const absolute = value => new URL(value, location.href).href;
+    const matches = (img, state) => img.currentSrc && absolute(img.currentSrc) === absolute(state.url);
+    const sync = img => {
+        const source = img.parentElement?.querySelector('source');
+        if (source && source.getAttribute('srcset') !== states.desktop.url) source.srcset = states.desktop.url;
+        if (img.getAttribute('src') !== states.mobile.url) img.src = states.mobile.url;
+    };
+    const stop = state => {
+        clearTimeout(state.timer);
+        state.timer = undefined;
+    };
+    const arm = state => {
+        if (state.done || state.fallback || state.timer) return;
+        state.timer = setTimeout(() => retry(state), 8000);
+    };
+    const retry = state => {
+        stop(state);
+        if (states[active] !== state || state.done || state.fallback) return;
+        if (state.attempt < 3) {
+            state.attempt += 1;
+            const url = new URL(state.original, location.href);
+            // Both background instances share one retry URL and browser request.
+            url.searchParams.set('wallpaper_retry', `${seed}-${state.attempt}`);
+            state.url = url.href;
+        } else {
+            state.fallback = true;
+            state.url = state.fallbackURL;
+        }
+        images.forEach(img => {
+            sync(img);
+            img.dataset.dailyWallAttempt = String(state.attempt);
+            img.dataset.dailyWallFallback = String(state.fallback);
+        });
+        arm(state);
+    };
+    const loaded = img => {
+        const state = states[active];
+        if (state && matches(img, state) && img.naturalWidth > 0) {
+            state.done = true;
+            stop(state);
+        }
+    };
+    const register = img => {
+        if (images.has(img)) return;
+        images.add(img);
+        for (const key of ['desktop', 'mobile']) {
+            if (!states[key]) {
+                const original = img.dataset[`${key}Src`];
+                states[key] = { original, url: original, fallbackURL: img.dataset[`${key}Fallback`], attempt: 1, done: false, fallback: false };
+            }
+        }
+        img.addEventListener('load', () => loaded(img));
+        img.addEventListener('error', () => {
+            const state = states[active];
+            if (matches(img, state)) retry(state);
+        });
+        sync(img);
+        if (img.complete) loaded(img);
+        arm(states[active]);
+    };
+    const scan = node => {
+        if (node.nodeType !== 1) return;
+        if (node.matches('img[data-daily-wall]')) register(node);
+        node.querySelectorAll('img[data-daily-wall]').forEach(register);
+    };
+    // Watch parser-created images as well as any future client navigation.
+    new MutationObserver(records => {
+        records.forEach(record => record.addedNodes.forEach(scan));
+        images.forEach(img => { if (!img.isConnected) images.delete(img); });
+    }).observe(document.documentElement, { childList: true, subtree: true });
+    media.addEventListener('change', () => {
+        if (states[active]) stop(states[active]);
+        active = selected();
+        if (!states[active]) return;
+        images.forEach(loaded);
+        arm(states[active]);
+    });
+    window.__dailyWallpaper = { register };
+    scan(document.documentElement);
+})();
+</script>

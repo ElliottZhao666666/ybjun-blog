@@ -2,7 +2,7 @@ import { siteConfig } from "@/config";
 
 const AUTO_COLOR_KEY = "autoColor";
 const AUTO_HUE_CACHE_KEY = "autoHueCache";
-const AUTO_HUE_URL = "https://api.bingpics.ybjun.com/image/latest/color/hsl/b";
+const AUTO_HUE_URL = "https://bingapi.ybjun.com/image/latest/color/hsl/b";
 export const HUE_CHANGE_EVENT = "theme-hue-change";
 
 type AutoHueCache = { date: string; hue: number };

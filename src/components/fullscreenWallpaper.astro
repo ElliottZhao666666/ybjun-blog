@@ -12,8 +12,8 @@ const { config, class: className } = Astro.props;
 
 const isDailyWall = config.isdailywall === true;
 const dailyWallSources = {
-    desktop: ["https://api.bingpics.ybjun.com/image/latest"],
-    mobile: ["https://api.bingpics.ybjun.com/image/latest/v"],
+    desktop: ["https://bingapi.ybjun.com/image/latest"],
+    mobile: ["https://bingapi.ybjun.com/image/latest/v"],
 };
 const dailyWallFallback = {
     desktop: "/assets/images/wallpaper_fallback/desktopWallpaper_fallback.webp",
@@ -59,7 +59,7 @@ const blur = config.fullscreen?.blur || 0;
     data-fullscreen-wallpaper
 >
     {isDailyWall ? (
-        <DailyWallpaper id="fullscreen-wallpaper" position={config.position} blur={blur} label="fullscreen-daily-wall" />
+        <DailyWallpaper id="fullscreen-wallpaper" position={config.position} blur={blur} label="fullscreen-daily-wall" fallback={dailyWallFallback} />
     ) : isCarouselEnabled ? (
         <div id="fullscreen-wallpaper-carousel" class="relative h-full w-full" data-carousel-config={JSON.stringify(carouselConfig)}>
             <ul class="carousel-list h-full w-full">

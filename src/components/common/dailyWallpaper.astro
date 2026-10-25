@@ -4,22 +4,28 @@ interface Props {
     position?: string;
     blur?: number;
     label?: string;
+    fallback: { desktop: string; mobile: string };
 }
-const { id, position = 'center', blur = 0, label = 'daily-wall' } = Astro.props;
+const { id, position = 'center', blur = 0, label = 'daily-wall', fallback } = Astro.props;
+const desktop = 'https://bingapi.ybjun.com/image/latest';
+const mobile = 'https://bingapi.ybjun.com/image/latest/v';
 ---
 <div id={id} class="relative h-full w-full overflow-hidden">
     <div class="transition absolute inset-0 bg-black/3 dark:bg-black/9 pointer-events-none"></div>
     <picture>
-        <source media="(orientation: landscape)" srcset="https://api.bingpics.ybjun.com/image/latest" />
+        <source media="(orientation: landscape)" srcset={desktop} />
         <img
-            src="https://api.bingpics.ybjun.com/image/latest/v"
+            src={mobile}
             alt="Bing 每日壁纸"
             class="h-full w-full object-cover"
             style={`object-position: ${position};${blur > 0 ? `filter: blur(${blur}px);` : ''}`}
             loading="eager"
             decoding="async"
             data-daily-wall={label}
-            onerror="if (!this.dataset.fallbackApplied) { this.dataset.fallbackApplied = 'true'; this.closest('picture').querySelector('source').removeAttribute('srcset'); this.src = matchMedia('(orientation: landscape)').matches ? '/assets/images/wallpaper_fallback/desktopWallpaper_fallback.webp' : '/assets/images/wallpaper_fallback/mobileWallpaper_fallback.webp'; }"
+            data-desktop-src={desktop}
+            data-mobile-src={mobile}
+            data-desktop-fallback={fallback.desktop}
+            data-mobile-fallback={fallback.mobile}
         />
     </picture>
 </div>
