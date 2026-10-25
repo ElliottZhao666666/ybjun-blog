@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import Icon from "@iconify/svelte";
+  import Icon from "@utils/local-icon";
   import { onMount } from "svelte";
   import { UAParser } from "ua-parser-js";
 

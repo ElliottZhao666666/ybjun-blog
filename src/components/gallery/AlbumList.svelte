@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-import Icon from "@iconify/svelte";
+import Icon from "@utils/local-icon";
 import { onMount } from "svelte";
 import { fade } from "svelte/transition";
 
@@ -121,7 +121,7 @@ function handleImageError(e: Event) {
         </div>
     {:else if timelineGroups.length === 0}
         <div class="text-center py-20 text-gray-400">
-            <Icon icon="material-symbols:photo-library-outline" class="text-5xl mx-auto mb-3 opacity-50" />
+            <Icon icon="material-symbols:photo-library-outline-rounded" class="text-5xl mx-auto mb-3 opacity-50" />
             <p>暂时还没有相册哦 ~</p>
         </div>
     {:else}

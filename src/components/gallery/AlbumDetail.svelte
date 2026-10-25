@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-import Icon from "@iconify/svelte";
+import Icon from "@utils/local-icon";
 import { onMount, onDestroy, tick } from "svelte";
 import { getFancybox, loadFancybox } from "../../utils/fancybox-loader";
 

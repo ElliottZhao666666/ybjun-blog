@@ -1,5 +1,5 @@
 <script lang="ts">
-import Icon from "@iconify/svelte";
+import Icon from "@utils/local-icon";
 import { url } from "@utils/url";
 import { onClickOutside } from "@utils/widget";
 import { onMount } from "svelte";

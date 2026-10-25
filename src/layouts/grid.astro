@@ -1,7 +1,6 @@
 ---
 import BackToTopButton from "@components/back2TopButton.astro";
 import Banner from "@components/banner.astro";
-import IconifyLoader from "@components/common/iconifyLoader.astro";
 import Footer from "@components/footer.astro";
 import FullscreenWallpaper from "@components/fullscreenWallpaper.astro";
 import Navbar from "@components/navbar.astro";
@@ -102,9 +101,6 @@ const {
     postSlug={postSlug}
     ogImageVersion={ogImageVersion}
 >
-    <!-- 全局图标加载器 -->
-    <IconifyLoader />
-
     <!-- Navbar -->
     <slot slot="head" name="head" />
     <div

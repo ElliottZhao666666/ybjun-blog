@@ -2,7 +2,7 @@
 import { BREAKPOINT_LG } from "@constants/breakpoints";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
-import Icon from "@iconify/svelte";
+import Icon from "@utils/local-icon";
 import { getDefaultHue, getHue, HUE_CHANGE_EVENT, isAutoColorAvailable, isAutoColorEnabled, refreshAutoHue, setAutoColor, setHue } from "@utils/hue";
 import { onClickOutside } from "@utils/widget";
 import { onMount } from "svelte";

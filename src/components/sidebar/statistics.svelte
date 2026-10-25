@@ -1,5 +1,5 @@
 <script lang="ts">
-import Icon from "@iconify/svelte";
+import Icon from "@utils/local-icon";
 import { onMount } from "svelte";
 
 // 接收来自 Astro 的静态数据

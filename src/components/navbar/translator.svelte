@@ -1,6 +1,6 @@
 <script lang="ts">
 import { BREAKPOINT_LG } from "@constants/breakpoints";
-import Icon from "@iconify/svelte";
+import Icon from "@utils/local-icon";
 import { onClickOutside } from "@utils/widget";
 import { onDestroy, onMount } from "svelte";
 import DropdownItem from "@/components/common/DropdownItem.svelte";
