@@ -2,20 +2,26 @@
 // 只加载基础的等宽字体，减少加载时间
 import "@fontsource-variable/jetbrains-mono";
 import "@/styles/article-elements.css";
+import katexStyles from "katex/dist/katex.css?inline";
 
 interface Props {
 	class: string;
 	copyProtection?: Record<string, boolean>;
 }
 const className = Astro.props.class;
+// Inspect rendered Markdown, so "$" inside a code block does not load math CSS.
+// Keeping math styles with actual formulas also works without JavaScript.
+const content = await Astro.slots.render("default");
+const hasMath = /class="[^"]*\bkatex\b/.test(content);
 ---
 
+{hasMath && <style is:inline set:html={katexStyles} />}
 <div data-pagefind-body data-copy-protection={Astro.props.copyProtection ? JSON.stringify(Astro.props.copyProtection) : undefined}
     data-block-selection={Astro.props.copyProtection?.blockSelection || undefined}
     class={`prose dark:prose-invert prose-base max-w-none! custom-md ${className}`}>
     <!--<div class="prose dark:prose-invert max-w-none custom-md">-->
     <!--<div class="max-w-none custom-md">-->
-    <slot/>
+    <Fragment set:html={content} />
 </div>
 
 <script>

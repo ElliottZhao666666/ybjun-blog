@@ -3,6 +3,7 @@
 (() => {
     const root = document.documentElement;
     let finished = false;
+    let earlyHelp;
     const alternateHost = location.hostname === 'www.ybjun.com' ? 'ybjun.com' : 'www.ybjun.com';
     const alternateURL = `https://${alternateHost}${location.pathname}${location.search}${location.hash}`;
     const updateLink = () => {
@@ -11,13 +12,42 @@
             link.href = alternateURL;
             link.textContent = `换用 ${alternateHost} 访问`;
         }
+        // The HTML stream may stop inside the large head, before the real
+        // overlay/body exists. Keep this escape route until body markup arrives.
+        if (earlyHelp && document.getElementById('loading-overlay')) {
+            earlyHelp.remove();
+            earlyHelp = undefined;
+            if (finished) observer.disconnect();
+        }
+    };
+    const showEarlyHelp = () => {
+        if (document.getElementById('loading-overlay')) return;
+        earlyHelp = document.createElement('div');
+        earlyHelp.id = 'loading-early-help';
+        earlyHelp.setAttribute('role', 'status');
+        for (const text of ['加载时间较长，可能是网络环境导致。', '您可以刷新页面，或换一个域名继续访问。']) {
+            const line = document.createElement('p');
+            line.textContent = text;
+            earlyHelp.append(line);
+        }
+        const actions = document.createElement('div');
+        const refresh = document.createElement('button');
+        refresh.type = 'button';
+        refresh.textContent = '刷新页面';
+        refresh.onclick = () => location.reload();
+        const alternate = document.createElement('a');
+        alternate.href = alternateURL;
+        alternate.textContent = `换用 ${alternateHost} 访问`;
+        actions.append(refresh, alternate);
+        earlyHelp.append(actions);
+        root.append(earlyHelp);
     };
     const finish = (timedOut = false) => {
         if (finished) return;
         finished = true;
         clearTimeout(warningTimer);
         clearTimeout(deadlineTimer);
-        observer.disconnect();
+        if (!earlyHelp) observer.disconnect();
         root.classList.remove('is-loading', 'loading-slow', 'banner-restoring');
         root.classList.add('show-initial-animation');
         if (timedOut) root.dataset.loadingFallback = 'true';
@@ -32,6 +62,7 @@
     const warningTimer = setTimeout(() => {
         if (!finished) {
             updateLink();
+            showEarlyHelp();
             root.classList.add('loading-slow');
         }
     }, 8000);
@@ -50,6 +81,25 @@
     #loading-slow-help { display: none; }
     html.loading-slow #loading-slow-help { display: block; }
     html.loading-slow #loading-overlay .loading-title { display: none; }
+    #loading-early-help {
+        position: fixed; inset: 0; z-index: 100; display: flex;
+        flex-direction: column; align-items: center; justify-content: center;
+        padding: 1.5rem; text-align: center; line-height: 1.8;
+        color: var(--primary, oklch(.7 .14 var(--configHue, 145)));
+        background: var(--page-bg, #f0f2f5); font-family: var(--global-font-family, system-ui);
+    }
+    html.dark #loading-early-help { background: var(--page-bg, #12151a); }
+    #loading-early-help p { margin: 0; }
+    #loading-early-help > div { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 1rem; }
+    #loading-early-help :is(button, a) {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: .4rem .9rem; border-radius: .75rem; cursor: pointer;
+        color: inherit; background: color-mix(in oklch, currentColor 8%, transparent);
+        border: 1px solid color-mix(in oklch, currentColor 25%, transparent);
+        font: inherit; text-decoration: none;
+    }
+    #loading-early-help :is(button, a):hover,
+    #loading-early-help :is(button, a):focus-visible { background: color-mix(in oklch, currentColor 18%, transparent); }
 </style>
 <noscript>
     <style>

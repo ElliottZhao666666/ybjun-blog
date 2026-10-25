@@ -212,6 +212,8 @@ export default defineConfig({
         },
     },
     build: {
+        // Inline the page's core layout. Heavy optional libraries are loaded
+        // separately (Fancybox), or emitted only with their content (KaTeX).
         inlineStylesheets: "always",
     },
 });
