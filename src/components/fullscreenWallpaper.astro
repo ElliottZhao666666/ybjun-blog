@@ -1,5 +1,6 @@
 ---
 import ImageWrapper from "@components/common/imageWrapper.astro";
+import DailyWallpaper from "@components/common/dailyWallpaper.astro";
 import type { SiteConfig } from "@/types/config";
 
 interface Props {
@@ -57,7 +58,9 @@ const blur = config.fullscreen?.blur || 0;
     style={`z-index: ${zIndex}; opacity: ${opacity};`}
     data-fullscreen-wallpaper
 >
-    {isCarouselEnabled ? (
+    {isDailyWall ? (
+        <DailyWallpaper id="fullscreen-wallpaper" position={config.position} blur={blur} label="fullscreen-daily-wall" />
+    ) : isCarouselEnabled ? (
         <div id="fullscreen-wallpaper-carousel" class="relative h-full w-full" data-carousel-config={JSON.stringify(carouselConfig)}>
             <ul class="carousel-list h-full w-full">
                 {imageSources.desktop.map((src, index) => (

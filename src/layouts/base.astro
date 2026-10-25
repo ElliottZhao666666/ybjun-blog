@@ -4,6 +4,7 @@ import "katex/dist/katex.css";
 import ConfigCarrier from "@components/configCarrier.astro";
 import FontLoader from "@components/fontLoader.astro";
 import LoadingOverlay from "@components/loadingOverlay.astro";
+import LoadingBootstrap from "@components/loadingBootstrap.astro";
 import MusicPlayer from "@components/musicPlayer.svelte";
 import Pio from "@components/pio.svelte";
 import {
@@ -142,6 +143,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 >
     <head>
         <meta charset="UTF-8" />
+        <LoadingBootstrap />
         <!--[if IE]>
         <script type="text/javascript">
             (function () {
@@ -599,74 +601,19 @@ loadAndInitTranslate();
 // Initialize particle effects
 setupParticleEffects();
 
-// Remove is-loading class and trigger initial-animation after DOM is ready.
-// Do not wait for window.load, otherwise slow non-critical resources may keep the page covered.
-if (typeof window !== 'undefined') {
-    let loadingOverlayHidden = false;
-    let fancyboxPreloadStarted = false;
-
-    const preloadFancyboxWhenIdle = () => {
-        if (fancyboxPreloadStarted) return;
-        fancyboxPreloadStarted = true;
-
-        const preload = () => {
-            loadFancybox().catch((error) => {
-                console.warn('Fancybox preload failed:', error);
-            });
-        };
-
-        if ('requestIdleCallback' in window) {
-            (window as any).requestIdleCallback(preload, { timeout: 3000 });
-        } else {
-            setTimeout(preload, 0);
-        }
-    };
-
-    const finishInitialAnimation = (enableBanner: boolean) => {
-        document.documentElement.classList.remove('is-loading');
-        document.documentElement.classList.add('show-initial-animation');
-        preloadFancyboxWhenIdle();
-        setTimeout(() => {
-            document.documentElement.classList.remove('show-initial-animation');
-            if (enableBanner) {
-                document.documentElement.classList.remove('banner-restoring');
-            }
-        }, 1200);
-    };
-
-    const hideLoadingOverlay = () => {
-        if (loadingOverlayHidden) return;
-        loadingOverlayHidden = true;
-
-        const overlay = document.getElementById('loading-overlay');
-        const enableBanner = document.body.classList.contains('enable-banner');
-
-        if (overlay) {
-            overlay.classList.add('fade-out');
-        }
-
-        setTimeout(() => {
-            if (overlay) {
-                overlay.style.display = 'none';
-            }
-
-            if (enableBanner) {
-                // banner 开始恢复过渡：添加 banner-restoring 类（解除 CSS 中的 height: 0）
-                document.documentElement.classList.add('banner-restoring');
-                setTimeout(() => finishInitialAnimation(enableBanner), 600);
-            } else {
-                finishInitialAnimation(enableBanner);
-            }
-        }, 600);
-    };
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', hideLoadingOverlay, { once: true });
+// Preload optional enhancements only after the independent loading controller
+// has revealed the document. This module must never own the escape timer.
+const preloadFancyboxWhenIdle = () => {
+    const preload = () => loadFancybox().catch(error => console.warn('Fancybox preload failed:', error));
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(preload, { timeout: 3000 });
     } else {
-        hideLoadingOverlay();
+        setTimeout(preload, 0);
     }
-
-    // 兜底熔断：即使 DOMContentLoaded 因异常未触发，也最多等待 10 秒。
-    setTimeout(hideLoadingOverlay, 10000);
+};
+if (document.documentElement.classList.contains('is-loading')) {
+    document.addEventListener('blog:loading:finished', preloadFancyboxWhenIdle, { once: true });
+} else {
+    preloadFancyboxWhenIdle();
 }
 </script>

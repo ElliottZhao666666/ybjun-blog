@@ -17,7 +17,7 @@ const titleInterval = config?.title?.interval ?? 1.5;
     id="loading-overlay"
     class="fixed inset-0 z-100 flex items-center justify-center bg-(--page-bg) transition-opacity duration-600"
 >
-    <div class="flex flex-col items-center">
+    <div class="flex flex-col items-center px-6 text-center">
         <!-- loading icon -->
         {showSpinner && <div class="loading-spinner mb-4"></div>}
         <!-- loading title -->
@@ -28,6 +28,14 @@ const titleInterval = config?.title?.interval ?? 1.5;
             {titleContent}
         </div>
         )}
+        <div id="loading-slow-help" class="text-(--primary)" role="status" aria-live="polite">
+            <p>加载时间较长，可能是网络环境导致。</p>
+            <p>您可以刷新页面，或换一个域名继续访问。</p>
+            <div class="loading-actions">
+                <button type="button" class="loading-action" onclick="location.reload()">刷新页面</button>
+                <a id="loading-alternate-domain" class="loading-action" href={`https://ybjun.com${Astro.url.pathname}`}>换用 ybjun.com 访问</a>
+            </div>
+        </div>
     </div>
 </div>
 )}
@@ -77,6 +85,17 @@ const titleInterval = config?.title?.interval ?? 1.5;
     .loading-title {
         animation: text-glow var(--titleInterval) ease-in-out infinite;
     }
+    #loading-slow-help { max-width: 32rem; line-height: 1.8; text-align: center; }
+    #loading-slow-help p { margin: 0; }
+    .loading-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 1rem; }
+    .loading-action {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: .4rem .9rem; border-radius: .75rem; cursor: pointer;
+        color: var(--primary); background: color-mix(in oklch, var(--primary) 8%, var(--page-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+        font: inherit; text-decoration: none; transition: background .2s;
+    }
+    .loading-action:hover, .loading-action:focus-visible { background: color-mix(in oklch, var(--primary) 18%, var(--page-bg)); }
 
     /* 手动触发淡出类 */
     #loading-overlay.fade-out {
@@ -90,65 +109,3 @@ const titleInterval = config?.title?.interval ?? 1.5;
         pointer-events: none;
     }
 </style>
-
-<script>
-if (typeof window !== 'undefined') {
-    const overlay = document.getElementById('loading-overlay');
-    const titleEl = document.querySelector('#loading-overlay .loading-title');
-
-    // 记录原始标题内容，便于恢复
-    const originalTitle = titleEl?.textContent?.trim() ?? '';
-    let titleReplaced = false;
-
-    const FORCE_REPLACE_DELAY = 15000;
-
-    const computeTitleAimDomain = () => {
-        const host = window.location.hostname;
-        if (host === 'www.ybjun.com') {
-            return 'ybjun.com';
-        }
-        return 'www.ybjun.com';
-    };
-
-    const forceReplaceTitle = () => {
-        if (!overlay || !titleEl) return;
-        // 覆叠层已经隐藏则无需替换
-        if (overlay.style.display === 'none' || overlay.classList.contains('fade-out')) return;
-        const TitleAimDomain = computeTitleAimDomain();
-        if (!titleReplaced) {
-            titleReplaced = true;
-        }
-        titleEl.innerHTML =
-            '<div>长时间加载失败，可能是网络环境导致，</div>' +
-            `<div>请尝试刷新页面或使用“${TitleAimDomain}”域名访问</div>`;
-    };
-
-    const restoreTitle = () => {
-        if (titleReplaced && titleEl && originalTitle) {
-            titleEl.textContent = originalTitle;
-            titleReplaced = false;
-        }
-    };
-
-    // 覆叠层显示满 15 秒后仍处于加载中，则强制替换标题
-    setTimeout(forceReplaceTitle, FORCE_REPLACE_DELAY);
-
-    // DOM 框架加载完成（覆叠层隐藏）时，恢复原标题
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!overlay || overlay.style.display === 'none' || overlay.classList.contains('fade-out')) {
-            restoreTitle();
-        }
-    });
-
-    // 熔断：覆叠层通过 base.astro 隐藏时同步恢复标题
-    const observer = new MutationObserver(() => {
-        if (overlay && (overlay.style.display === 'none' || overlay.classList.contains('fade-out'))) {
-            restoreTitle();
-            observer.disconnect();
-        }
-    });
-    if (overlay) {
-        observer.observe(overlay, { attributes: true, subtree: true });
-    }
-}
-</script>

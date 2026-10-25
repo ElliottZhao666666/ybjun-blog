@@ -7,7 +7,7 @@ description: >-
   Docker 部署 PostgreSQL 作为达芬奇专属协作服务器。结合对端口冲突、初始化陷阱的深度避坑指南，以及“原片驻留NAS +
   本地代理缓存”的读写分离架构，打破局域网带宽瓶颈，为中小型团队提供一套高效、低延迟的云端协同剪辑方案。
 author: ''
-cover: ./cover.png
+cover: ./cover-1000.webp
 pinned: false
 tags:
   - 技术备忘

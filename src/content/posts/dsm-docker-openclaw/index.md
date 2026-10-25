@@ -6,7 +6,7 @@ description: >-
   Cloudflare 隧道穿透的配置细节，并针对 UDP 假死降级 TCP、WebSocket
   报错等隐蔽大坑提供了硬核排雷方案，助你零成本将强大的大语言模型无缝接入社交生态。
 author: ''
-cover: ./cover.png
+cover: ./cover-1000.webp
 pinned: false
 tags:
   - 技术备忘

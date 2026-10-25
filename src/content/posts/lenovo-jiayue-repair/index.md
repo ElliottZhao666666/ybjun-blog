@@ -3,7 +3,7 @@ title: 联想家悦续命记：掉盘、花屏与启动失败背后的硬件宿�
 published: '2026-08-12T01:24:52'
 description: 18年老机换盘为何花屏掉盘？本文硬核复盘，深度剖析VIA南桥缺陷、4K扇区死锁与电源老化的机理，揭晓硬件的最终宿命。
 author: ''
-cover: ./cover.png
+cover: ./cover-1000.webp
 pinned: false
 tags:
   - 经验分享

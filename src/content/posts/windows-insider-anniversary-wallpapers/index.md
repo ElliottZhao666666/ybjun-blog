@@ -17,7 +17,7 @@ copyProtection:
   blockClipboard: false
   blockContextMenu: false
   blockDevTools: false
-cover: https://mediablog.ybjun.com/WIP-Wallpaper/12th-anniversary/WP12-LM-blue.png
+cover: ./cover-1000.webp
 encrypted: false
 ---
 

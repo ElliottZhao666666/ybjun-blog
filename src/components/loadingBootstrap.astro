@@ -1,0 +1,61 @@
+<!-- Keep this classic inline script before stylesheets and module scripts. -->
+<script is:inline>
+(() => {
+    const root = document.documentElement;
+    let finished = false;
+    const alternateHost = location.hostname === 'www.ybjun.com' ? 'ybjun.com' : 'www.ybjun.com';
+    const alternateURL = `https://${alternateHost}${location.pathname}${location.search}${location.hash}`;
+    const updateLink = () => {
+        const link = document.getElementById('loading-alternate-domain');
+        if (link && link.href !== alternateURL) {
+            link.href = alternateURL;
+            link.textContent = `换用 ${alternateHost} 访问`;
+        }
+    };
+    const finish = (timedOut = false) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(warningTimer);
+        clearTimeout(deadlineTimer);
+        observer.disconnect();
+        root.classList.remove('is-loading', 'loading-slow', 'banner-restoring');
+        root.classList.add('show-initial-animation');
+        if (timedOut) root.dataset.loadingFallback = 'true';
+        const overlay = document.getElementById('loading-overlay');
+        overlay?.classList.add('fade-out');
+        setTimeout(() => {
+            if (overlay) overlay.style.display = 'none';
+            document.dispatchEvent(new Event('blog:loading:finished'));
+        }, 600);
+        setTimeout(() => root.classList.remove('show-initial-animation'), 1200);
+    };
+    const warningTimer = setTimeout(() => {
+        if (!finished) {
+            updateLink();
+            root.classList.add('loading-slow');
+        }
+    }, 8000);
+    const deadlineTimer = setTimeout(() => finish(true), 10000);
+    const observer = new MutationObserver(updateLink);
+    observer.observe(document, { childList: true, subtree: true });
+    // "interactive" precedes deferred/module execution, unlike DOMContentLoaded.
+    document.addEventListener('readystatechange', () => {
+        if (document.readyState !== 'loading') finish();
+    });
+    if (document.readyState !== 'loading') finish();
+})();
+</script>
+<style is:inline>
+    html:not(.is-loading) #loading-overlay { opacity: 0; pointer-events: none; }
+    #loading-slow-help { display: none; }
+    html.loading-slow #loading-slow-help { display: block; }
+    html.loading-slow #loading-overlay .loading-title { display: none; }
+</style>
+<noscript>
+    <style>
+        html.is-loading { overflow: auto !important; }
+        #loading-overlay { display: none !important; }
+        html.is-loading:not(.banner-restoring) #banner-wrapper { height: var(--banner-height-home) !important; }
+        .banner-title, .banner-subtitle, .onload-animation-up, .onload-animation-down { opacity: 1 !important; }
+    </style>
+</noscript>

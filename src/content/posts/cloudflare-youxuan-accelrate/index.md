@@ -6,7 +6,7 @@ description: >-
   泛播网络在国内路由条件很差，导致首屏加载动辄长达一分钟。本文拒绝繁琐且易卡 Bug 的 SaaS 跨域接管方案，分享一套纯原生、单域名的全流程
   Cloudflare 优选 IP 实战记录。涵盖前端代理、API 路由接管、R2 云连接器配置，以及踩坑实录，助你实现网站全国全绿访问。
 author: ''
-cover: ./cover.png
+cover: ./cover-1000.webp
 pinned: false
 tags:
   - 技术备忘

@@ -3,7 +3,7 @@ title: 第一篇文章
 published: '2026-02-11T08:12:24'
 description: 欢迎光临月半菌的博客
 author: ''
-cover: ./cover.jpg
+cover: ./cover-1000.webp
 pinned: false
 tags:
   - 随笔

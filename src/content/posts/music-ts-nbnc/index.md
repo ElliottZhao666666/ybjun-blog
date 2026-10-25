@@ -18,7 +18,7 @@ copyProtection:
   blockClipboard: false
   blockContextMenu: true
   blockDevTools: false
-cover: ./cover.webp
+cover: ./cover-1000.webp
 encrypted: false
 ---
 

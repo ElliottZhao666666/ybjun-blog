@@ -4,7 +4,7 @@ published: '2026-04-12T13:17:59'
 description: >-
   还记得XP开机时那个满屏跳动代码、无法跳过的蓝屏扫盘界面吗？本期就揭秘这个“童年阴影”！我们将潜入Windows的Native“无主之地”，不仅扒清它的底层原理，更要亲手用纯C语言“裸编”原生程序，成功劫持系统启动链。最后还会将这段上古代码丢进最新Win11中，见证跨越20年的架构碰撞与底层图形结界。
 author: ''
-cover: ./cover.png
+cover: ./cover-1000.webp
 pinned: false
 tags:
   - 学习笔记

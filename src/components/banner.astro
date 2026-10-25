@@ -1,5 +1,6 @@
 ---
 import ImageWrapper from "@components/common/imageWrapper.astro";
+import DailyWallpaper from "@components/common/dailyWallpaper.astro";
 import { BANNER_HEIGHT_EXTEND } from "@constants/constants";
 import type { SiteConfig } from "@/types/config";
 
@@ -59,7 +60,9 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
     ]}
     style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
 >
-    {isCarouselEnabled ? (
+    {isDailyWall ? (
+        <DailyWallpaper id="banner" position={config.position} label="banner-daily-wall" />
+    ) : isCarouselEnabled ? (
         <div id="banner-carousel" class="relative h-full w-full" data-carousel-config={JSON.stringify(carouselConfig)}>
             <ul class="carousel-list h-full w-full">
                 {imageSources.desktop.map((src, index) => (
