@@ -1,0 +1,6 @@
+---
+import VisitorInfo from "./VisitorInfo.svelte";
+interface Props { mediaQuery: string; className?: string; style?: string; }
+const { mediaQuery, className, style } = Astro.props;
+---
+<VisitorInfo client:media={mediaQuery} {className} {style} />

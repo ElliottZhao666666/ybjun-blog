@@ -1,6 +1,7 @@
 <script lang="ts">
 import Icon from "@utils/local-icon";
 import { onMount } from "svelte";
+import { siteStatistics, startSiteStatistics } from "@utils/site-statistics";
 
 // 接收来自 Astro 的静态数据
 export let postCount: number;
@@ -12,17 +13,16 @@ export let style = "";
 
 // === ⚙️ 配置区域 ===
 const SITE_START_DATE = "2026-02-17"; // 你的建站日期
-const API_BASE = "https://commentblog.ybjun.com"; // 你的 Worker 地址
 
 // === 📊 状态变量 ===
-let runDays = 0;
-let lastUpdateStr = "";
+let runDays = Math.floor((Date.now() - new Date(SITE_START_DATE).getTime()) / 86400000);
+let lastUpdateStr = timeAgo(lastUpdatedTime);
 
 // 流量数据 (默认显示占位符)
 let sitePV = "--";
 let siteUV = "--";
 
-onMount(async () => {
+onMount(() => {
 	// 1. 计算已运行时间
 	const start = new Date(SITE_START_DATE).getTime();
 	const now = new Date().getTime();
@@ -32,23 +32,13 @@ onMount(async () => {
 	// 2. 计算"最后更新"的相对时间
 	lastUpdateStr = timeAgo(lastUpdatedTime);
 
-	// 3. 与后端 Worker 交互 (获取 PV/UV)
-	try {
-		// A. 上报一次访问 (增加 PV/UV)
-		await fetch(`${API_BASE}/site/visit`, { method: "POST" });
-
-		// B. 获取最新统计数据
-		const res = await fetch(`${API_BASE}/site/stats`);
-		if (res.ok) {
-			const data = await res.json();
-			sitePV = data.site_pv?.toString() || "0";
-			siteUV = data.site_uv?.toString() || "0";
-		}
-	} catch (e) {
-		console.error("统计服务连接失败:", e);
-		sitePV = "Err";
-		siteUV = "Err";
-	}
+	// All responsive copies display one shared result. Mounting never counts a visit.
+	const unsubscribe = siteStatistics.subscribe(data => {
+		sitePV = data.pv?.toString() ?? (data.failed ? "Err" : "--");
+		siteUV = data.uv?.toString() ?? (data.failed ? "Err" : "--");
+	});
+	startSiteStatistics();
+	return unsubscribe;
 });
 
 // 相对时间计算函数

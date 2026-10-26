@@ -33,13 +33,14 @@ const wordCountStr = (totalWords / 1000).toFixed(1) + " k";
 interface Props {
 	class?: string;
 	style?: string;
+	mediaQuery: string;
 }
 
-const { class: className, style } = Astro.props;
+const { class: className, style, mediaQuery } = Astro.props;
 ---
 
 <StatsPanel 
-    client:load 
+    client:media={mediaQuery}
     {postCount} 
     {wordCountStr} 
     {lastUpdatedTime}

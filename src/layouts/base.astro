@@ -4,6 +4,7 @@ import FontLoader from "@components/fontLoader.astro";
 import LoadingOverlay from "@components/loadingOverlay.astro";
 import LoadingBootstrap from "@components/loadingBootstrap.astro";
 import DailyWallpaperBootstrap from "@components/dailyWallpaperBootstrap.astro";
+import SiteStatisticsBootstrap from "@components/siteStatisticsBootstrap.astro";
 import MusicPlayer from "@components/musicPlayer.svelte";
 import Pio from "@components/pio.svelte";
 import {
@@ -143,6 +144,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
         <meta charset="UTF-8" />
         <LoadingBootstrap />
         {siteConfig.wallpaper.isdailywall === true && <DailyWallpaperBootstrap />}
+        <SiteStatisticsBootstrap />
         <!--[if IE]>
         <script type="text/javascript">
             (function () {

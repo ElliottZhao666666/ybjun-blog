@@ -2,12 +2,12 @@
   import Icon from "@utils/local-icon";
   import { onMount } from "svelte";
   import { UAParser } from "ua-parser-js";
+  import { getVisitorNetworkInfo } from "@utils/visitor-info";
 
   export let className = "";
   export let style = "";
 
   // === 配置 ===
-  const INFO_API = "https://infoblog.ybjun.com"; // 你的 Info Worker 地址
 
   // === 状态变量 ===
   let loading = true;
@@ -67,23 +67,19 @@
 
     // 3. 请求 Worker 获取网络信息 & 测速
   try {
-  const start = performance.now();
-  const res = await fetch(INFO_API);
-  const end = performance.now();
+  const network = await getVisitorNetworkInfo();
 
   // 计算 Ping
-  info.ping = Math.round(end - start);
+  info.ping = network.elapsed;
   if (info.ping > 100) info.pingColor = "text-yellow-500";
   if (info.ping > 300) info.pingColor = "text-red-500";
 
-  if (res.ok) {
-  const data = await res.json();
+  const data = network.data;
   info.ip = data.ip || "未知 IP";
   // 组合显示：IP (城市)
   const cityLoc = data.city ? `(${data.city})` : "";
   info.location = `${data.ip} ${cityLoc}`;
   info.isp = data.isp || "未知网络";
-  }
   } catch (e) {
   console.error("访客信息获取失败", e);
   info.location = "数据获取失败";

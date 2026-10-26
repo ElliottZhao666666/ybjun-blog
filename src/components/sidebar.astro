@@ -9,7 +9,7 @@ import type { MarkdownHeading } from "astro";
 
 // 引入你的自定义组件
 import Statistics from "./sidebar/statistics.astro";
-import VisitorInfo from "./sidebar/VisitorInfo.svelte";
+import VisitorInfoPanel from "./sidebar/visitorInfoPanel.astro";
 
 interface Props {
     id?: string;
@@ -19,16 +19,19 @@ interface Props {
 }
 
 const { id, class: className, headings, side } = Astro.props;
+// Match the native md/lg breakpoints in styles/main.css; CSS placement is unchanged.
+const mediaQuery = side === "right" ? "(width >= 1280px)"
+    : side === "left" ? "(768px <= width < 1280px)" : "(width < 768px)";
 
 // 1. 获取配置中的组件，但过滤掉 statistics 和 visitorinfo
 // (因为我们要手动控制它们的位置，避免配置和硬编重复)
 const topComponents = widgetManager
     .getComponentsBySideAndPosition(side, "top", Astro.url.pathname)
-    .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo");
+    .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo" && !(side === "middle" && c.type === "toc"));
     
 const stickyComponents = widgetManager
     .getComponentsBySideAndPosition(side, "sticky", Astro.url.pathname)
-    .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo");
+    .filter((c) => c.type !== "statistics" && c.type !== "visitorinfo" && !(side === "middle" && c.type === "toc"));
 
 const componentMap = {
     profile: Profile,
@@ -98,8 +101,8 @@ function renderComponent(component: any, index: number) {
                    但当屏幕 >= LG 时，右侧栏会出现，所以我们要用 lg:hidden 隐藏左边的这份，防止重复。
                 */}
                 <div class="flex flex-col gap-4 lg:hidden">
-                    {showStatistics && <Statistics class="onload-animation" style="animation-delay: 0ms" />}
-                    {showVisitorInfo && <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />}
+                    {showStatistics && <Statistics {mediaQuery} class="onload-animation" style="animation-delay: 0ms" />}
+                    {showVisitorInfo && <VisitorInfoPanel {mediaQuery} className="onload-animation" style="animation-delay: 100ms" />}
                 </div>
             </div>
         </div>
@@ -130,10 +133,10 @@ function renderComponent(component: any, index: number) {
                 })}
 
                 {/* 2. 站点统计 (始终显示) */}
-                {showStatistics && <Statistics class="onload-animation" style="animation-delay: 0ms" />}
+                {showStatistics && <Statistics {mediaQuery} class="onload-animation" style="animation-delay: 0ms" />}
                 
                 {/* 3. 访客信息 (始终显示) */}
-                {showVisitorInfo && <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />}
+                {showVisitorInfo && <VisitorInfoPanel {mediaQuery} className="onload-animation" style="animation-delay: 100ms" />}
             </div>
         </div>
     )}
@@ -157,8 +160,14 @@ function renderComponent(component: any, index: number) {
                 手机端没有 Sticky 概念，所有内容都是从上到下流式排列。
                 我们直接把统计和访客加在最后即可。
             */}
-            {showStatistics && <Statistics class="onload-animation" style="animation-delay: 0ms" />}
-            {showVisitorInfo && <VisitorInfo client:visible className="onload-animation" style="animation-delay: 100ms" />}
+            {stickyComponents.filter(component => component.type !== "toc").map((component, index) => {
+                const renderData = renderComponent(component, index);
+                if (!renderData) return null;
+                const { Component, props } = renderData;
+                return <Component {...props} side={side} />;
+            })}
+            {showStatistics && <Statistics {mediaQuery} class="onload-animation" style="animation-delay: 0ms" />}
+            {showVisitorInfo && <VisitorInfoPanel {mediaQuery} className="onload-animation" style="animation-delay: 100ms" />}
          </div>
     )}
 </div>
