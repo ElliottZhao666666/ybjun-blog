@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from "@/config";
+import fontManifest from "../../public/assets/LXGWWenKai/manifest.json";
 
 // Get all fonts from config
 const fontConfig = siteConfig.font || {};
@@ -23,9 +24,15 @@ const finalFontFamily = customFontFamily
   fonts.map((font) => {
     const fontSrc = font.src;
     const isCss = fontSrc.toLowerCase().split('?')[0].endsWith('.css');
+    const isSiteSlicedFont = font.family === fontManifest.family
+        && fontSrc.split('?')[0] === '/assets/LXGWWenKai/result.css';
     if (isCss) {
         return (
             <>
+                {isSiteSlicedFont && <>
+                    <style is:inline data-font-core set:html={fontManifest.criticalCss} />
+                    {fontManifest.preload.map(item => <link rel="preload" as="font" href={item.href} type={item.type} crossorigin="anonymous" fetchpriority="high" data-font-core />)}
+                </>}
                 <link rel="preload" as="style" href={fontSrc} />
                 <link rel="stylesheet" href={fontSrc} media="print" onload="this.media='all'" />
                 <noscript><link rel="stylesheet" href={fontSrc} /></noscript>
