@@ -1,0 +1,970 @@
+{
+  "schema": 1,
+  "family": "LXGW WenKai Screen",
+  "revision": "r2",
+  "core_count": {
+    "minimum": 800,
+    "maximum": 1100
+  },
+  "new_characters": {
+    "policy": "append-to-tail",
+    "unicode_window": 256
+  },
+  "groups": [
+    {
+      "id": "core",
+      "tier": 1,
+      "characters": "core.txt"
+    },
+    {
+      "id": "gb2312-01",
+      "tier": 2,
+      "characters": "gb2312-01.txt"
+    },
+    {
+      "id": "gb2312-02",
+      "tier": 2,
+      "characters": "gb2312-02.txt"
+    },
+    {
+      "id": "gb2312-03",
+      "tier": 2,
+      "characters": "gb2312-03.txt"
+    },
+    {
+      "id": "gb2312-04",
+      "tier": 2,
+      "characters": "gb2312-04.txt"
+    },
+    {
+      "id": "gb2312-05",
+      "tier": 2,
+      "characters": "gb2312-05.txt"
+    },
+    {
+      "id": "gb2312-06",
+      "tier": 2,
+      "characters": "gb2312-06.txt"
+    },
+    {
+      "id": "gb2312-07",
+      "tier": 2,
+      "characters": "gb2312-07.txt"
+    },
+    {
+      "id": "gb2312-08",
+      "tier": 2,
+      "characters": "gb2312-08.txt"
+    },
+    {
+      "id": "gb2312-09",
+      "tier": 2,
+      "characters": "gb2312-09.txt"
+    },
+    {
+      "id": "gb2312-10",
+      "tier": 2,
+      "characters": "gb2312-10.txt"
+    },
+    {
+      "id": "gb2312-11",
+      "tier": 2,
+      "characters": "gb2312-11.txt"
+    },
+    {
+      "id": "gb2312-12",
+      "tier": 2,
+      "characters": "gb2312-12.txt"
+    },
+    {
+      "id": "gb2312-13",
+      "tier": 2,
+      "characters": "gb2312-13.txt"
+    },
+    {
+      "id": "gb2312-14",
+      "tier": 2,
+      "characters": "gb2312-14.txt"
+    },
+    {
+      "id": "gb2312-15",
+      "tier": 2,
+      "characters": "gb2312-15.txt"
+    },
+    {
+      "id": "gb2312-16",
+      "tier": 2,
+      "characters": "gb2312-16.txt"
+    },
+    {
+      "id": "gb2312-17",
+      "tier": 2,
+      "characters": "gb2312-17.txt"
+    },
+    {
+      "id": "gb2312-18",
+      "tier": 2,
+      "characters": "gb2312-18.txt"
+    },
+    {
+      "id": "gb2312-19",
+      "tier": 2,
+      "characters": "gb2312-19.txt"
+    },
+    {
+      "id": "gb2312-20",
+      "tier": 2,
+      "characters": "gb2312-20.txt"
+    },
+    {
+      "id": "gb2312-21",
+      "tier": 2,
+      "characters": "gb2312-21.txt"
+    },
+    {
+      "id": "gb2312-22",
+      "tier": 2,
+      "characters": "gb2312-22.txt"
+    },
+    {
+      "id": "gb2312-23",
+      "tier": 2,
+      "characters": "gb2312-23.txt"
+    },
+    {
+      "id": "gb2312-24",
+      "tier": 2,
+      "characters": "gb2312-24.txt"
+    },
+    {
+      "id": "gb2312-25",
+      "tier": 2,
+      "characters": "gb2312-25.txt"
+    },
+    {
+      "id": "gb2312-26",
+      "tier": 2,
+      "characters": "gb2312-26.txt"
+    },
+    {
+      "id": "gb2312-27",
+      "tier": 2,
+      "characters": "gb2312-27.txt"
+    },
+    {
+      "id": "gb2312-28",
+      "tier": 2,
+      "characters": "gb2312-28.txt"
+    },
+    {
+      "id": "gb2312-29",
+      "tier": 2,
+      "characters": "gb2312-29.txt"
+    },
+    {
+      "id": "gb2312-30",
+      "tier": 2,
+      "characters": "gb2312-30.txt"
+    },
+    {
+      "id": "gb2312-31",
+      "tier": 2,
+      "characters": "gb2312-31.txt"
+    },
+    {
+      "id": "gb2312-32",
+      "tier": 2,
+      "characters": "gb2312-32.txt"
+    },
+    {
+      "id": "gb2312-33",
+      "tier": 2,
+      "characters": "gb2312-33.txt"
+    },
+    {
+      "id": "gb2312-34",
+      "tier": 2,
+      "characters": "gb2312-34.txt"
+    },
+    {
+      "id": "gb2312-35",
+      "tier": 2,
+      "characters": "gb2312-35.txt"
+    },
+    {
+      "id": "gb2312-36",
+      "tier": 2,
+      "characters": "gb2312-36.txt"
+    },
+    {
+      "id": "gb2312-37",
+      "tier": 2,
+      "characters": "gb2312-37.txt"
+    },
+    {
+      "id": "gb2312-38",
+      "tier": 2,
+      "characters": "gb2312-38.txt"
+    },
+    {
+      "id": "gb2312-39",
+      "tier": 2,
+      "characters": "gb2312-39.txt"
+    },
+    {
+      "id": "gb2312-40",
+      "tier": 2,
+      "characters": "gb2312-40.txt"
+    },
+    {
+      "id": "gb2312-41",
+      "tier": 2,
+      "characters": "gb2312-41.txt"
+    },
+    {
+      "id": "gb2312-42",
+      "tier": 2,
+      "characters": "gb2312-42.txt"
+    },
+    {
+      "id": "gb2312-43",
+      "tier": 2,
+      "characters": "gb2312-43.txt"
+    },
+    {
+      "id": "gb2312-44",
+      "tier": 2,
+      "characters": "gb2312-44.txt"
+    },
+    {
+      "id": "gb2312-45",
+      "tier": 2,
+      "characters": "gb2312-45.txt"
+    },
+    {
+      "id": "gb2312-46",
+      "tier": 2,
+      "characters": "gb2312-46.txt"
+    },
+    {
+      "id": "gb2312-47",
+      "tier": 2,
+      "characters": "gb2312-47.txt"
+    },
+    {
+      "id": "han-rare-001",
+      "tier": 3,
+      "characters": "han-rare-001.txt"
+    },
+    {
+      "id": "han-rare-002",
+      "tier": 3,
+      "characters": "han-rare-002.txt"
+    },
+    {
+      "id": "han-rare-003",
+      "tier": 3,
+      "characters": "han-rare-003.txt"
+    },
+    {
+      "id": "han-rare-004",
+      "tier": 3,
+      "characters": "han-rare-004.txt"
+    },
+    {
+      "id": "han-rare-005",
+      "tier": 3,
+      "characters": "han-rare-005.txt"
+    },
+    {
+      "id": "han-rare-006",
+      "tier": 3,
+      "characters": "han-rare-006.txt"
+    },
+    {
+      "id": "han-rare-007",
+      "tier": 3,
+      "characters": "han-rare-007.txt"
+    },
+    {
+      "id": "han-rare-008",
+      "tier": 3,
+      "characters": "han-rare-008.txt"
+    },
+    {
+      "id": "han-rare-009",
+      "tier": 3,
+      "characters": "han-rare-009.txt"
+    },
+    {
+      "id": "han-rare-010",
+      "tier": 3,
+      "characters": "han-rare-010.txt"
+    },
+    {
+      "id": "han-rare-011",
+      "tier": 3,
+      "characters": "han-rare-011.txt"
+    },
+    {
+      "id": "han-rare-012",
+      "tier": 3,
+      "characters": "han-rare-012.txt"
+    },
+    {
+      "id": "han-rare-013",
+      "tier": 3,
+      "characters": "han-rare-013.txt"
+    },
+    {
+      "id": "han-rare-014",
+      "tier": 3,
+      "characters": "han-rare-014.txt"
+    },
+    {
+      "id": "han-rare-015",
+      "tier": 3,
+      "characters": "han-rare-015.txt"
+    },
+    {
+      "id": "han-rare-016",
+      "tier": 3,
+      "characters": "han-rare-016.txt"
+    },
+    {
+      "id": "han-rare-017",
+      "tier": 3,
+      "characters": "han-rare-017.txt"
+    },
+    {
+      "id": "han-rare-018",
+      "tier": 3,
+      "characters": "han-rare-018.txt"
+    },
+    {
+      "id": "han-rare-019",
+      "tier": 3,
+      "characters": "han-rare-019.txt"
+    },
+    {
+      "id": "han-rare-020",
+      "tier": 3,
+      "characters": "han-rare-020.txt"
+    },
+    {
+      "id": "han-rare-021",
+      "tier": 3,
+      "characters": "han-rare-021.txt"
+    },
+    {
+      "id": "han-rare-022",
+      "tier": 3,
+      "characters": "han-rare-022.txt"
+    },
+    {
+      "id": "han-rare-023",
+      "tier": 3,
+      "characters": "han-rare-023.txt"
+    },
+    {
+      "id": "han-rare-024",
+      "tier": 3,
+      "characters": "han-rare-024.txt"
+    },
+    {
+      "id": "han-rare-025",
+      "tier": 3,
+      "characters": "han-rare-025.txt"
+    },
+    {
+      "id": "han-rare-026",
+      "tier": 3,
+      "characters": "han-rare-026.txt"
+    },
+    {
+      "id": "han-rare-027",
+      "tier": 3,
+      "characters": "han-rare-027.txt"
+    },
+    {
+      "id": "han-rare-028",
+      "tier": 3,
+      "characters": "han-rare-028.txt"
+    },
+    {
+      "id": "han-rare-029",
+      "tier": 3,
+      "characters": "han-rare-029.txt"
+    },
+    {
+      "id": "han-rare-030",
+      "tier": 3,
+      "characters": "han-rare-030.txt"
+    },
+    {
+      "id": "han-rare-031",
+      "tier": 3,
+      "characters": "han-rare-031.txt"
+    },
+    {
+      "id": "han-rare-032",
+      "tier": 3,
+      "characters": "han-rare-032.txt"
+    },
+    {
+      "id": "han-rare-033",
+      "tier": 3,
+      "characters": "han-rare-033.txt"
+    },
+    {
+      "id": "han-rare-034",
+      "tier": 3,
+      "characters": "han-rare-034.txt"
+    },
+    {
+      "id": "han-rare-035",
+      "tier": 3,
+      "characters": "han-rare-035.txt"
+    },
+    {
+      "id": "han-rare-036",
+      "tier": 3,
+      "characters": "han-rare-036.txt"
+    },
+    {
+      "id": "han-rare-037",
+      "tier": 3,
+      "characters": "han-rare-037.txt"
+    },
+    {
+      "id": "han-rare-038",
+      "tier": 3,
+      "characters": "han-rare-038.txt"
+    },
+    {
+      "id": "han-rare-039",
+      "tier": 3,
+      "characters": "han-rare-039.txt"
+    },
+    {
+      "id": "han-rare-040",
+      "tier": 3,
+      "characters": "han-rare-040.txt"
+    },
+    {
+      "id": "han-rare-041",
+      "tier": 3,
+      "characters": "han-rare-041.txt"
+    },
+    {
+      "id": "han-rare-042",
+      "tier": 3,
+      "characters": "han-rare-042.txt"
+    },
+    {
+      "id": "han-rare-043",
+      "tier": 3,
+      "characters": "han-rare-043.txt"
+    },
+    {
+      "id": "han-rare-044",
+      "tier": 3,
+      "characters": "han-rare-044.txt"
+    },
+    {
+      "id": "han-rare-045",
+      "tier": 3,
+      "characters": "han-rare-045.txt"
+    },
+    {
+      "id": "han-rare-046",
+      "tier": 3,
+      "characters": "han-rare-046.txt"
+    },
+    {
+      "id": "han-rare-047",
+      "tier": 3,
+      "characters": "han-rare-047.txt"
+    },
+    {
+      "id": "han-rare-048",
+      "tier": 3,
+      "characters": "han-rare-048.txt"
+    },
+    {
+      "id": "han-rare-049",
+      "tier": 3,
+      "characters": "han-rare-049.txt"
+    },
+    {
+      "id": "han-rare-050",
+      "tier": 3,
+      "characters": "han-rare-050.txt"
+    },
+    {
+      "id": "han-rare-051",
+      "tier": 3,
+      "characters": "han-rare-051.txt"
+    },
+    {
+      "id": "han-rare-052",
+      "tier": 3,
+      "characters": "han-rare-052.txt"
+    },
+    {
+      "id": "han-rare-053",
+      "tier": 3,
+      "characters": "han-rare-053.txt"
+    },
+    {
+      "id": "han-rare-054",
+      "tier": 3,
+      "characters": "han-rare-054.txt"
+    },
+    {
+      "id": "han-rare-055",
+      "tier": 3,
+      "characters": "han-rare-055.txt"
+    },
+    {
+      "id": "han-rare-056",
+      "tier": 3,
+      "characters": "han-rare-056.txt"
+    },
+    {
+      "id": "han-rare-057",
+      "tier": 3,
+      "characters": "han-rare-057.txt"
+    },
+    {
+      "id": "han-rare-058",
+      "tier": 3,
+      "characters": "han-rare-058.txt"
+    },
+    {
+      "id": "han-rare-059",
+      "tier": 3,
+      "characters": "han-rare-059.txt"
+    },
+    {
+      "id": "han-rare-060",
+      "tier": 3,
+      "characters": "han-rare-060.txt"
+    },
+    {
+      "id": "han-rare-061",
+      "tier": 3,
+      "characters": "han-rare-061.txt"
+    },
+    {
+      "id": "han-rare-062",
+      "tier": 3,
+      "characters": "han-rare-062.txt"
+    },
+    {
+      "id": "han-rare-063",
+      "tier": 3,
+      "characters": "han-rare-063.txt"
+    },
+    {
+      "id": "han-rare-064",
+      "tier": 3,
+      "characters": "han-rare-064.txt"
+    },
+    {
+      "id": "han-rare-065",
+      "tier": 3,
+      "characters": "han-rare-065.txt"
+    },
+    {
+      "id": "han-rare-066",
+      "tier": 3,
+      "characters": "han-rare-066.txt"
+    },
+    {
+      "id": "han-rare-067",
+      "tier": 3,
+      "characters": "han-rare-067.txt"
+    },
+    {
+      "id": "han-rare-068",
+      "tier": 3,
+      "characters": "han-rare-068.txt"
+    },
+    {
+      "id": "han-rare-069",
+      "tier": 3,
+      "characters": "han-rare-069.txt"
+    },
+    {
+      "id": "han-rare-070",
+      "tier": 3,
+      "characters": "han-rare-070.txt"
+    },
+    {
+      "id": "han-rare-071",
+      "tier": 3,
+      "characters": "han-rare-071.txt"
+    },
+    {
+      "id": "han-rare-072",
+      "tier": 3,
+      "characters": "han-rare-072.txt"
+    },
+    {
+      "id": "han-rare-073",
+      "tier": 3,
+      "characters": "han-rare-073.txt"
+    },
+    {
+      "id": "han-rare-074",
+      "tier": 3,
+      "characters": "han-rare-074.txt"
+    },
+    {
+      "id": "han-rare-075",
+      "tier": 3,
+      "characters": "han-rare-075.txt"
+    },
+    {
+      "id": "han-rare-076",
+      "tier": 3,
+      "characters": "han-rare-076.txt"
+    },
+    {
+      "id": "han-rare-077",
+      "tier": 3,
+      "characters": "han-rare-077.txt"
+    },
+    {
+      "id": "han-rare-078",
+      "tier": 3,
+      "characters": "han-rare-078.txt"
+    },
+    {
+      "id": "han-rare-079",
+      "tier": 3,
+      "characters": "han-rare-079.txt"
+    },
+    {
+      "id": "han-rare-080",
+      "tier": 3,
+      "characters": "han-rare-080.txt"
+    },
+    {
+      "id": "han-rare-081",
+      "tier": 3,
+      "characters": "han-rare-081.txt"
+    },
+    {
+      "id": "han-rare-082",
+      "tier": 3,
+      "characters": "han-rare-082.txt"
+    },
+    {
+      "id": "han-rare-083",
+      "tier": 3,
+      "characters": "han-rare-083.txt"
+    },
+    {
+      "id": "han-rare-084",
+      "tier": 3,
+      "characters": "han-rare-084.txt"
+    },
+    {
+      "id": "han-rare-085",
+      "tier": 3,
+      "characters": "han-rare-085.txt"
+    },
+    {
+      "id": "han-rare-086",
+      "tier": 3,
+      "characters": "han-rare-086.txt"
+    },
+    {
+      "id": "han-rare-087",
+      "tier": 3,
+      "characters": "han-rare-087.txt"
+    },
+    {
+      "id": "han-rare-088",
+      "tier": 3,
+      "characters": "han-rare-088.txt"
+    },
+    {
+      "id": "han-rare-089",
+      "tier": 3,
+      "characters": "han-rare-089.txt"
+    },
+    {
+      "id": "han-rare-090",
+      "tier": 3,
+      "characters": "han-rare-090.txt"
+    },
+    {
+      "id": "han-rare-091",
+      "tier": 3,
+      "characters": "han-rare-091.txt"
+    },
+    {
+      "id": "han-rare-092",
+      "tier": 3,
+      "characters": "han-rare-092.txt"
+    },
+    {
+      "id": "han-rare-093",
+      "tier": 3,
+      "characters": "han-rare-093.txt"
+    },
+    {
+      "id": "han-rare-094",
+      "tier": 3,
+      "characters": "han-rare-094.txt"
+    },
+    {
+      "id": "han-rare-095",
+      "tier": 3,
+      "characters": "han-rare-095.txt"
+    },
+    {
+      "id": "han-rare-096",
+      "tier": 3,
+      "characters": "han-rare-096.txt"
+    },
+    {
+      "id": "other-bopo-01",
+      "tier": 4,
+      "characters": "other-bopo-01.txt"
+    },
+    {
+      "id": "other-cyrl-01",
+      "tier": 4,
+      "characters": "other-cyrl-01.txt"
+    },
+    {
+      "id": "other-grek-01",
+      "tier": 4,
+      "characters": "other-grek-01.txt"
+    },
+    {
+      "id": "other-hangul-jamo-01",
+      "tier": 4,
+      "characters": "other-hangul-jamo-01.txt"
+    },
+    {
+      "id": "other-hangul-syllables-01",
+      "tier": 4,
+      "characters": "other-hangul-syllables-01.txt"
+    },
+    {
+      "id": "other-hangul-syllables-02",
+      "tier": 4,
+      "characters": "other-hangul-syllables-02.txt"
+    },
+    {
+      "id": "other-hangul-syllables-03",
+      "tier": 4,
+      "characters": "other-hangul-syllables-03.txt"
+    },
+    {
+      "id": "other-hangul-syllables-04",
+      "tier": 4,
+      "characters": "other-hangul-syllables-04.txt"
+    },
+    {
+      "id": "other-hangul-syllables-05",
+      "tier": 4,
+      "characters": "other-hangul-syllables-05.txt"
+    },
+    {
+      "id": "other-hangul-syllables-06",
+      "tier": 4,
+      "characters": "other-hangul-syllables-06.txt"
+    },
+    {
+      "id": "other-hangul-syllables-07",
+      "tier": 4,
+      "characters": "other-hangul-syllables-07.txt"
+    },
+    {
+      "id": "other-hangul-syllables-08",
+      "tier": 4,
+      "characters": "other-hangul-syllables-08.txt"
+    },
+    {
+      "id": "other-hangul-syllables-09",
+      "tier": 4,
+      "characters": "other-hangul-syllables-09.txt"
+    },
+    {
+      "id": "other-hangul-syllables-10",
+      "tier": 4,
+      "characters": "other-hangul-syllables-10.txt"
+    },
+    {
+      "id": "other-hangul-syllables-11",
+      "tier": 4,
+      "characters": "other-hangul-syllables-11.txt"
+    },
+    {
+      "id": "other-hangul-syllables-12",
+      "tier": 4,
+      "characters": "other-hangul-syllables-12.txt"
+    },
+    {
+      "id": "other-hangul-syllables-13",
+      "tier": 4,
+      "characters": "other-hangul-syllables-13.txt"
+    },
+    {
+      "id": "other-hangul-syllables-14",
+      "tier": 4,
+      "characters": "other-hangul-syllables-14.txt"
+    },
+    {
+      "id": "other-hangul-syllables-15",
+      "tier": 4,
+      "characters": "other-hangul-syllables-15.txt"
+    },
+    {
+      "id": "other-hangul-syllables-16",
+      "tier": 4,
+      "characters": "other-hangul-syllables-16.txt"
+    },
+    {
+      "id": "other-hangul-syllables-17",
+      "tier": 4,
+      "characters": "other-hangul-syllables-17.txt"
+    },
+    {
+      "id": "other-hangul-syllables-18",
+      "tier": 4,
+      "characters": "other-hangul-syllables-18.txt"
+    },
+    {
+      "id": "other-hangul-syllables-19",
+      "tier": 4,
+      "characters": "other-hangul-syllables-19.txt"
+    },
+    {
+      "id": "other-hangul-syllables-20",
+      "tier": 4,
+      "characters": "other-hangul-syllables-20.txt"
+    },
+    {
+      "id": "other-hangul-syllables-21",
+      "tier": 4,
+      "characters": "other-hangul-syllables-21.txt"
+    },
+    {
+      "id": "other-hangul-syllables-22",
+      "tier": 4,
+      "characters": "other-hangul-syllables-22.txt"
+    },
+    {
+      "id": "other-hangul-syllables-23",
+      "tier": 4,
+      "characters": "other-hangul-syllables-23.txt"
+    },
+    {
+      "id": "other-hangul-syllables-24",
+      "tier": 4,
+      "characters": "other-hangul-syllables-24.txt"
+    },
+    {
+      "id": "other-hangul-syllables-25",
+      "tier": 4,
+      "characters": "other-hangul-syllables-25.txt"
+    },
+    {
+      "id": "other-hangul-syllables-26",
+      "tier": 4,
+      "characters": "other-hangul-syllables-26.txt"
+    },
+    {
+      "id": "other-hangul-syllables-27",
+      "tier": 4,
+      "characters": "other-hangul-syllables-27.txt"
+    },
+    {
+      "id": "other-hangul-syllables-28",
+      "tier": 4,
+      "characters": "other-hangul-syllables-28.txt"
+    },
+    {
+      "id": "other-hangul-syllables-29",
+      "tier": 4,
+      "characters": "other-hangul-syllables-29.txt"
+    },
+    {
+      "id": "other-hangul-syllables-30",
+      "tier": 4,
+      "characters": "other-hangul-syllables-30.txt"
+    },
+    {
+      "id": "other-hira-01",
+      "tier": 4,
+      "characters": "other-hira-01.txt"
+    },
+    {
+      "id": "other-kana-01",
+      "tier": 4,
+      "characters": "other-kana-01.txt"
+    },
+    {
+      "id": "other-latn-01",
+      "tier": 4,
+      "characters": "other-latn-01.txt"
+    },
+    {
+      "id": "other-latn-02",
+      "tier": 4,
+      "characters": "other-latn-02.txt"
+    },
+    {
+      "id": "other-latn-03",
+      "tier": 4,
+      "characters": "other-latn-03.txt"
+    },
+    {
+      "id": "other-lisu-01",
+      "tier": 4,
+      "characters": "other-lisu-01.txt"
+    },
+    {
+      "id": "other-zinh-01",
+      "tier": 4,
+      "characters": "other-zinh-01.txt"
+    },
+    {
+      "id": "other-zyyy-01",
+      "tier": 4,
+      "characters": "other-zyyy-01.txt"
+    },
+    {
+      "id": "other-zyyy-02",
+      "tier": 4,
+      "characters": "other-zyyy-02.txt"
+    },
+    {
+      "id": "other-zyyy-03",
+      "tier": 4,
+      "characters": "other-zyyy-03.txt"
+    },
+    {
+      "id": "other-zyyy-04",
+      "tier": 4,
+      "characters": "other-zyyy-04.txt"
+    },
+    {
+      "id": "other-zyyy-05",
+      "tier": 4,
+      "characters": "other-zyyy-05.txt"
+    },
+    {
+      "id": "other-zzzz-01",
+      "tier": 4,
+      "characters": "other-zzzz-01.txt"
+    }
+  ]
+}

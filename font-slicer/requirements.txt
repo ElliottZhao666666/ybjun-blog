@@ -1,0 +1,3 @@
+fonttools==4.67.0
+Brotli==1.2.1
+PyYAML==6.0.3

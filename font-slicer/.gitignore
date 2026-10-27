@@ -1,0 +1,32 @@
+# Installed runtimes and dependency caches
+/.venv/
+/venv/
+/node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Downloaded upstream fonts, generated distributions and local evidence
+/cache/
+/builds/
+/backups/
+/reports/
+*.ttf
+*.otf
+*.ttc
+*.woff
+*.woff2
+*.zip
+*.7z
+
+# Logs, partial downloads and local configuration
+*.log
+*.tmp
+*.part*
+.env
+.env.*
+.dev.vars*
+Thumbs.db
+.DS_Store

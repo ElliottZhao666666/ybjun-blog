@@ -1,0 +1,17 @@
+# other-zzzz-01 | tier 4 | 14 codepoints
+# 其他语言、组合字符或符号；保留全部官方字符
+# 行首 U+码点是实际规则；后两列仅供阅读。允许人工增删/移动整行，禁止重复归属。
+U+E003	'\ue003'	UNNAMED
+U+E500	'\ue500'	UNNAMED
+U+E501	'\ue501'	UNNAMED
+U+E502	'\ue502'	UNNAMED
+U+E503	'\ue503'	UNNAMED
+U+E504	'\ue504'	UNNAMED
+U+E505	'\ue505'	UNNAMED
+U+E506	'\ue506'	UNNAMED
+U+E507	'\ue507'	UNNAMED
+U+EE01	'\uee01'	UNNAMED
+U+EE02	'\uee02'	UNNAMED
+U+F061	'\uf061'	UNNAMED
+U+F6C3	'\uf6c3'	UNNAMED
+U+FFFFD	'\U000ffffd'	UNNAMED
