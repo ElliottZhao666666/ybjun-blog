@@ -3,7 +3,7 @@ import type Swup from "@swup/astro/client/Swup";
 const VISIT_TIMEOUT = 17_000;
 const PAGE_TIMEOUT = VISIT_TIMEOUT;
 const PROGRESS_DELAY = 300;
-const LOADING_DELAY = 5_000;
+const LOADING_DELAY = 6_000;
 const ERROR_DISMISS_DELAY = 10_000;
 const installed = new WeakSet<Swup>();
 type Visit = Swup["visit"];
@@ -26,6 +26,7 @@ type Session = {
 	settled: boolean;
 	committed: boolean;
 	transitioning: boolean;
+	progressFrame?: number;
 };
 // Swup 4.8 has no public cancel/reset API. Keep the small recovery bridge here;
 // ordinary navigation, animation, content replacement and history remain Swup's.
@@ -51,10 +52,11 @@ export function installNavigationLoading(): void {
 		const close = ui.querySelector<HTMLButtonElement>(
 			'[data-navigation-action="close"]',
 		)!;
-		ui.style.setProperty(
-			"--navigation-progress-duration",
-			`${VISIT_TIMEOUT - PROGRESS_DELAY}ms`,
-		);
+		const progress = ui.querySelector<HTMLElement>('[role="progressbar"]')!;
+		const setProgress = (value: number) => {
+			ui.style.setProperty("--navigation-progress", String(value));
+			progress.setAttribute("aria-valuenow", String(Math.round(value * 100)));
+		};
 		const requests = new Map<string, Set<AbortController>>();
 		let active: Session | undefined;
 		let failedTarget = "";
@@ -177,6 +179,8 @@ export function installNavigationLoading(): void {
 		const clear = (session: Session) => {
 			session.timers.forEach(clearTimeout);
 			session.timers.length = 0;
+			if (session.progressFrame !== undefined)
+				cancelAnimationFrame(session.progressFrame);
 			setBusy(false);
 		};
 		const stop = async (
@@ -202,6 +206,7 @@ export function installNavigationLoading(): void {
 			document.getElementById("page-height-extend")?.classList.add("hidden");
 			if (reason === "cancel" || reason === "superseded") setState("idle");
 			else {
+				setProgress(1);
 				failedTarget = session.visit.to.url + (session.visit.to.hash || "");
 				ordinary.href = failedTarget;
 				title.textContent = session.committed
@@ -304,13 +309,28 @@ export function installNavigationLoading(): void {
 					transitioning: false,
 				};
 				active = session;
+				setProgress(0);
 				setState("idle");
 				setBusy(true);
 				title.textContent = "正在打开页面";
 				detail.textContent = "请稍候，当前页面仍然保留。";
+				const started = performance.now();
+				// Elapsed-wait feedback, not a claim about downloaded bytes. Keep the
+				// value independent of CSS animation and reduced-motion preferences.
+				const advance = () => {
+					if (active !== session || session.settled || session.committed) return;
+					const elapsed = performance.now() - started - PROGRESS_DELAY;
+					setProgress(
+						Math.min(1, 0.05 + (0.95 * elapsed) / (VISIT_TIMEOUT - PROGRESS_DELAY)),
+					);
+					session.progressFrame = requestAnimationFrame(advance);
+				};
 				session.timers.push(
 					setTimeout(() => {
-						if (active === session) setState("progress");
+						if (active === session && !session.committed) {
+							setState("progress");
+							advance();
+						}
 					}, PROGRESS_DELAY),
 					setTimeout(() => {
 						if (active === session && !session.committed)
@@ -378,6 +398,9 @@ export function installNavigationLoading(): void {
 			(visit) => {
 				if (active?.visit === visit) {
 					active.committed = true;
+					if (active.progressFrame !== undefined)
+						cancelAnimationFrame(active.progressFrame);
+					setProgress(1);
 					if (ui.dataset.state !== "idle") setState("transition");
 				}
 			},

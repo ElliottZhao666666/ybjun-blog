@@ -1,6 +1,6 @@
 <!-- Kept outside Swup containers so pending navigation never replaces its UI. -->
 <div id="navigation-loading" data-state="idle">
-    <div class="navigation-progress" role="progressbar" aria-label="正在打开页面"><span></span></div>
+    <div class="navigation-progress" role="progressbar" aria-label="正在打开页面" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
     <div class="navigation-veil"></div>
     <section class="navigation-message">
         <div class="navigation-spinner" aria-hidden="true"></div>
@@ -20,9 +20,9 @@
 <style>
     #navigation-loading { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
     #navigation-loading[data-state="idle"] { display: none; }
-    .navigation-progress { position: absolute; inset: 0 0 auto; height: 3px; overflow: hidden; background: color-mix(in oklch, var(--primary) 12%, transparent); }
-    .navigation-progress span { display: block; height: 100%; width: 5%; border-radius: 99px; background: var(--primary); box-shadow: 0 0 10px var(--primary); animation: navigation-progress var(--navigation-progress-duration, 16700ms) cubic-bezier(.15,.55,.4,1) forwards; }
-    [data-state="transition"] .navigation-progress span { animation: none; width: 100%; }
+    .navigation-progress { position: absolute; inset: 0 0 auto; height: 3px; overflow: hidden; background: color-mix(in oklch, var(--primary) 12%, transparent); opacity: 1; }
+    .navigation-progress span { display: block; height: 100%; width: 100%; transform: scaleX(var(--navigation-progress, 0)); transform-origin: left; border-radius: 99px; background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+    [data-state="transition"] .navigation-progress { opacity: 0; transition: opacity .2s .1s; }
     .navigation-veil { position: absolute; inset: 0; opacity: 0; background: color-mix(in oklch, var(--page-bg) 48%, transparent); backdrop-filter: blur(3px); transition: opacity .2s; }
     .navigation-message { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(28rem, calc(100vw - 2rem)); box-sizing: border-box; padding: 1.5rem; border-radius: var(--radius-large, 1rem); background: var(--card-bg, var(--page-bg)); color: var(--primary); border: 1px solid color-mix(in oklch, var(--primary) 22%, transparent); box-shadow: 0 12px 45px #0002; text-align: center; pointer-events: auto; }
     .navigation-heading { font-size: 1.15rem; font-weight: 700; margin: 0 0 .5rem; }
@@ -36,7 +36,6 @@
     [data-state="waiting"] [data-navigation-action="retry"], [data-state="waiting"] [data-navigation-action="close"], [data-state="waiting"] #navigation-open-normally { display: none; }
     [data-state="error"] .navigation-progress, [data-state="error"] .navigation-spinner, [data-state="error"] [data-navigation-action="cancel"] { display: none; }
     [data-state="error"] .navigation-message { top: auto; bottom: 1rem; transform: translateX(-50%); }
-    @keyframes navigation-progress { from { width: 5%; } to { width: 94%; } }
     @keyframes navigation-spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { .navigation-progress span, .navigation-spinner { animation: none; } .navigation-progress span { width: 100%; opacity: .7; } }
+    @media (prefers-reduced-motion: reduce) { .navigation-spinner { animation: none; } [data-state="transition"] .navigation-progress { transition: none; } .navigation-progress span { opacity: .7; } }
 </style>
