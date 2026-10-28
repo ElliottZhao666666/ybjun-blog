@@ -1,9 +1,10 @@
 import type Swup from "@swup/astro/client/Swup";
 
-const PAGE_TIMEOUT = 12_000;
-const VISIT_TIMEOUT = 15_000;
+const VISIT_TIMEOUT = 17_000;
+const PAGE_TIMEOUT = VISIT_TIMEOUT;
 const PROGRESS_DELAY = 300;
-const LOADING_DELAY = 3_000;
+const LOADING_DELAY = 5_000;
+const ERROR_DISMISS_DELAY = 10_000;
 const installed = new WeakSet<Swup>();
 type Visit = Swup["visit"];
 type Snapshot = {
@@ -47,9 +48,18 @@ export function installNavigationLoading(): void {
 		const ordinary = document.getElementById(
 			"navigation-open-normally",
 		) as HTMLAnchorElement;
+		const close = ui.querySelector<HTMLButtonElement>(
+			'[data-navigation-action="close"]',
+		)!;
+		ui.style.setProperty(
+			"--navigation-progress-duration",
+			`${VISIT_TIMEOUT - PROGRESS_DELAY}ms`,
+		);
 		const requests = new Map<string, Set<AbortController>>();
 		let active: Session | undefined;
 		let failedTarget = "";
+		let dismissTimer: ReturnType<typeof setTimeout> | undefined;
+		let countdownTimer: ReturnType<typeof setInterval> | undefined;
 		let rollback: Promise<void> | undefined;
 		let pendingRollback:
 			| { snapshot: Snapshot; resolve: () => void }
@@ -77,7 +87,37 @@ export function installNavigationLoading(): void {
 		});
 		let displayed = snapshot();
 		const setState = (state: string) => {
+			if (state !== "error") {
+				clearTimeout(dismissTimer);
+				clearInterval(countdownTimer);
+				dismissTimer = undefined;
+				countdownTimer = undefined;
+				close.textContent = "关闭提示";
+			}
 			ui.dataset.state = state;
+		};
+		const startErrorCountdown = () => {
+			clearTimeout(dismissTimer);
+			clearInterval(countdownTimer);
+			const expires = Date.now() + ERROR_DISMISS_DELAY;
+			const update = () => {
+				const seconds = Math.max(0, Math.ceil((expires - Date.now()) / 1000));
+				close.textContent = `关闭提示（${seconds}秒）`;
+			};
+			update();
+			countdownTimer = setInterval(update, 250);
+			dismissTimer = setTimeout(() => {
+				if (ui.dataset.state === "error") setState("idle");
+			}, ERROR_DISMISS_DELAY);
+		};
+		const errorSummary = (error: unknown): string => {
+			const message = error instanceof Error ? error.message : "";
+			const status = message.match(/Navigation HTTP (\d{3})/);
+			if (status) return `HTTP ${status[1]}`;
+			if (message === "Navigation containers missing") return "页面内容不完整";
+			if (error instanceof DOMException && error.name === "AbortError")
+				return "请求超时或中断";
+			return "网络连接异常";
 		};
 		const setBusy = (busy: boolean) => {
 			const content = document.getElementById("swup-container");
@@ -142,6 +182,7 @@ export function installNavigationLoading(): void {
 		const stop = async (
 			session: Session,
 			reason: "cancel" | "superseded" | "timeout" | "error",
+			error?: unknown,
 		) => {
 			if (session.settled) return;
 			session.settled = true;
@@ -167,11 +208,12 @@ export function installNavigationLoading(): void {
 					? "页面已打开"
 					: "页面暂时未能打开";
 				detail.textContent = session.committed
-					? "切换效果未能及时完成，您可以继续浏览。"
+					? "切换效果未能及时完成，您可以继续浏览（切换超时）。"
 					: reason === "timeout"
-						? "等待时间较长，已结束本次等待。您可以重试，或用普通方式打开。"
-						: "连接未能完成，当前页面已保留。您可以重试，或用普通方式打开。";
+						? "等待时间较长，已结束本次等待。您可以重试，或从新标签页打开（等待超时）。"
+						: `连接未能完成，当前页面已保留。您可以重试，或从新标签页打开（${errorSummary(error)}）。`;
 				setState("error");
+				startErrorCountdown();
 			}
 			if (!session.committed) {
 				if (session.transitioning)
@@ -309,8 +351,8 @@ export function installNavigationLoading(): void {
 							throw new Error("Navigation containers missing");
 					}
 					return page;
-				} catch {
-					if (!session.settled) await stop(session, "error");
+				} catch (error) {
+					if (!session.settled) await stop(session, "error", error);
 					// Swup awaits this promise before animating and then checks visit.done.
 					// Resolve an inert page for an aborted visit to avoid its automatic hard
 					// redirect and the unhandled rejection in Swup 4.8's page.then().
@@ -328,7 +370,6 @@ export function installNavigationLoading(): void {
 			if (active?.visit !== visit) return;
 			active.transitioning = true;
 			document.documentElement.classList.remove("show-initial-animation");
-			if (ui.dataset.state === "progress") setState("transition");
 		};
 		swup.hooks.on("animation:out:start", beginTransition, { priority: -100 });
 		swup.hooks.on("animation:skip", beginTransition, { priority: -100 });
