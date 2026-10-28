@@ -1,6 +1,8 @@
 <!-- Keep this classic inline script before stylesheets and module scripts. -->
-<script is:inline>
+<script is:inline data-swup-ignore-script>
 (() => {
+    if (window.__blogLoadingInitialized) return;
+    window.__blogLoadingInitialized = true;
     const root = document.documentElement;
     let finished = false;
     let earlyHelp;

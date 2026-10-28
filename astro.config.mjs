@@ -73,6 +73,8 @@ export default defineConfig({
             updateHead: true,
             updateBodyClass: false,
             globalInstance: true,
+            // Navigation is critical: do not wait for window.load or idle time.
+            loadOnIdle: false,
             smoothScrolling: false,
             resolveUrl: (url) => url,
             animateHistoryBrowsing: false,
@@ -80,6 +82,20 @@ export default defineConfig({
                 return event.state && event.state.url && event.state.url.includes("#");
             },
         }),
+        {
+            name: "blog-swup-preload-compatibility",
+            hooks: {
+                "astro:config:setup": ({ injectScript }) => {
+                    // Runs in the same injected module immediately after Swup.
+                    injectScript("page", `
+                        import { installSwupPreloadCompatibility } from "@/utils/swup-preload";
+                        import { installNavigationLoading } from "@/utils/navigation-loading";
+                        installSwupPreloadCompatibility();
+                        installNavigationLoading();
+                    `);
+                },
+            },
+        },
         icon({
             include: {
                 "fa6-brands": ["*"],

@@ -1,0 +1,21 @@
+{
+	"prefetch": [
+		{
+			"source": "document",
+			"where": {
+				"and": [
+					{ "href_matches": "/*", "relative_to": "document" },
+					{
+						"selector_matches": "a[data-no-swup], [data-no-swup] a"
+					},
+					{
+						"not": {
+							"selector_matches": "a[download], a[target], a[href^=\"#\"]"
+						}
+					}
+				]
+			},
+			"eagerness": "conservative"
+		}
+	]
+}

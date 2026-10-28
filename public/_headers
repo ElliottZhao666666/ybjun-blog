@@ -3,6 +3,11 @@
   X-Frame-Options: DENY
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
+  Speculation-Rules: "/navigation-speculation-rules.json"
+
+/navigation-speculation-rules.json
+  Content-Type: application/speculationrules+json
+  Cache-Control: public, max-age=0, must-revalidate
 
 /atom.xml
   Access-Control-Allow-Origin: *

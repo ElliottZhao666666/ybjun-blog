@@ -1,0 +1,39 @@
+<!-- Kept outside Swup containers so pending navigation never replaces its UI. -->
+<div id="navigation-loading" data-state="idle">
+    <div class="navigation-progress" role="progressbar" aria-label="正在打开页面"><span></span></div>
+    <div class="navigation-veil"></div>
+    <section class="navigation-message" aria-live="polite" aria-atomic="true">
+        <div class="navigation-spinner" aria-hidden="true"></div>
+        <div id="navigation-loading-title" class="navigation-heading" role="heading" aria-level="2">正在打开页面</div>
+        <p id="navigation-loading-detail">请稍候，当前页面仍然保留。</p>
+        <div class="navigation-actions">
+            <button type="button" data-navigation-action="cancel">取消等待</button>
+            <button type="button" data-navigation-action="retry">重试</button>
+            <a id="navigation-open-normally" data-no-swup href="/">普通方式打开</a>
+            <button type="button" data-navigation-action="close">关闭提示</button>
+        </div>
+    </section>
+</div>
+
+<style>
+    #navigation-loading { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+    #navigation-loading[data-state="idle"] { display: none; }
+    .navigation-progress { position: absolute; inset: 0 0 auto; height: 3px; overflow: hidden; background: color-mix(in oklch, var(--primary) 12%, transparent); }
+    .navigation-progress span { display: block; height: 100%; width: 35%; border-radius: 99px; background: var(--primary); box-shadow: 0 0 10px var(--primary); animation: navigation-progress 1.3s ease-in-out infinite; }
+    .navigation-veil { position: absolute; inset: 0; opacity: 0; background: color-mix(in oklch, var(--page-bg) 48%, transparent); backdrop-filter: blur(3px); transition: opacity .2s; }
+    .navigation-message { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(28rem, calc(100vw - 2rem)); box-sizing: border-box; padding: 1.5rem; border-radius: var(--radius-large, 1rem); background: var(--card-bg, var(--page-bg)); color: var(--primary); border: 1px solid color-mix(in oklch, var(--primary) 22%, transparent); box-shadow: 0 12px 45px #0002; text-align: center; pointer-events: auto; }
+    .navigation-heading { font-size: 1.15rem; font-weight: 700; margin: 0 0 .5rem; }
+    .navigation-message p { margin: 0; line-height: 1.8; font-size: .95rem; overflow-wrap: anywhere; }
+    .navigation-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin-top: 1rem; }
+    .navigation-actions :is(button,a) { font: inherit; text-decoration: none; cursor: pointer; border-radius: .75rem; padding: .4rem .8rem; color: inherit; border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent); background: color-mix(in oklch, var(--primary) 8%, transparent); }
+    .navigation-actions :is(button,a):hover, .navigation-actions :is(button,a):focus-visible { background: color-mix(in oklch, var(--primary) 18%, transparent); }
+    .navigation-spinner { width: 2rem; height: 2rem; border: 3px solid color-mix(in oklch, var(--primary) 15%, transparent); border-top-color: var(--primary); border-radius: 50%; margin: 0 auto 1rem; animation: navigation-spin 1.5s linear infinite; }
+    [data-state="waiting"] .navigation-veil { opacity: 1; }
+    [data-state="waiting"] .navigation-message, [data-state="error"] .navigation-message { display: block; }
+    [data-state="waiting"] [data-navigation-action="retry"], [data-state="waiting"] [data-navigation-action="close"], [data-state="waiting"] #navigation-open-normally { display: none; }
+    [data-state="error"] .navigation-progress, [data-state="error"] .navigation-spinner, [data-state="error"] [data-navigation-action="cancel"] { display: none; }
+    [data-state="error"] .navigation-message { top: auto; bottom: 1rem; transform: translateX(-50%); }
+    @keyframes navigation-progress { from { transform: translateX(-110%); } to { transform: translateX(390%); } }
+    @keyframes navigation-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .navigation-progress span, .navigation-spinner { animation: none; } .navigation-progress span { width: 100%; opacity: .7; } }
+</style>

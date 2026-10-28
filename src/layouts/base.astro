@@ -3,6 +3,7 @@ import ConfigCarrier from "@components/configCarrier.astro";
 import FontLoader from "@components/fontLoader.astro";
 import LoadingOverlay from "@components/loadingOverlay.astro";
 import LoadingBootstrap from "@components/loadingBootstrap.astro";
+import NavigationLoading from "@components/navigationLoading.astro";
 import DailyWallpaperBootstrap from "@components/dailyWallpaperBootstrap.astro";
 import SiteStatisticsBootstrap from "@components/siteStatisticsBootstrap.astro";
 import MusicPlayer from "@components/musicPlayer.svelte";
@@ -342,6 +343,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
     >
         <!-- 页面加载动画 -->
         <LoadingOverlay />
+        <NavigationLoading />
         <!-- 全局配置载体 -->
         <ConfigCarrier />
         <!-- 页面顶部渐变高光效果 - 只在full和semifull模式下显示 -->
@@ -411,8 +413,9 @@ import { setupParticleEffects } from "@/utils/particle";
 
 // 初始化Swup
 const setup = () => {
-    // Swup can update the body for each page visit, but it's after the page transition, causing a delay for banner height change, so use Swup hooks instead to change the height immediately when a link is clicked
-    window.swup.hooks.on('link:click', () => {
+    // Keep the current layout intact while waiting for HTML; start its layout
+    // changes together with the actual Swup exit animation.
+    window.swup.hooks.on('animation:out:start', () => {
         // 简化 navbar 处理逻辑
         const bannerEnabled = !!document.getElementById('banner-wrapper')
         if (bannerEnabled) {
@@ -450,7 +453,7 @@ const setup = () => {
             }
         }
     })
-    window.swup.hooks.on('visit:start', (visit: {to: {url: string}}) => {
+    const preparePageLayout = (visit: {to: {url: string}}) => {
         // Disable scroll protection when a link is clicked to prevent interference with page jump scrolling to top
         if ((window as any).scrollProtectionManager && typeof (window as any).scrollProtectionManager.disable === 'function') {
             (window as any).scrollProtectionManager.disable();
@@ -489,7 +492,9 @@ const setup = () => {
         if (heightExtend) {
             heightExtend.classList.remove('hidden')
         }
-    });
+    };
+    window.swup.hooks.on('animation:out:start', preparePageLayout);
+    window.swup.hooks.on('animation:skip', preparePageLayout);
     window.swup.hooks.on('visit:end', (_visit: {to: {url: string}}) => {
         setTimeout(() => {
             const heightExtend = document.getElementById('page-height-extend')
