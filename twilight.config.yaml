@@ -206,6 +206,9 @@ profile:
     - name: 图虫摄影网
       icon: material-symbols:camera
       url: https://tuchong.com/25406319
+    - name: GitHub
+      icon: fa6-brands:github
+      url: https://github.com/ElliottZhao666666/
     - name: 邮箱
       icon: material-symbols:mail
       url: 'mailto:main@ybjun.com '

@@ -34,17 +34,29 @@ const recentPosts = posts.slice(0, 6);
                         <p class="text-sm text-75">复制链接到你的 RSS 阅读器</p>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <code class="bg-[var(--card-bg)] px-3 py-2 rounded-lg text-sm font-mono text-75 border border-[var(--line-divider)] break-all">
+                <div class="flex min-w-0 flex-col sm:flex-row sm:flex-wrap gap-3">
+                    <code class="min-w-0 bg-[var(--card-bg)] px-3 py-2 rounded-lg text-sm font-mono text-75 border border-[var(--line-divider)] break-all">
                         {Astro.site}rss.xml
                     </code>
-                    <button
-                        id="copy-rss-btn"
-                        class="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:opacity-80 transition-all duration-300 font-medium text-sm whitespace-nowrap"
-                        data-url={`${Astro.site}rss.xml`}
-                    >
-                        复制链接
-                    </button>
+                    <div class="flex flex-wrap gap-3">
+                        <button
+                            id="copy-rss-btn"
+                            class="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:opacity-80 transition-all duration-300 font-medium text-sm whitespace-nowrap"
+                            data-url={`${Astro.site}rss.xml`}
+                        >
+                            复制链接
+                        </button>
+                        <a
+                            href={`${Astro.site}rss.xml`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-no-swup
+                            class="btn-regular gap-2 px-4 py-2 rounded-lg border border-[var(--line-divider)] font-medium text-sm whitespace-nowrap"
+                        >
+                            <Icon name="material-symbols:open-in-new" class="text-lg" />
+                            直接打开
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
