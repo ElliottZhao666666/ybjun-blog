@@ -45,7 +45,7 @@ site:
       src: /assets/LXGWWenKai/result.css?v=1.530-r2-09a5c1149223
       family: LXGW WenKai Screen
   themeColor:
-    hue: '145'
+    hue: '185'
     auto: true
   defaultTheme: system
   wallpaper:
