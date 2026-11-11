@@ -1,13 +1,13 @@
 ---
 title: 将洛手宠物实装到codex，rocom-codex-pets-gen 技能使用方法
-published: '2026-11-04T17:39:21'
+published: '2026-11-11T14:39:04'
 description: 把《洛克王国：世界》里的宠物放到 Codex 做桌宠：原模型渲染、九类颜色与动态赛季支持。
 pinned: false
 tags:
   - 技术备忘
   - Codex
 category: 小作品
-draft: true
+draft: false
 author: ''
 sourceLink: ''
 comment: true
@@ -17,11 +17,10 @@ copyProtection:
   blockContextMenu: true
   blockDevTools: false
 cover: ./cover-1794366661094-4a9tu.webp
-encrypted: true
-password: '123456'
+encrypted: false
 ---
 
-本文通过一个实际的例子，简要介绍使用博主开发的 Codex 技能 `rocom-codex-pets-gen` 技能，将洛克王国世界的宠物资源提取出来，并生成 Codex 桌宠的全过程。
+本文通过一个实际的例子，简要介绍使用博主开发的 Codex 技能 `rocom-codex-pets-gen` 技能，用洛克王国世界的精灵生成 Codex 桌宠的全过程。支持异色、炫彩、污染以及不同形态。
 
 ![img_1794367200647.png](./img_1794367200647.png)
 
@@ -97,4 +96,20 @@ password: '123456'
 ```
 
 ![img_1794376395511.png](./img_1794376395511.png)
+
+
+:::warning
+常规的生成桌宠很费额度！虽然我们的 Skill 会指导 Codex 直接使用渲染器根据动作要求渲染精灵模型，并直接把这些渲染图作为桌宠图源，相对于常规制作直接 AI 生成大量图源会节省不少 Token，但依然推荐大家使用耗费小一点的模型以最大限度地节省额度，效果也不会差太多的。
+:::
+
+![img_1794377800072.png](./img_1794377800072.png)
+
+等待一段时间，生成成功后，就可以直接应用啦！附加的 ZIP 包可以发给其他在用 Codex 的小伙伴安装使用。
+![img_1794378872988.png](./img_1794378872988.png)
+
+
+:::warning
+1. 本文仅为个人研究成果展示，仅供学习交流、研究 Codex 桌宠和 Skill 制作使用。本项目不涉及也不会涉及任何商业行为，更不代表官方立场！
+2. 部分精灵可能因体积、自身形态等原因并不适合做此转换，即使打包成功桌宠也有可能被以检查不通过为由拒绝安装，这时候可以换一只精灵。
+:::
 
