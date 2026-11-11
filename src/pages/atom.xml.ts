@@ -1,5 +1,7 @@
+import { getCategoryPathParts } from "@utils/category";
 import { getSortedPosts } from "@utils/content";
 import { rewriteFeedImageSrcToCdn } from "@utils/feed";
+import { parseTags } from "@utils/tag";
 import { getPostUrl } from "@utils/url";
 import type { APIContext } from "astro";
 import MarkdownIt from "markdown-it";
@@ -8,6 +10,19 @@ import sanitizeHtml from "sanitize-html";
 import { profileConfig, siteConfig } from "@/config";
 
 const markdownParser = new MarkdownIt();
+
+function escapeXml(value: string) {
+	return value
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&apos;");
+}
+
+function wrapCdata(value: string) {
+	return value.replace(/]]>/g, "]]]]><![CDATA[>");
+}
 
 export async function GET(context: APIContext) {
 	if (!context.site) {
@@ -23,13 +38,13 @@ export async function GET(context: APIContext) {
 	// 创建Atom feed头部
 	let atomFeed = `<?xml version="1.0" encoding="utf-8"?>
         <feed xmlns="http://www.w3.org/2005/Atom">
-        <title>${siteConfig.title}</title>
-        <subtitle>${siteConfig.subtitle || "No description"}</subtitle>
-        <link href="${context.site}" rel="alternate" type="text/html"/>
-        <link href="${new URL("atom.xml", context.site)}" rel="self" type="application/atom+xml"/>
-        <id>${context.site}</id>
+        <title>${escapeXml(siteConfig.title)}</title>
+        <subtitle>${escapeXml(siteConfig.subtitle || "No description")}</subtitle>
+        <link href="${escapeXml(context.site.href)}" rel="alternate" type="text/html"/>
+        <link href="${escapeXml(new URL("atom.xml", context.site).href)}" rel="self" type="application/atom+xml"/>
+        <id>${escapeXml(context.site.href)}</id>
         <updated>${new Date().toISOString()}</updated>
-        <language>${siteConfig.lang}</language>`;
+        <language>${escapeXml(siteConfig.lang)}</language>`;
 
 	for (const post of posts) {
 		// convert markdown to html string, ensure post.body is a string
@@ -59,22 +74,30 @@ export async function GET(context: APIContext) {
 
 		atomFeed += `
         <entry>
-            <title>${post.data.title}</title>
-            <link href="${postUrl}" rel="alternate" type="text/html"/>
-            <id>${postUrl}</id>
+            <title>${escapeXml(post.data.title)}</title>
+            <link href="${escapeXml(postUrl)}" rel="alternate" type="text/html"/>
+            <id>${escapeXml(postUrl)}</id>
             <published>${post.data.published.toISOString()}</published>
             <updated>${post.data.updated?.toISOString() || post.data.published.toISOString()}</updated>
-            <summary>${post.data.description || ""}</summary>
-            <content type="html"><![CDATA[${content}]]></content>
+            <summary>${escapeXml(post.data.description || "")}</summary>
+            <content type="html"><![CDATA[${wrapCdata(content)}]]></content>
             <author>
-                <name>${profileConfig.name}</name>
+                <name>${escapeXml(profileConfig.name)}</name>
             </author>`;
 		// 添加分类标签
-		if (post.data.category) {
-			atomFeed += `
-            <category term="${post.data.category}"></category>`;
+		const categoryParts = getCategoryPathParts(post.data.category);
+		if (categoryParts && categoryParts.length > 0) {
+			for (let i = 0; i < categoryParts.length; i++) {
+				const term = categoryParts.slice(0, i + 1).join(" / ");
+				atomFeed += `
+            <category term="${escapeXml(term)}"></category>`;
+			}
 		}
 		// 添加标签
+		for (const tag of parseTags(post.data.tags)) {
+			atomFeed += `
+            <category term="${escapeXml(tag)}" label="${escapeXml(tag)}"></category>`;
+		}
 		atomFeed += `
             </entry>`;
 	}

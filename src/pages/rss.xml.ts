@@ -1,7 +1,9 @@
 import type { RSSFeedItem } from "@astrojs/rss";
 import rss from "@astrojs/rss";
+import { getCategoryPathLabel } from "@utils/category";
 import { getSortedPosts } from "@utils/content";
 import { rewriteFeedImageSrcToCdn } from "@utils/feed";
+import { parseTags } from "@utils/tag";
 import { getPostUrl } from "@utils/url";
 import type { APIContext } from "astro";
 import MarkdownIt from "markdown-it";
@@ -40,11 +42,18 @@ export async function GET(context: APIContext) {
 			}
 		}
 
+		const categories: string[] = [];
+		const categoryLabel = getCategoryPathLabel(post.data.category);
+		if (categoryLabel) categories.push(categoryLabel);
+		const tags = parseTags(post.data.tags);
+		if (tags.length > 0) categories.push(...tags);
+
 		feed.push({
 			title: post.data.title,
 			description: post.data.description,
 			pubDate: post.data.published,
 			link: getPostUrl(post),
+			categories,
 			// sanitize the new html string with corrected image paths
 			content: sanitizeHtml(html.toString(), {
 				allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
