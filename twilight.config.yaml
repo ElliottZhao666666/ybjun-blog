@@ -103,7 +103,7 @@ site:
         text: 背景图来自 Bing
         url: https://www.bing.com
       navbar:
-        transparentMode: full
+        transparentMode: semifull
       waves:
         enable: true
         performanceMode: true
