@@ -45,9 +45,11 @@ const isPublic = src.startsWith("/");
 // biome-ignore lint/suspicious/noImplicitAnyLet: <check later>
 let img;
 if (isLocal) {
-	const files = import.meta.glob<ImageMetadata>("../../**", {
-		import: "default",
-	});
+	// Import only images; article scripts and data are not JavaScript modules.
+	const files = import.meta.glob<ImageMetadata>(
+		"../../**/*.{avif,gif,jpeg,jpg,png,svg,tiff,webp,AVIF,GIF,JPEG,JPG,PNG,SVG,TIFF,WEBP}",
+		{ import: "default" },
+	);
 	let normalizedPath = path
 		.normalize(path.join("../../", basePath, src))
 		.replace(/\\/g, "/");
